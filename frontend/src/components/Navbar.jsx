@@ -27,30 +27,43 @@ const Navbar = () => {
         
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
-            <li className="nav-item">
-              <Link className="nav-link" to="/">Accueil</Link>
-            </li>
             {user && (
               <li className="nav-item">
-                <Link className="nav-link" to="/demande-projet">Demander un projet</Link>
+                <Link className="nav-link text-white" to="/demande-projet">Demander un projet</Link>
               </li>
             )}
             {user ? (
-              <>
-                <li className="nav-item">
-                  <span className="nav-link">
-                    Bonjour, {user.user_metadata?.firstName || user.email}
-                  </span>
-                </li>
-                <li className="nav-item">
-                  <button 
-                    className="btn btn-outline-light btn-sm"
-                    onClick={handleSignOut}
-                  >
-                    Déconnexion
-                  </button>
-                </li>
-              </>
+              <li className="nav-item dropdown">
+                <a 
+                  className="nav-link dropdown-toggle text-white" 
+                  href="#"
+                  id="userDropdown" 
+                  role="button" 
+                  data-bs-toggle="dropdown" 
+                  aria-expanded="false"
+                  style={{ cursor: 'pointer' }}
+                >
+                  {user.user_metadata?.firstName} {user.user_metadata?.lastName}
+                </a>
+                <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                  <li>
+                    <Link className="dropdown-item" to="/parametres">
+                      <i className="bi bi-gear me-2"></i>
+                      Paramètres
+                    </Link>
+                  </li>
+                  <li><hr className="dropdown-divider" /></li>
+                  <li>
+                    <button 
+                      className="dropdown-item text-danger" 
+                      onClick={handleSignOut}
+                    >
+                      <i className="bi bi-box-arrow-right me-2"></i>
+                      Déconnexion
+                    </button>
+                  </li>
+                </ul>
+              </li>
             ) : (
               <>
                 <li className="nav-item">

@@ -1,26 +1,85 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import ModalStatusProject from '../components/modalStatusProject';
 
 const ProjectRequest = () => {
   const { user } = useAuth();
+  const modalRef = useRef(null);
   const [formData, setFormData] = useState({
     title: '',
-    descriptionClientClient: '',
+    descriptionClient: '',
     typeProject: '',
     goal: '',
-    files: null
+    files: []
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitMessage, setSubmitMessage] = useState('');
+  const [modalState, setModalState] = useState({
+    show: false,
+    status: 'success',
+    projectId: null,
+    message: ''
+  });
 
   const handleChange = (e) => {
     const { name, value, type, files } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'file' ? files[0] : value
-    }));
+    if (type === 'file') {
+      setFormData(prev => ({
+        ...prev,
+        [name]: Array.from(files)
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+
+  const uploadImages = async (projectId, files) => {
+    const uploadedUrls = [];
+    
+    for (const file of files) {
+      // Vérifier que c'est bien une image
+      if (!file.type.startsWith('image/')) {
+        continue;
+      }
+      
+      // Upload vers Supabase Storage
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${projectId}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+      
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('project-images')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Obtenir l'URL publique
+      const { data: { publicUrl } } = supabase.storage
+        .from('project-images')
+        .getPublicUrl(fileName);
+
+      // Insérer dans la table ProjectsImages
+      const { data: imageData, error: imageError } = await supabase
+        .from('ProjectsImages')
+        .insert([{
+          projectId: projectId,
+          fileUrl: publicUrl,
+          file_type: 'image'
+        }])
+        .select();
+
+      if (imageError) throw imageError;
+
+      uploadedUrls.push(publicUrl);
+    }
+    
+    return uploadedUrls;
   };
 
   const handleSubmit = async (e) => {
@@ -28,21 +87,15 @@ const ProjectRequest = () => {
     setIsSubmitting(true);
     
     try {
-      // Utiliser directement l'ID de l'utilisateur auth
+      // 1. Créer le projet
       const projectData = {
         title: formData.title,
         descriptionClient: formData.descriptionClient,
         typeProject: formData.typeProject,
         goal: formData.goal,
-        userId: user.id, // Utiliser userId au lieu de user_id
+        userId: user.id,
         status: 'en attente'
       };
-
-      // Gestion du fichier si nécessaire
-      if (formData.files) {
-        projectData.filename = formData.files.name;
-        projectData.file_size = formData.files.size;
-      }
 
       const { data, error } = await supabase
         .from('Projects')
@@ -51,20 +104,53 @@ const ProjectRequest = () => {
 
       if (error) throw error;
 
-      setSubmitMessage('Votre demande a été soumise avec succès ! Nous vous recontacterons bientôt.');
+      const projectId = data[0]?.id;
+
+      // 2. Upload des images si présentes
+      if (formData.files && formData.files.length > 0) {
+        try {
+          await uploadImages(projectId, formData.files);
+        } catch (uploadError) {
+          alert('Le projet a été créé mais il y a eu un problème avec l\'upload des images.');
+        }
+      }
+
+      // 3. Afficher le modal de succès
+      setModalState({
+        show: true,
+        status: 'success',
+        projectId: projectId,
+        message: 'Votre demande a été soumise avec succès !'
+      });
+
+      // 4. Réinitialiser le formulaire
       setFormData({
         title: '',
         descriptionClient: '',
         typeProject: '',
         goal: '',
-        files: null
+        files: []
       });
+      
+      // Réinitialiser l'input file
+      const fileInput = document.getElementById('files');
+      if (fileInput) fileInput.value = '';
+      
     } catch (error) {
       console.error('Erreur:', error);
-      setSubmitMessage('Une erreur est survenue. Veuillez réessayer.');
+      setModalState({
+        show: true,
+        status: 'error',
+        projectId: null,
+        message: 'Une erreur est survenue. Veuillez réessayer.'
+      });
     }
     
     setIsSubmitting(false);
+  };
+
+  const closeModal = () => {
+    setModalState({ ...modalState, show: false });
   };
 
   return (
@@ -72,12 +158,6 @@ const ProjectRequest = () => {
       <div className="row">
         <div className="col-lg-8 mx-auto">
           <h1 className="text-center mb-5">Demande de projet de modélisation 3D</h1>
-          
-          {submitMessage && (
-            <div className={`alert ${submitMessage.includes('succès') ? 'alert-success' : 'alert-danger'}`}>
-              {submitMessage}
-            </div>
-          )}
 
           <form onSubmit={handleSubmit}>
             <div className="mb-3">
@@ -94,7 +174,7 @@ const ProjectRequest = () => {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="descriptionClient" className="form-label">descriptionClient détaillée *</label>
+              <label htmlFor="descriptionClient" className="form-label">Description détaillée *</label>
               <textarea
                 className="form-control"
                 id="descriptionClient"
@@ -139,7 +219,7 @@ const ProjectRequest = () => {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="files" className="form-label">Fichiers de référence / Images</label>
+              <label htmlFor="files" className="form-label">Images de référence</label>
               <input
                 type="file"
                 className="form-control"
@@ -147,11 +227,18 @@ const ProjectRequest = () => {
                 name="files"
                 onChange={handleChange}
                 multiple
-                accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.gif,.bmp,.tiff"
+                accept="image/*,.pdf"
               />
               <div className="form-text">
-                Formats acceptés : JPG, PNG, GIF, PDF, DOC, DOCX, etc. (max 10MB par fichier)
+                Formats acceptés : JPG, PNG, GIF, PDF (max 10MB par fichier)
               </div>
+              {formData.files.length > 0 && (
+                <div className="mt-2">
+                  <small className="text-muted">
+                    {formData.files.length} fichier(s) sélectionné(s)
+                  </small>
+                </div>
+              )}
             </div>
 
             <div className="text-center">
@@ -166,6 +253,14 @@ const ProjectRequest = () => {
           </form>
         </div>
       </div>
+
+      <ModalStatusProject
+        show={modalState.show}
+        status={modalState.status}
+        projectId={modalState.projectId}
+        message={modalState.message}
+        onClose={closeModal}
+      />
     </div>
   );
 };
