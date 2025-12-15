@@ -11,7 +11,10 @@ describe('Composant ProtectedRoute', () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({ user: null, loading: false })
 
     render(
-      <MemoryRouter initialEntries={['/protected']}>
+      <MemoryRouter 
+        initialEntries={['/protected']}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <Routes>
           <Route path="/login" element={<h1>Page de Login</h1>} />
           <Route path="/protected" element={
@@ -32,7 +35,10 @@ describe('Composant ProtectedRoute', () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({ user: { id: 1 }, loading: false })
 
     render(
-      <MemoryRouter initialEntries={['/protected']}>
+      <MemoryRouter 
+        initialEntries={['/protected']}
+        future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+      >
         <ProtectedRoute>
           <h1>Contenu Privé</h1>
         </ProtectedRoute>

@@ -7,7 +7,11 @@ import Footer from './Footer'
 // Le composant Footer utilise probablement des liens (Link) de react-router-dom, 
 // donc on doit l'envelopper dans un BrowserRouter pour le test.
 const renderWithRouter = (component) => {
-  return render(<BrowserRouter>{component}</BrowserRouter>)
+  return render(
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      {component}
+    </BrowserRouter>
+  )
 }
 
 describe('Composant Footer', () => {

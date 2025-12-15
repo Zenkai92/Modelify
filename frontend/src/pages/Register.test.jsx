@@ -14,7 +14,11 @@ vi.mock('../contexts/AuthContext', () => ({
 
 describe('Page Register', () => {
   it('affiche une erreur si les mots de passe ne correspondent pas', async () => {
-    render(<BrowserRouter><Register /></BrowserRouter>)
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Register />
+      </BrowserRouter>
+    )
 
     // Remplir les champs obligatoires
     fireEvent.change(screen.getByLabelText(/Prénom \*/i), { target: { value: 'John' } })

@@ -9,7 +9,11 @@ describe('Composant Navbar', () => {
   it('affiche les liens Connexion/Inscription quand déconnecté', () => {
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({ user: null })
     
-    render(<BrowserRouter><Navbar /></BrowserRouter>)
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Navbar />
+      </BrowserRouter>
+    )
     
     expect(screen.getByText('Connexion')).toBeInTheDocument()
     expect(screen.getByText('Inscription')).toBeInTheDocument()
@@ -23,7 +27,11 @@ describe('Composant Navbar', () => {
       signOut: mockSignOut
     })
     
-    render(<BrowserRouter><Navbar /></BrowserRouter>)
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Navbar />
+      </BrowserRouter>
+    )
     
     expect(screen.getByText('John Doe')).toBeInTheDocument()
     // Note: Déconnexion est dans un dropdown, il faut parfois cliquer pour le voir, 

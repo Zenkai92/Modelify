@@ -15,13 +15,21 @@ vi.mock('../contexts/AuthContext', () => ({
 
 describe('Page Login', () => {
   it('affiche les champs email et mot de passe', () => {
-    render(<BrowserRouter><Login /></BrowserRouter>)
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Login />
+      </BrowserRouter>
+    )
     expect(screen.getByLabelText(/Email/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Mot de passe/i)).toBeInTheDocument()
   })
 
   it('appelle la fonction signIn avec les bonnes données', async () => {
-    render(<BrowserRouter><Login /></BrowserRouter>)
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Login />
+      </BrowserRouter>
+    )
     
     // Simuler la saisie
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@example.com' } })
@@ -39,7 +47,11 @@ describe('Page Login', () => {
   })
 
   it('affiche un message d\'erreur si la connexion échoue', async () => {
-    render(<BrowserRouter><Login /></BrowserRouter>)
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Login />
+      </BrowserRouter>
+    )
     
     // Remplir les champs pour passer la validation HTML5
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'wrong@test.com' } })
