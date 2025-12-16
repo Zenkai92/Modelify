@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import logo from '../public/Logo_Modelify.png';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -12,7 +13,7 @@ const Navbar = () => {
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
       <div className="container">
-        <Link className="navbar-brand fw-bold" to="/">
+        <Link className="navbar-brand fw-bold d-flex align-items-center" to="/">
           Modelify
         </Link>
         

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import FloatingShapes from '../components/FloatingShapes'
 
 const Login = () => {
   const [email, setEmail] = useState('')
@@ -32,60 +33,66 @@ const Login = () => {
   }
 
   return (
-    <div className="container py-5">
-      <div className="row justify-content-center">
-        <div className="col-md-6 col-lg-4">
-          <div className="card">
-            <div className="card-body">
-              <h2 className="card-title text-center mb-4">Connexion</h2>
-              
-              {error && (
-                <div className="alert alert-danger" role="alert">
-                  {error}
+    <div className="auth-section">
+      {/* Formes flottantes en arrière-plan */}
+      <FloatingShapes />
+      
+      <div className="container position-relative" style={{ zIndex: 2 }}>
+        <div className="row justify-content-center">
+          <div className="col-md-6 col-lg-4">
+            <div className="card shadow-lg border-0">
+              <div className="card-body p-5">
+                <h2 className="card-title text-center mb-4 fw-bold" style={{ color: '#764ba2' }}>Connexion</h2>
+                
+                {error && (
+                  <div className="alert alert-danger" role="alert">
+                    {error}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit}>
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="password" className="form-label">Mot de passe</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      id="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-100 py-2 mt-3"
+                    disabled={loading}
+                    style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}
+                  >
+                    {loading ? 'Connexion...' : 'Se connecter'}
+                  </button>
+                </form>
+
+                <div className="text-center mt-4">
+                  <p className="mb-0 text-muted">
+                    Pas encore de compte ?{' '}
+                    <Link to="/register" className="text-decoration-none fw-bold" style={{ color: '#764ba2' }}>
+                      S'inscrire
+                    </Link>
+                  </p>
                 </div>
-              )}
-
-              <form onSubmit={handleSubmit}>
-                <div className="mb-3">
-                  <label htmlFor="email" className="form-label">Email</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="password" className="form-label">Mot de passe</label>
-                  <input
-                    type="password"
-                    className="form-control"
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="btn btn-primary w-100"
-                  disabled={loading}
-                >
-                  {loading ? 'Connexion...' : 'Se connecter'}
-                </button>
-              </form>
-
-              <div className="text-center mt-3">
-                <p>
-                  Pas encore de compte ?{' '}
-                  <Link to="/register" className="text-decoration-none">
-                    S'inscrire
-                  </Link>
-                </p>
               </div>
             </div>
           </div>

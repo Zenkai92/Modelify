@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import FloatingShapes from '../components/FloatingShapes'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -72,169 +73,174 @@ const Register = () => {
   }
 
   return (
-    <div className="container py-5">
-      <div className="row justify-content-center">
-        <div className="col-md-8 col-lg-6">
-          <div className="card">
-            <div className="card-body">
-              <h2 className="card-title text-center mb-4">Inscription</h2>
-              
-              {error && (
-                <div className="alert alert-danger" role="alert">
-                  {error}
-                </div>
-              )}
+    <div className="auth-section">
+      <FloatingShapes />
 
-              <form onSubmit={handleSubmit}>
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="firstName" className="form-label">Prénom *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="firstName"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="lastName" className="form-label">Nom *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="lastName"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="email" className="form-label">Email *</label>
-                  <input
-                    type="email"
-                    className="form-control"
-                    id="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="row">
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="password" className="form-label">Mot de passe *</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                  <div className="col-md-6 mb-3">
-                    <label htmlFor="confirmPassword" className="form-label">Confirmer le mot de passe *</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label htmlFor="role" className="form-label">Type de compte *</label>
-                  <select
-                    className="form-select"
-                    id="role"
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="particulier">Particulier</option>
-                    <option value="entreprise">Entreprise</option>
-                  </select>
-                </div>
-
-                {formData.role === 'entreprise' && (
-                  <div className="mb-3">
-                    <label htmlFor="companyName" className="form-label">Nom de l'entreprise</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="companyName"
-                      name="companyName"
-                      value={formData.companyName}
-                      onChange={handleChange}
-                    />
+      <div className="container position-relative" style={{ zIndex: 2 }}>
+        <div className="row justify-content-center">
+          <div className="col-md-8 col-lg-6">
+            <div className="card shadow-lg border-0">
+              <div className="card-body p-5">
+                <h2 className="card-title text-center mb-4 fw-bold" style={{ color: '#764ba2' }}>Inscription</h2>
+                
+                {error && (
+                  <div className="alert alert-danger" role="alert">
+                    {error}
                   </div>
                 )}
 
-                <div className="mb-3">
-                  <label htmlFor="streetAddress" className="form-label">Adresse</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    id="streetAddress"
-                    name="streetAddress"
-                    value={formData.streetAddress}
-                    onChange={handleChange}
-                  />
-                </div>
+                <form onSubmit={handleSubmit}>
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="firstName" className="form-label">Prénom *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="firstName"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="lastName" className="form-label">Nom *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="lastName"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
 
-                <div className="row">
-                  <div className="col-md-8 mb-3">
-                    <label htmlFor="city" className="form-label">Ville</label>
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">Email *</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
+
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="password" className="form-label">Mot de passe *</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        id="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="confirmPassword" className="form-label">Confirmer le mot de passe *</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="mb-3">
+                    <label htmlFor="role" className="form-label">Type de compte *</label>
+                    <select
+                      className="form-select"
+                      id="role"
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      required
+                    >
+                      <option value="particulier">Particulier</option>
+                      <option value="entreprise">Entreprise</option>
+                    </select>
+                  </div>
+
+                  {formData.role === 'entreprise' && (
+                    <div className="mb-3">
+                      <label htmlFor="companyName" className="form-label">Nom de l'entreprise</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="companyName"
+                        name="companyName"
+                        value={formData.companyName}
+                        onChange={handleChange}
+                      />
+                    </div>
+                  )}
+
+                  <div className="mb-3">
+                    <label htmlFor="streetAddress" className="form-label">Adresse</label>
                     <input
                       type="text"
                       className="form-control"
-                      id="city"
-                      name="city"
-                      value={formData.city}
+                      id="streetAddress"
+                      name="streetAddress"
+                      value={formData.streetAddress}
                       onChange={handleChange}
                     />
                   </div>
-                  <div className="col-md-4 mb-3">
-                    <label htmlFor="postalCode" className="form-label">Code postal</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      id="postalCode"
-                      name="postalCode"
-                      value={formData.postalCode}
-                      onChange={handleChange}
-                    />
+
+                  <div className="row">
+                    <div className="col-md-8 mb-3">
+                      <label htmlFor="city" className="form-label">Ville</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="city"
+                        name="city"
+                        value={formData.city}
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div className="col-md-4 mb-3">
+                      <label htmlFor="postalCode" className="form-label">Code postal</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="postalCode"
+                        name="postalCode"
+                        value={formData.postalCode}
+                        onChange={handleChange}
+                      />
+                    </div>
                   </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-primary w-100 py-2 mt-3"
+                    disabled={loading}
+                    style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}
+                  >
+                    {loading ? 'Inscription...' : 'S\'inscrire'}
+                  </button>
+                </form>
+
+                <div className="text-center mt-4">
+                  <p className="mb-0 text-muted">
+                    Déjà un compte ?{' '}
+                    <Link to="/login" className="text-decoration-none fw-bold" style={{ color: '#764ba2' }}>
+                      Se connecter
+                    </Link>
+                  </p>
                 </div>
-
-                <button
-                  type="submit"
-                  className="btn btn-primary w-100"
-                  disabled={loading}
-                >
-                  {loading ? 'Inscription...' : 'S\'inscrire'}
-                </button>
-              </form>
-
-              <div className="text-center mt-3">
-                <p>
-                  Déjà un compte ?{' '}
-                  <Link to="/login" className="text-decoration-none">
-                    Se connecter
-                  </Link>
-                </p>
               </div>
             </div>
           </div>

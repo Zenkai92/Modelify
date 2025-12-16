@@ -15,9 +15,92 @@ code {
 .hero-section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 100px 0;
+  padding: 100px 0 150px 0; /* Augmenter le padding-bottom pour la vague */
+  position: relative;
+  /* overflow: hidden; Removed to allow shapes to float over the next section */
 }
 
+/* Nouvelle classe pour les pages d'authentification */
+.auth-section {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: calc(100vh - 56px); /* Hauteur totale moins la navbar approx */
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 40px 0;
+}
+
+/* Séparateur en forme de vague */
+.custom-shape-divider-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  transform: rotate(180deg);
+}
+
+.custom-shape-divider-bottom svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 120px;
+}
+
+.custom-shape-divider-bottom .shape-fill {
+  fill: #FFFFFF;
+}
+
+/* Animation de flottement */
+@keyframes float {
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(5deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+/* Conteneur des formes 3D */
+.floating-shapes-container {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.floating-shape {
+  position: absolute;
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Formes blanches (dans la zone Hero) */
+.shape-white {
+  color: rgba(255, 255, 255, 0.3);
+  fill: rgba(255, 255, 255, 0.3);
+}
+
+/* Formes colorées (dans la zone Services/Blanche) */
+.shape-gradient {
+  /* On utilise la couleur principale du dégradé */
+  color: #764ba2; 
+  fill: url(#gradient-fill); /* Référence au gradient SVG défini dans le JSX */
+}
+
+/* Positions spécifiques - Répartition optimisée */
+.shape-1 { bottom: 130px; left: 10%; width: 60px; animation-delay: 0s; }
+.shape-2 { bottom: 110px; right: 8%; width: 80px; animation-delay: 2s; }
+.shape-3 { bottom: 20px; left: 19%; width: 50px; animation-delay: 1s; z-index: 2; }
+.shape-4 { bottom: -30px; right: 17%; width: 70px; animation-delay: 3s; z-index: 2; }
+.shape-5 { bottom: -10px; left: 37%; width: 40px; animation-delay: 4s; }
+.shape-6 { bottom: 40px; left: 55%; width: 30px; animation-delay: 1.5s; }
+.shape-cube-left { bottom: -20px; left: 2%; width: 45px; animation-delay: 0.5s; z-index: 2; }
+.shape-cube-small { bottom: 150px; left: 46%; width: 25px; animation-delay: 3.5s; }
+.shape-pyramid { bottom: 80px; right: 26%; width: 55px; animation-delay: 1.2s; z-index: 2; }
+.shape-sphere-left { bottom: 100px; left: 28%; width: 35px; animation-delay: 2.8s; }
+.shape-cross { bottom: -40px; left: 64%; width: 65px; animation-delay: 0.8s; z-index: 2; }
 .project-card {
   transition: transform 0.2s;
 }
