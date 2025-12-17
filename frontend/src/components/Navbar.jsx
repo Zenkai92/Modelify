@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import logo from '../public/Logo_Modelify.png';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();

@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse
 from app.schemas import ProjectRequestCreate, ProjectRequestResponse
 from app.database import supabase
-from typing import Optional
+from typing import Optional, List
 import json
 from datetime import datetime
 
@@ -14,7 +14,14 @@ async def create_project_request(
     descriptionClient: str = Form(...),
     typeProject: str = Form(..., alias="typeProject"),
     goal: str = Form(...),
-    files: Optional[UploadFile] = File(None)
+    userId: str = Form(...),
+    nbElements: str = Form("unique"),
+    dimensionLength: Optional[float] = Form(None),
+    dimensionWidth: Optional[float] = Form(None),
+    dimensionHeight: Optional[float] = Form(None),
+    dimensionNoConstraint: bool = Form(False),
+    detailLevel: str = Form("standard"),
+    files: List[UploadFile] = File(None)
 ):
     """
     Créer une nouvelle demande de projet de modélisation 3D
@@ -26,21 +33,53 @@ async def create_project_request(
             "descriptionClient": descriptionClient,
             "typeProject": typeProject,
             "goal": goal,
+            "userId": userId,
+            "nbElements": nbElements,
+            "dimensionLength": dimensionLength,
+            "dimensionWidth": dimensionWidth,
+            "dimensionHeight": dimensionHeight,
+            "dimensionNoConstraint": dimensionNoConstraint,
+            "detailLevel": detailLevel,
             "status": "en attente",
             "createdAt": datetime.utcnow().date().isoformat()  # .date() pour obtenir seulement YYYY-MM-DD
         }
-        
-        # Gestion du fichier uploadé
-        if files:
-            # Ici vous pourriez sauvegarder le fichier
-            project_data["filename"] = files.filename
-            project_data["file_size"] = files.size
         
         # Sauvegarde en Supabase
         result = supabase.table('Projects').insert(project_data).execute()
         
         if result.data:
             projectId = result.data[0]['id']
+            
+            # Gestion des fichiers uploadés
+            if files:
+                for file in files:
+                    try:
+                        file_content = await file.read()
+                        file_ext = file.filename.split('.')[-1]
+                        # Nom de fichier unique : ID_PROJET/TIMESTAMP_NOM
+                        file_path = f"{projectId}/{datetime.utcnow().timestamp()}_{file.filename}"
+                        
+                        # Upload vers Supabase Storage
+                        supabase.storage.from_('project-images').upload(
+                            file_path,
+                            file_content,
+                            {"content-type": file.content_type}
+                        )
+                        
+                        # Récupération de l'URL publique
+                        public_url = supabase.storage.from_('project-images').get_public_url(file_path)
+                        
+                        # Enregistrement dans la table ProjectsImages
+                        supabase.table('ProjectsImages').insert({
+                            "projectId": projectId,
+                            "fileUrl": public_url,
+                            "file_type": "image"
+                        }).execute()
+                        
+                    except Exception as upload_error:
+                        print(f"Erreur upload fichier {file.filename}: {str(upload_error)}")
+                        # On continue pour les autres fichiers même si un échoue
+            
             return {
                 "message": "Demande de projet créée avec succès",
                 "projectId": projectId,
