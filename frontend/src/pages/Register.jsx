@@ -122,9 +122,9 @@ const Register = () => {
           </div>
         </div>
         <div 
-          className={`card p-3 cursor-pointer ${formData.role === 'entreprise' ? 'border-primary shadow' : ''}`}
-          style={{ cursor: 'pointer', width: '150px', borderColor: formData.role === 'entreprise' ? '#764ba2' : '' }}
-          onClick={() => setFormData({...formData, role: 'entreprise'})}
+          className={`card p-3 cursor-pointer ${formData.role === 'professionnel' ? 'border-primary shadow' : ''}`}
+          style={{ cursor: 'pointer', width: '150px', borderColor: formData.role === 'professionnel' ? '#764ba2' : '' }}
+          onClick={() => setFormData({...formData, role: 'professionnel'})}
         >
           <div className="text-center">
             <i className="bi bi-building fs-1 mb-2" style={{ color: '#764ba2' }}></i>
