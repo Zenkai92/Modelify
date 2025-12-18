@@ -43,7 +43,9 @@ const Navbar = () => {
                   aria-expanded="false"
                   style={{ cursor: 'pointer' }}
                 >
-                  {user.user_metadata?.firstName} {user.user_metadata?.lastName}
+                  {user.user_metadata?.role === 'professionnel' 
+                    ? user.user_metadata?.companyName 
+                    : `${user.user_metadata?.firstName} ${user.user_metadata?.lastName}`}
                 </a>
                 <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                   <li>
