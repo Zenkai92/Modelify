@@ -49,9 +49,21 @@ const Navbar = () => {
                 </a>
                 <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                   <li>
-                    <Link className="dropdown-item" to="/parametres">
-                      <i className="bi bi-gear me-2"></i>
-                      Paramètres
+                    <Link className="dropdown-item" to="/profile">
+                      <i className="bi bi-person me-2"></i>
+                      Informations personnelles
+                    </Link>
+                  </li>
+                  <li>
+                    <Link className="dropdown-item" to="/status-commandes">
+                      <i className="bi bi-activity me-2"></i>
+                      Status des commandes
+                    </Link>
+                  </li>
+                  <li>
+                    <Link className="dropdown-item" to="/historique-commandes">
+                      <i className="bi bi-clock-history me-2"></i>
+                      Historiques des commandes
                     </Link>
                   </li>
                   <li><hr className="dropdown-divider" /></li>
