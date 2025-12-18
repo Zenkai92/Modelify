@@ -1,6 +1,5 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
 import ModalStatusProject from '../modalStatusProject';
 
 const ProjectForm = () => {

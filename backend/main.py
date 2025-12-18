@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import projects
+from app.routers import projects, users
 import uvicorn
 
 app = FastAPI(
@@ -20,6 +20,7 @@ app.add_middleware(
 
 # Routes
 app.include_router(projects.router, prefix="/api", tags=["projects"])
+app.include_router(users.router, prefix="/api", tags=["users"])
 
 @app.get("/")
 async def root():

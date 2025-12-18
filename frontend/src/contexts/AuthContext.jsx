@@ -71,28 +71,28 @@ export const AuthProvider = ({ children }) => {
           updateAt: new Date().toISOString()
         }
         
-        console.log('📝 Données profil à insérer:', profileData)
+        console.log('📝 Données profil à envoyer au backend:', profileData)
         
-        // D'abord tester une sélection pour voir la structure
-        const { data: testSelect, error: selectError } = await supabase
-          .from('Users')
-          .select('*')
-          .limit(1)
-        
-        console.log('🔍 Structure table Users:', testSelect, selectError)
-        
-        // Utiliser un client admin pour l'insertion (contourne RLS)
-        const { data: insertData, error: profileError } = await supabase
-          .from('Users')
-          .insert([profileData])
-          .select()
-        
-        console.log('💾 Résultat insertion profil:', { insertData, profileError })
-        
-        if (profileError) {
-          console.error('❌ Erreur création profil:', profileError)
-        } else {
-          console.log('✅ Profil créé avec succès:', insertData)
+        try {
+          const response = await fetch('http://localhost:8000/api/users', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(profileData),
+          })
+
+          if (!response.ok) {
+            const errorData = await response.json()
+            throw new Error(errorData.detail || 'Erreur lors de la création du profil')
+          }
+
+          const result = await response.json()
+          console.log('✅ Profil créé avec succès via API:', result)
+        } catch (apiError) {
+          console.error('❌ Erreur API création profil:', apiError)
+          // On ne bloque pas l'inscription si la création du profil échoue, 
+          // mais idéalement il faudrait gérer ça (rollback ou retry)
         }
       } catch (profileError) {
         console.error('❌ Exception création profil:', profileError)
