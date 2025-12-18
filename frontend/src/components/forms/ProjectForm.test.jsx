@@ -6,6 +6,9 @@ import ProjectForm from './ProjectForm'
 const mockInsert = vi.fn()
 const mockSelect = vi.fn()
 
+// Mock global fetch
+global.fetch = vi.fn()
+
 vi.mock('../../lib/supabase', () => ({
   supabase: {
     from: vi.fn(() => ({
@@ -30,6 +33,12 @@ describe('Composant ProjectForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     
+    // Mock fetch response
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ projectId: 999 })
+    })
+
     mockInsert.mockReturnValue({
       select: mockSelect
     })
@@ -43,7 +52,7 @@ describe('Composant ProjectForm', () => {
     render(<ProjectForm />)
     expect(screen.getByLabelText(/Titre du projet/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Description détaillée/i)).toBeInTheDocument()
-    expect(screen.getByText(/Soumettre la demande/i)).toBeInTheDocument()
+    expect(screen.getByText(/Suivant/i)).toBeInTheDocument()
   })
 
   it('envoie les données correctes à Supabase lors de la soumission', async () => {
@@ -65,22 +74,20 @@ describe('Composant ProjectForm', () => {
       target: { value: 'Impression 3D' }
     })
 
+    fireEvent.click(screen.getByText(/Suivant/i))
+
     const submitButton = screen.getByText(/Soumettre la demande/i)
     fireEvent.click(submitButton)
 
     await waitFor(() => {
-      expect(mockInsert).toHaveBeenCalledTimes(1)
-      
-      expect(mockInsert).toHaveBeenCalledWith([
+      expect(global.fetch).toHaveBeenCalledTimes(1)
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/projects',
         expect.objectContaining({
-          title: 'Mon Super Projet 3D',
-          descriptionClient: 'Je veux une modélisation de voiture.',
-          typeProject: 'personnel',
-          goal: 'Impression 3D',
-          userId: 'user-123-test',
-          status: 'en attente'
+          method: 'POST',
+          body: expect.any(FormData)
         })
-      ])
+      )
     })
 
     expect(await screen.findByText(/Votre demande a été soumise avec succès/i)).toBeInTheDocument()

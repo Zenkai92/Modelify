@@ -20,6 +20,9 @@ describe('Page Register', () => {
       </BrowserRouter>
     )
 
+    // Passer à l'étape 2
+    fireEvent.click(screen.getByText(/Suivant/i))
+
     // Remplir les champs obligatoires
     fireEvent.change(screen.getByLabelText(/Prénom \*/i), { target: { value: 'John' } })
     fireEvent.change(screen.getByLabelText(/^Nom \*/i), { target: { value: 'Doe' } })
@@ -29,7 +32,7 @@ describe('Page Register', () => {
     fireEvent.change(screen.getByLabelText(/^Mot de passe \*/i), { target: { value: '123456' } })
     fireEvent.change(screen.getByLabelText(/Confirmer le mot de passe/i), { target: { value: '654321' } })
 
-    fireEvent.click(screen.getByRole('button', { name: /S'inscrire/i }))
+    fireEvent.click(screen.getByRole('button', { name: /Suivant/i }))
 
     expect(await screen.findByText(/Les mots de passe ne correspondent pas/i)).toBeInTheDocument()
   })
