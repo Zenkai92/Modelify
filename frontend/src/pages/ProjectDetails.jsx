@@ -43,7 +43,6 @@ const ProjectDetails = () => {
 
   if (loading) return (
     <div className="project-details-section">
-      <FloatingShapes />
       <div className="container project-details-container">
         <div className="text-center text-white">
           <div className="spinner-border" role="status">
@@ -57,7 +56,6 @@ const ProjectDetails = () => {
 
   if (error) return (
     <div className="project-details-section">
-      <FloatingShapes />
       <div className="container project-details-container">
         <div className="alert alert-danger shadow-lg border-0" role="alert">
           <h4 className="alert-heading">Erreur</h4>
@@ -72,9 +70,7 @@ const ProjectDetails = () => {
   if (!project) return null;
 
   return (
-    <div className="project-details-section">
-      <FloatingShapes />
-      
+    <div className="project-details-section">      
       <div className="container project-details-container">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1 className="text-white fw-bold mb-0">Détails du projet</h1>

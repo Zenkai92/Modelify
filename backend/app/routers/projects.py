@@ -27,7 +27,8 @@ async def create_project_request(
     Créer une nouvelle demande de projet de modélisation 3D
     """
     # DEBUG LOGGING TO FILE
-    log_path = r"C:\Users\33761\Desktop\B3\Certification CDA\Modelify\backend\backend_debug.log"
+    import os
+    log_path = "backend_debug.log"
     try:
         with open(log_path, "a") as f:
             f.write(f"\n--- NEW REQUEST {datetime.utcnow()} ---\n")
