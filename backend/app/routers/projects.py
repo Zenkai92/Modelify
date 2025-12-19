@@ -90,11 +90,15 @@ async def create_project_request(
         raise HTTPException(status_code=500, detail=f"Erreur lors de la création du projet: {str(e)}")
 
 @router.get("/projects")
-async def get_all_projects():
+async def get_all_projects(userId: Optional[str] = None):
     """
-    Récupérer toutes les demandes de projets
+    Récupérer toutes les demandes de projets, optionnellement filtrées par userId
     """
-    result = supabase.table('Projects').select('*').execute()
+    query = supabase.table('Projects').select('*')
+    if userId:
+        query = query.eq('userId', userId)
+    
+    result = query.execute()
     return {"projects": result.data, "total": len(result.data)}
 
 @router.get("/projects/{projectId}")

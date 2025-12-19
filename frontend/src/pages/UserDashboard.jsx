@@ -1,102 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-
-const ProfileInfo = () => {
-  const { user } = useAuth();
-  
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-  
-  return (
-    <div className="card">
-      <div className="card-header">
-        <h3>Informations personnelles</h3>
-      </div>
-      <div className="card-body">
-        <form>
-          {user?.user_metadata?.role !== 'professionnel' && (
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Prénom</label>
-                <input type="text" className="form-control" value={user?.user_metadata?.firstName || ''} disabled />
-              </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label">Nom</label>
-                <input type="text" className="form-control" value={user?.user_metadata?.lastName || ''} disabled />
-              </div>
-            </div>
-          )}
-
-          {user?.user_metadata?.role === 'professionnel' && (
-            <div className="mb-3">
-              <label className="form-label">Nom de l'entreprise</label>
-              <input type="text" className="form-control" value={user?.user_metadata?.companyName || ''} disabled />
-            </div>
-          )}
-
-          <div className="mb-3">
-            <label className="form-label">Email</label>
-            <input type="email" className="form-control" value={user?.email || ''} disabled />
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Adresse</label>
-            <input type="text" className="form-control" value={user?.user_metadata?.address || ''} disabled />
-          </div>
-
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label className="form-label">Ville</label>
-              <input type="text" className="form-control" value={user?.user_metadata?.city || ''} disabled />
-            </div>
-            <div className="col-md-6 mb-3">
-              <label className="form-label">Code postal</label>
-              <input type="text" className="form-control" value={user?.user_metadata?.postalCode || ''} disabled />
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">Compte créé le</label>
-            <input type="text" className="form-control" value={formatDate(user?.created_at)} disabled />
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-const OrderStatus = () => {
-  return (
-    <div className="card">
-      <div className="card-header">
-        <h3>Status des commandes</h3>
-      </div>
-      <div className="card-body">
-        <p>Aucune commande en cours.</p>
-      </div>
-    </div>
-  );
-};
-
-const OrderHistory = () => {
-  return (
-    <div className="card">
-      <div className="card-header">
-        <h3>Historique des commandes</h3>
-      </div>
-      <div className="card-body">
-        <p>Aucun historique disponible.</p>
-      </div>
-    </div>
-  );
-};
+import PersonalInfoCard from '../components/dashboard/PersonalInfoCard';
+import OrderStatusCard from '../components/dashboard/OrderStatusCard';
+import HistoryCard from '../components/dashboard/HistoryCard';
 
 const UserDashboard = () => {
   const location = useLocation();
@@ -105,46 +11,66 @@ const UserDashboard = () => {
   const renderContent = () => {
     switch(currentPath) {
       case '/profile':
-        return <ProfileInfo />;
+        return <PersonalInfoCard />;
       case '/status-commandes':
-        return <OrderStatus />;
+        return <OrderStatusCard />;
       case '/historique-commandes':
-        return <OrderHistory />;
+        return <HistoryCard />;
       default:
-        return <ProfileInfo />;
+        return <PersonalInfoCard />;
     }
   };
 
   return (
-    <div className="container mt-5 mb-5">
-      <div className="row">
-        <div className="col-md-3 mb-4">
-          <div className="list-group">
-            <Link 
-              to="/profile" 
-              className={`list-group-item list-group-item-action ${currentPath === '/profile' ? 'active' : ''}`}
-            >
-              <i className="bi bi-person me-2"></i>
-              Informations personnelles
-            </Link>
-            <Link 
-              to="/status-commandes" 
-              className={`list-group-item list-group-item-action ${currentPath === '/status-commandes' ? 'active' : ''}`}
-            >
-              <i className="bi bi-activity me-2"></i>
-              Status des commandes
-            </Link>
-            <Link 
-              to="/historique-commandes" 
-              className={`list-group-item list-group-item-action ${currentPath === '/historique-commandes' ? 'active' : ''}`}
-            >
-              <i className="bi bi-clock-history me-2"></i>
-              Historiques des commandes
-            </Link>
-          </div>
+    <div>
+      {/* Header Section */}
+      <section className="hero-section text-center py-5" style={{ minHeight: '300px', paddingBottom: '100px' }}>
+        <div className="container position-relative" style={{ zIndex: 2 }}>
+          <h1 className="display-5 fw-bold text-white mb-2">Mon Espace</h1>
+          <p className="lead text-white-50">Gérez votre profil et vos projets</p>
         </div>
-        <div className="col-md-9">
-          {renderContent()}
+        <div className="custom-shape-divider-bottom">
+            <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="shape-fill"></path>
+            </svg>
+        </div>
+      </section>
+
+      <div className="container mb-5" style={{ marginTop: '-80px', position: 'relative', zIndex: 3 }}>
+        <div className="row">
+          <div className="col-md-3 mb-4">
+            <div className="card border-0 shadow-sm rounded-3 overflow-hidden">
+              <div className="list-group list-group-flush">
+                <Link 
+                  to="/profile" 
+                  className={`list-group-item list-group-item-action py-3 ${currentPath === '/profile' ? 'active' : ''}`}
+                  style={currentPath === '/profile' ? { backgroundColor: '#4e73df', borderColor: '#4e73df' } : {}}
+                >
+                  <i className="bi bi-person me-2"></i>
+                  Informations personnelles
+                </Link>
+                <Link 
+                  to="/status-commandes" 
+                  className={`list-group-item list-group-item-action py-3 ${currentPath === '/status-commandes' ? 'active' : ''}`}
+                  style={currentPath === '/status-commandes' ? { backgroundColor: '#4e73df', borderColor: '#4e73df' } : {}}
+                >
+                  <i className="bi bi-activity me-2"></i>
+                  Status des commandes
+                </Link>
+                <Link 
+                  to="/historique-commandes" 
+                  className={`list-group-item list-group-item-action py-3 ${currentPath === '/historique-commandes' ? 'active' : ''}`}
+                  style={currentPath === '/historique-commandes' ? { backgroundColor: '#4e73df', borderColor: '#4e73df' } : {}}
+                >
+                  <i className="bi bi-clock-history me-2"></i>
+                  Historiques des commandes
+                </Link>
+              </div>
+            </div>
+          </div>
+          <div className="col-md-9">
+            {renderContent()}
+          </div>
         </div>
       </div>
     </div>

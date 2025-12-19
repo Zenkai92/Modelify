@@ -9,6 +9,7 @@ import UserDashboard from './pages/UserDashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AuthCallback from './pages/auth/AuthCallback';
+import ProjectDetails from './pages/ProjectDetails';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -44,6 +45,12 @@ function App() {
             <Route path="/historique-commandes" element={
                 <ProtectedRoute>
                   <UserDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/projects/:projectId" element={
+                <ProtectedRoute>
+                  <ProjectDetails />
                 </ProtectedRoute>
               }
             />
