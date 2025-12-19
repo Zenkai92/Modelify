@@ -26,6 +26,19 @@ async def create_project_request(
     """
     Créer une nouvelle demande de projet de modélisation 3D
     """
+    # DEBUG LOGGING TO FILE
+    log_path = r"C:\Users\33761\Desktop\B3\Certification CDA\Modelify\backend\backend_debug.log"
+    try:
+        with open(log_path, "a") as f:
+            f.write(f"\n--- NEW REQUEST {datetime.utcnow()} ---\n")
+            f.write(f"Title: {title}\n")
+            f.write(f"Files received: {len(files) if files else 'None'}\n")
+            if files:
+                for file in files:
+                    f.write(f"File: {file.filename}, Content-Type: {file.content_type}\n")
+    except Exception as e:
+        print(f"Failed to write log: {e}")
+
     try:
         # Création de l'objet projet (sans ID, Supabase l'auto-génère)
         project_data = {
@@ -52,32 +65,57 @@ async def create_project_request(
             
             # Gestion des fichiers uploadés
             if files:
+                with open(log_path, "a") as f:
+                    f.write(f"Project created with ID: {projectId}. Processing {len(files)} files...\n")
+
                 for file in files:
                     try:
                         file_content = await file.read()
-                        file_ext = file.filename.split('.')[-1]
-                        # Nom de fichier unique : ID_PROJET/TIMESTAMP_NOM
-                        file_path = f"{projectId}/{datetime.utcnow().timestamp()}_{file.filename}"
+                        # Sanitize filename to avoid encoding issues
+                        import re
+                        clean_filename = re.sub(r'[^a-zA-Z0-9._-]', '', file.filename)
                         
+                        # Nom de fichier unique : ID_PROJET/TIMESTAMP_NOM
+                        file_path = f"{projectId}/{datetime.utcnow().timestamp()}_{clean_filename}"
+                        
+                        with open(log_path, "a") as f:
+                            f.write(f"Uploading file to path: {file_path}\n")
+
                         # Upload vers Supabase Storage
-                        supabase.storage.from_('project-images').upload(
+                        upload_response = supabase.storage.from_('project-images').upload(
                             file_path,
                             file_content,
                             {"content-type": file.content_type}
                         )
                         
+                        with open(log_path, "a") as f:
+                            f.write(f"Upload response: {upload_response}\n")
+
                         # Récupération de l'URL publique
                         public_url = supabase.storage.from_('project-images').get_public_url(file_path)
                         
+                        with open(log_path, "a") as f:
+                            f.write(f"Public URL: {public_url}\n")
+
+                        # Détermination du type de fichier
+                        content_type = file.content_type
+                        file_type = "image" if content_type.startswith("image/") else "document"
+
                         # Enregistrement dans la table ProjectsImages
-                        supabase.table('ProjectsImages').insert({
+                        insert_response = supabase.table('ProjectsImages').insert({
                             "projectId": projectId,
                             "fileUrl": public_url,
-                            "file_type": "image"
+                            "file_type": file_type
                         }).execute()
                         
+                        with open(log_path, "a") as f:
+                            f.write(f"DB Insert response: {insert_response}\n")
+                        
                     except Exception as upload_error:
-                        print(f"Erreur upload fichier {file.filename}: {str(upload_error)}")
+                        with open(log_path, "a") as f:
+                            f.write(f"ERROR processing file {file.filename}: {str(upload_error)}\n")
+                            import traceback
+                            f.write(traceback.format_exc() + "\n")
                         # On continue pour les autres fichiers même si un échoue
             
             return {
@@ -104,12 +142,20 @@ async def get_all_projects(userId: Optional[str] = None):
 @router.get("/projects/{projectId}")
 async def get_project(projectId: int):
     """
-    Récupérer une demande de projet spécifique
+    Récupérer une demande de projet spécifique avec ses images
     """
+    # Récupération du projet
     result = supabase.table('Projects').select('*').eq('id', projectId).execute()
     if not result.data:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
-    return result.data[0]
+    
+    project = result.data[0]
+    
+    # Récupération des images associées
+    images_result = supabase.table('ProjectsImages').select('*').eq('projectId', projectId).execute()
+    project['images'] = images_result.data if images_result.data else []
+    
+    return project
 
 @router.put("/projects/{projectId}/status")
 async def update_project_status(projectId: int, status: str):

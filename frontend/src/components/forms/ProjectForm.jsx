@@ -31,9 +31,11 @@ const ProjectForm = () => {
   const handleChange = (e) => {
     const { name, value, type, files, checked } = e.target;
     if (type === 'file') {
+      const fileArray = Array.from(files || []);
+      console.log("Files selected:", fileArray);
       setFormData(prev => ({
         ...prev,
-        [name]: Array.from(files)
+        [name]: fileArray
       }));
     } else if (type === 'checkbox') {
       setFormData(prev => ({
@@ -52,6 +54,9 @@ const ProjectForm = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
+    console.log("--- DEBUG SUBMIT ---");
+    console.log("Files in state:", formData.files);
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
@@ -69,10 +74,23 @@ const ProjectForm = () => {
           if (formData.dimensionHeight) formDataToSend.append('dimensionHeight', formData.dimensionHeight);
       }
 
-      if (formData.files) {
-        formData.files.forEach(file => {
+      if (formData.files && formData.files.length > 0) {
+        console.log(`Appending ${formData.files.length} files to FormData`);
+        formData.files.forEach((file, index) => {
+          console.log(`File ${index}:`, file.name, file.size, file.type);
           formDataToSend.append('files', file);
         });
+      } else {
+        console.log("No files to append");
+      }
+
+      // Log FormData entries for debugging
+      for (let pair of formDataToSend.entries()) {
+        if (pair[0] === 'files') {
+            console.log('FormData Entry: files', pair[1].name);
+        } else {
+            console.log('FormData Entry:', pair[0], pair[1]);
+        }
       }
 
       const response = await fetch('http://localhost:8000/api/projects', {
