@@ -1,10 +1,11 @@
 import React from 'react';
+import './FloatingShapes.css';
 
 const FloatingShapes = () => {
   return (
     <>
       {/* Définition du gradient pour les SVG */}
-      <svg style={{ width: 0, height: 0, position: 'absolute' }} aria-hidden="true" focusable="false">
+      <svg className="floating-shapes-defs" aria-hidden="true" focusable="false">
         <linearGradient id="gradient-fill" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#667eea" />
           <stop offset="100%" stopColor="#764ba2" />

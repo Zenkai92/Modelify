@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import './Navbar.css';
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -35,13 +36,12 @@ const Navbar = () => {
             {user ? (
               <li className="nav-item dropdown">
                 <a 
-                  className="nav-link dropdown-toggle text-white" 
+                  className="nav-link dropdown-toggle text-white navbar-cursor-pointer" 
                   href="#"
                   id="userDropdown" 
                   role="button" 
                   data-bs-toggle="dropdown" 
                   aria-expanded="false"
-                  style={{ cursor: 'pointer' }}
                 >
                   {user.user_metadata?.role === 'professionnel' 
                     ? user.user_metadata?.companyName 

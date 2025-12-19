@@ -1,5 +1,6 @@
 import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import './PersonalInfoCard.css';
 
 const PersonalInfoCard = () => {
   const { user } = useAuth();
@@ -16,7 +17,7 @@ const PersonalInfoCard = () => {
   return (
     <div className="card shadow-sm border-0 rounded-3">
       <div className="card-header bg-white border-bottom py-3">
-        <h5 className="mb-0 fw-bold" style={{ color: '#764ba2' }}>
+        <h5 className="mb-0 fw-bold personal-info-title">
           <i className="bi bi-person-circle me-2"></i>
           Informations personnelles
         </h5>

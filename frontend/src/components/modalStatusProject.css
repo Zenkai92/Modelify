@@ -1,0 +1,39 @@
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+}
+
+.modal-content-custom {
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.modal-gradient {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.status-icon-container {
+  width: 80px;
+  height: 80px;
+}
+
+.status-icon-success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.status-icon-error {
+  background-color: #ffebee;
+  color: #c62828;
+}
+
+.project-id-alert {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+}
+
+.project-id-text {
+  color: #667eea;
+  font-weight: bold;
+}

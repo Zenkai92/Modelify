@@ -1,10 +1,11 @@
 import React from 'react';
+import './HistoryCard.css';
 
 const HistoryCard = () => {
   return (
     <div className="card shadow-sm border-0 rounded-3">
       <div className="card-header bg-white border-bottom py-3">
-        <h5 className="mb-0 fw-bold" style={{ color: '#764ba2' }}>
+        <h5 className="mb-0 fw-bold history-card-title">
           <i className="bi bi-clock-history me-2"></i>
           Historique des commandes
         </h5>

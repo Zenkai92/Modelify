@@ -1,0 +1,17 @@
+.order-status-spinner {
+  color: #764ba2;
+}
+
+.order-status-title {
+  color: #764ba2;
+}
+
+.order-status-btn {
+  background-color: #764ba2;
+  border-color: #764ba2;
+  color: white;
+}
+
+.order-status-row {
+  cursor: pointer;
+}

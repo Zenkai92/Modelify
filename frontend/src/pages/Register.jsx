@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import FloatingShapes from '../components/FloatingShapes'
+import './Register.css'
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -112,22 +113,20 @@ const Register = () => {
       <h4 className="text-center mb-4">Je suis...</h4>
       <div className="d-flex justify-content-center gap-3">
         <div 
-          className={`card p-3 cursor-pointer ${formData.role === 'particulier' ? 'border-primary shadow' : ''}`}
-          style={{ cursor: 'pointer', width: '150px', borderColor: formData.role === 'particulier' ? '#764ba2' : '' }}
+          className={`card p-3 cursor-pointer register-role-card ${formData.role === 'particulier' ? 'border-primary shadow active' : ''}`}
           onClick={() => setFormData({...formData, role: 'particulier'})}
         >
           <div className="text-center">
-            <i className="bi bi-person fs-1 mb-2" style={{ color: '#764ba2' }}></i>
+            <i className="bi bi-person fs-1 mb-2 register-icon"></i>
             <h5 className="mb-0">Particulier</h5>
           </div>
         </div>
         <div 
-          className={`card p-3 cursor-pointer ${formData.role === 'professionnel' ? 'border-primary shadow' : ''}`}
-          style={{ cursor: 'pointer', width: '150px', borderColor: formData.role === 'professionnel' ? '#764ba2' : '' }}
+          className={`card p-3 cursor-pointer register-role-card ${formData.role === 'professionnel' ? 'border-primary shadow active' : ''}`}
           onClick={() => setFormData({...formData, role: 'professionnel'})}
         >
           <div className="text-center">
-            <i className="bi bi-building fs-1 mb-2" style={{ color: '#764ba2' }}></i>
+            <i className="bi bi-building fs-1 mb-2 register-icon"></i>
             <h5 className="mb-0">Entreprise</h5>
           </div>
         </div>
@@ -266,19 +265,19 @@ const Register = () => {
     <div className="auth-section">
       <FloatingShapes />
 
-      <div className="container position-relative" style={{ zIndex: 2 }}>
+      <div className="container position-relative register-container">
         <div className="row justify-content-center">
           <div className="col-md-8 col-lg-6">
             <div className="card shadow-lg border-0">
               <div className="card-body p-5">
-                <h2 className="card-title text-center mb-4 fw-bold" style={{ color: '#764ba2' }}>Inscription</h2>
+                <h2 className="card-title text-center mb-4 fw-bold register-title">Inscription</h2>
                 
                 {/* Progress Bar */}
-                <div className="progress mb-4" style={{ height: '5px' }}>
+                <div className="progress mb-4 register-progress">
                   <div
-                    className="progress-bar"
+                    className="progress-bar register-progress-bar"
                     role="progressbar"
-                    style={{ width: `${(step / 3) * 100}%`, backgroundColor: '#764ba2' }}
+                    style={{ width: `${(step / 3) * 100}%` }}
                     aria-valuenow={(step / 3) * 100}
                     aria-valuemin="0"
                     aria-valuemax="100"
@@ -310,18 +309,16 @@ const Register = () => {
                     {step < 3 ? (
                       <button
                         type="button"
-                        className="btn btn-primary ms-auto"
+                        className="btn btn-primary ms-auto register-btn"
                         onClick={handleNext}
-                        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}
                       >
                         Suivant
                       </button>
                     ) : (
                       <button
                         type="submit"
-                        className="btn btn-primary ms-auto"
+                        className="btn btn-primary ms-auto register-btn"
                         disabled={loading}
-                        style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', border: 'none' }}
                       >
                         {loading ? 'Inscription...' : 'S\'inscrire'}
                       </button>
@@ -332,7 +329,7 @@ const Register = () => {
                 <div className="text-center mt-4">
                   <p className="mb-0 text-muted">
                     Déjà un compte ?{' '}
-                    <Link to="/login" className="text-decoration-none fw-bold" style={{ color: '#764ba2' }}>
+                    <Link to="/login" className="text-decoration-none fw-bold register-link">
                       Se connecter
                     </Link>
                   </p>

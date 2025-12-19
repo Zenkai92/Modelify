@@ -54,7 +54,7 @@ const ProjectDetails = () => {
       <div className="alert alert-danger" role="alert">
         {error}
       </div>
-      <Link to="/dashboard" className="btn btn-primary">Retour au tableau de bord</Link>
+      <Link to="/status-commandes" className="btn btn-primary">Retour au tableau de bord</Link>
     </div>
   );
 
@@ -64,7 +64,7 @@ const ProjectDetails = () => {
     <div className="container mt-5 mb-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Détails du projet</h1>
-        <Link to="/dashboard" className="btn btn-outline-secondary">
+        <Link to="/status-commandes" className="btn btn-outline-secondary">
           <i className="bi bi-arrow-left"></i> Retour
         </Link>
       </div>

@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import './OrderStatusCard.css';
 
 const OrderStatusCard = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -40,7 +42,7 @@ const OrderStatusCard = () => {
   if (loading) return (
     <div className="card shadow-sm border-0 rounded-3">
       <div className="card-body p-5 text-center">
-        <div className="spinner-border" style={{ color: '#764ba2' }} role="status">
+        <div className="spinner-border order-status-spinner" role="status">
           <span className="visually-hidden">Chargement...</span>
         </div>
       </div>
@@ -58,7 +60,7 @@ const OrderStatusCard = () => {
   return (
     <div className="card shadow-sm border-0 rounded-3">
       <div className="card-header bg-white border-bottom py-3">
-        <h5 className="mb-0 fw-bold" style={{ color: '#764ba2' }}>
+        <h5 className="mb-0 fw-bold order-status-title">
           <i className="bi bi-activity me-2"></i>
           Status des commandes
         </h5>
@@ -68,7 +70,7 @@ const OrderStatusCard = () => {
           <div className="p-5 text-center text-muted">
             <i className="bi bi-inbox display-4 d-block mb-3"></i>
             <p className="mb-3">Aucune commande en cours.</p>
-            <Link to="/demande-projet" className="btn text-white" style={{ backgroundColor: '#764ba2', borderColor: '#764ba2' }}>
+            <Link to="/demande-projet" className="btn text-white order-status-btn">
               <i className="bi bi-plus-lg me-2"></i>
               Créer une nouvelle demande
             </Link>
@@ -85,11 +87,15 @@ const OrderStatusCard = () => {
               </thead>
               <tbody>
                 {projects.map((project) => (
-                  <tr key={project.id}>
+                  <tr 
+                    key={project.id} 
+                    onClick={() => navigate(`/projects/${project.id}`)}
+                    className="order-status-row"
+                  >
                     <td className="ps-4">
-                      <Link to={`/projects/${project.id}`} className="text-decoration-none fw-bold text-dark">
+                      <span className="fw-bold text-dark">
                         {project.title}
-                      </Link>
+                      </span>
                     </td>
                     <td>{formatDate(project.createdAt)}</td>
                     <td className="pe-4">

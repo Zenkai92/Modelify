@@ -1,0 +1,37 @@
+.register-role-card {
+  cursor: pointer;
+  width: 150px;
+}
+
+.register-role-card.active {
+  border-color: #764ba2 !important;
+}
+
+.register-icon {
+  color: #764ba2;
+}
+
+.register-container {
+  z-index: 2;
+}
+
+.register-title {
+  color: #764ba2;
+}
+
+.register-progress {
+  height: 5px;
+}
+
+.register-progress-bar {
+  background-color: #764ba2;
+}
+
+.register-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+}
+
+.register-link {
+  color: #764ba2;
+}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import FloatingShapes from '../components/FloatingShapes';
+import './Home.css';
 
 const Home = () => {
   return (
@@ -8,7 +9,7 @@ const Home = () => {
       {/* Section Hero */}
       <section className="hero-section text-center">
         
-        <div className="container position-relative" style={{ zIndex: 2 }}>
+        <div className="container position-relative home-hero-content">
           <div className="row">
             <div className="col-lg-8 mx-auto">
               <h1 className="display-4 fw-bold mb-4">

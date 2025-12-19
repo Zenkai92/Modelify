@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import ModalStatusProject from '../modalStatusProject';
+import './ProjectForm.css';
 
 const ProjectForm = () => {
   const { user } = useAuth();
@@ -143,7 +144,7 @@ const ProjectForm = () => {
   return (
     <>
       <div className="mb-4">
-        <div className="progress" style={{ height: '20px' }}>
+        <div className="progress project-form-progress">
           <div 
             className="progress-bar" 
             role="progressbar" 

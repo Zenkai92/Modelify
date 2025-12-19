@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import PersonalInfoCard from '../components/dashboard/PersonalInfoCard';
 import OrderStatusCard from '../components/dashboard/OrderStatusCard';
 import HistoryCard from '../components/dashboard/HistoryCard';
+import './UserDashboard.css';
 
 const UserDashboard = () => {
   const location = useLocation();
@@ -24,8 +25,8 @@ const UserDashboard = () => {
   return (
     <div>
       {/* Header Section */}
-      <section className="hero-section text-center py-5" style={{ minHeight: '300px', paddingBottom: '100px' }}>
-        <div className="container position-relative" style={{ zIndex: 2 }}>
+      <section className="hero-section text-center py-5 dashboard-hero">
+        <div className="container position-relative dashboard-hero-content">
           <h1 className="display-5 fw-bold text-white mb-2">Mon Espace</h1>
           <p className="lead text-white-50">Gérez votre profil et vos projets</p>
         </div>
@@ -36,31 +37,28 @@ const UserDashboard = () => {
         </div>
       </section>
 
-      <div className="container mb-5" style={{ marginTop: '-80px', position: 'relative', zIndex: 3 }}>
+      <div className="container mb-5 dashboard-content-container">
         <div className="row">
           <div className="col-md-3 mb-4">
             <div className="card border-0 shadow-sm rounded-3 overflow-hidden">
               <div className="list-group list-group-flush">
                 <Link 
                   to="/profile" 
-                  className={`list-group-item list-group-item-action py-3 ${currentPath === '/profile' ? 'active' : ''}`}
-                  style={currentPath === '/profile' ? { backgroundColor: '#4e73df', borderColor: '#4e73df' } : {}}
+                  className={`list-group-item list-group-item-action py-3 dashboard-nav-link ${currentPath === '/profile' ? 'active' : ''}`}
                 >
                   <i className="bi bi-person me-2"></i>
                   Informations personnelles
                 </Link>
                 <Link 
                   to="/status-commandes" 
-                  className={`list-group-item list-group-item-action py-3 ${currentPath === '/status-commandes' ? 'active' : ''}`}
-                  style={currentPath === '/status-commandes' ? { backgroundColor: '#4e73df', borderColor: '#4e73df' } : {}}
+                  className={`list-group-item list-group-item-action py-3 dashboard-nav-link ${currentPath === '/status-commandes' ? 'active' : ''}`}
                 >
                   <i className="bi bi-activity me-2"></i>
                   Status des commandes
                 </Link>
                 <Link 
                   to="/historique-commandes" 
-                  className={`list-group-item list-group-item-action py-3 ${currentPath === '/historique-commandes' ? 'active' : ''}`}
-                  style={currentPath === '/historique-commandes' ? { backgroundColor: '#4e73df', borderColor: '#4e73df' } : {}}
+                  className={`list-group-item list-group-item-action py-3 dashboard-nav-link ${currentPath === '/historique-commandes' ? 'active' : ''}`}
                 >
                   <i className="bi bi-clock-history me-2"></i>
                   Historiques des commandes
