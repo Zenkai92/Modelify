@@ -97,7 +97,7 @@ const OrderStatusCard = () => {
                         {project.title}
                       </span>
                     </td>
-                    <td>{formatDate(project.createdAt)}</td>
+                    <td>{formatDate(project.created_at)}</td>
                     <td className="pe-4">
                       <span className={`badge rounded-pill ${
                         project.status === 'terminé' ? 'bg-success' : 

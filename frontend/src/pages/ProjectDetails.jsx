@@ -165,7 +165,7 @@ const ProjectDetails = () => {
                   </div>
                   
                   <div className="status-date">
-                    Mis à jour le {formatDate(project.updated_at || project.createdAt)}
+                    Mis à jour le {formatDate(project.updatedAt || project.created_at)}
                   </div>
                 </div>
 
@@ -173,7 +173,7 @@ const ProjectDetails = () => {
 
                 <div className="mb-3">
                   <div className="detail-label">Date de création</div>
-                  <div className="detail-value fs-6">{formatDate(project.createdAt)}</div>
+                  <div className="detail-value fs-6">{formatDate(project.created_at)}</div>
                 </div>
               </div>
             </div>

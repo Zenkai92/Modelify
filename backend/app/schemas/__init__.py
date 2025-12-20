@@ -15,7 +15,7 @@ class ProjectRequestCreate(ProjectRequestBase):
     pass
 
 class ProjectRequestResponse(ProjectRequestBase):
-    id: int
+    id: str
     created_at: datetime
     status: str = "pending"
     

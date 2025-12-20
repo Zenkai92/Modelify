@@ -55,7 +55,7 @@ async def create_project_request(
             "dimensionNoConstraint": dimensionNoConstraint,
             "detailLevel": detailLevel,
             "status": "en attente",
-            "createdAt": datetime.utcnow().date().isoformat()  # .date() pour obtenir seulement YYYY-MM-DD
+            "created_at": datetime.utcnow().date().isoformat()  # .date() pour obtenir seulement YYYY-MM-DD
         }
         
         # Sauvegarde en Supabase
@@ -141,7 +141,7 @@ async def get_all_projects(userId: Optional[str] = None):
     return {"projects": result.data, "total": len(result.data)}
 
 @router.get("/projects/{projectId}")
-async def get_project(projectId: int):
+async def get_project(projectId: str):
     """
     Récupérer une demande de projet spécifique avec ses images
     """
@@ -159,7 +159,7 @@ async def get_project(projectId: int):
     return project
 
 @router.put("/projects/{projectId}/status")
-async def update_project_status(projectId: int, status: str):
+async def update_project_status(projectId: str, status: str):
     """
     Mettre à jour le statut d'un projet
     """
