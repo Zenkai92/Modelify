@@ -1,10 +1,12 @@
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import ModalStatusProject from '../modalStatusProject';
 import './ProjectForm.css';
 
 const ProjectForm = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     title: '',
@@ -27,6 +29,14 @@ const ProjectForm = () => {
     projectId: null,
     message: ''
   });
+
+  const getUnit = (value) => {
+    const val = parseFloat(value);
+    if (isNaN(val)) return '';
+    if (val >= 0.01 && val < 1) return 'mm';
+    if (val >= 1) return 'cm';
+    return '';
+  };
 
   const handleChange = (e) => {
     const { name, value, type, files, checked } = e.target;
@@ -144,6 +154,9 @@ const ProjectForm = () => {
   };
 
   const closeModal = () => {
+    if (modalState.status === 'success') {
+      navigate('/');
+    }
     setModalState({ ...modalState, show: false });
   };
 
@@ -217,7 +230,6 @@ const ProjectForm = () => {
                   onChange={handleChange}
                   required
                 >
-                  <option value="">Sélectionnez un type</option>
                   <option value="professionnel">Professionnel</option>
                   <option value="personnel">Personnel</option>
                 </select>
@@ -287,7 +299,7 @@ const ProjectForm = () => {
                     checked={formData.nbElements === 'unique'}
                     onChange={handleChange}
                   />
-                  <label className="form-check-label" htmlFor="nbUnique">Unique</label>
+                  <label className="form-check-label" htmlFor="nbUnique">Objet unique monobloc</label>
                 </div>
                 <div className="form-check form-check-inline">
                   <input
@@ -299,7 +311,7 @@ const ProjectForm = () => {
                     checked={formData.nbElements === 'multiple'}
                     onChange={handleChange}
                   />
-                  <label className="form-check-label" htmlFor="nbMultiple">Multiple</label>
+                  <label className="form-check-label" htmlFor="nbMultiple">Plusieurs pièces assemblées</label>
                 </div>
               </div>
             </div>
@@ -321,7 +333,7 @@ const ProjectForm = () => {
               </div>
               {!formData.dimensionNoConstraint && (
                 <div className="row">
-                  <div className="col-md-4 mb-2">
+                  <div className="col-md-4 mb-2 position-relative">
                     <input
                       type="number"
                       className="form-control"
@@ -331,8 +343,9 @@ const ProjectForm = () => {
                       onChange={handleChange}
                       step="0.01"
                     />
+                    <span className="unit-indicator text-muted">{getUnit(formData.dimensionLength)}</span>
                   </div>
-                  <div className="col-md-4 mb-2">
+                  <div className="col-md-4 mb-2 position-relative">
                     <input
                       type="number"
                       className="form-control"
@@ -342,8 +355,9 @@ const ProjectForm = () => {
                       onChange={handleChange}
                       step="0.01"
                     />
+                    <span className="unit-indicator text-muted">{getUnit(formData.dimensionWidth)}</span>
                   </div>
-                  <div className="col-md-4 mb-2">
+                  <div className="col-md-4 mb-2 position-relative">
                     <input
                       type="number"
                       className="form-control"
@@ -353,6 +367,7 @@ const ProjectForm = () => {
                       onChange={handleChange}
                       step="0.01"
                     />
+                    <span className="unit-indicator text-muted">{getUnit(formData.dimensionHeight)}</span>
                   </div>
                 </div>
               )}

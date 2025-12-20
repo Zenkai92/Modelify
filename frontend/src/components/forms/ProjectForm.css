@@ -1,3 +1,12 @@
 .project-form-progress {
   height: 20px;
 }
+
+.unit-indicator {
+  position: absolute;
+  right: 45px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  font-weight: 500;
+}
