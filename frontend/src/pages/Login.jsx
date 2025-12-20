@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import FloatingShapes from '../components/FloatingShapes'
 import './Login.css'
@@ -11,6 +11,8 @@ const Login = () => {
   const [error, setError] = useState('')
   const { signIn, user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const message = location.state?.message
 
   // Rediriger si déjà connecté
   if (user) {
@@ -45,6 +47,12 @@ const Login = () => {
               <div className="card-body p-5">
                 <h2 className="card-title text-center mb-4 fw-bold login-title">Connexion</h2>
                 
+                {message && (
+                  <div className="alert alert-success" role="alert">
+                    {message}
+                  </div>
+                )}
+
                 {error && (
                   <div className="alert alert-danger" role="alert">
                     {error}

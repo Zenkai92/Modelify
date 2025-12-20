@@ -20,6 +20,7 @@ const Register = () => {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [confirmTouched, setConfirmTouched] = useState(false)
   const { signUp, user } = useAuth()
   const navigate = useNavigate()
 
@@ -213,8 +214,15 @@ const Register = () => {
             name="confirmPassword"
             value={formData.confirmPassword}
             onChange={handleChange}
+            onBlur={() => setConfirmTouched(true)}
+            onFocus={() => setConfirmTouched(false)}
             required
           />
+          {confirmTouched && formData.confirmPassword && formData.password !== formData.confirmPassword && (
+            <div className="text-danger small mt-1">
+              Les mots de passe ne correspondent pas
+            </div>
+          )}
         </div>
       </div>
     </>
