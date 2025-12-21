@@ -1,8 +1,15 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Select from 'react-select';
 import { useAuth } from '../../contexts/AuthContext';
 import ModalStatusProject from '../modalStatusProject';
 import './ProjectForm.css';
+
+const detailLevelOptions = [
+  { value: 'basique', label: <span><strong>Volumique</strong> - Formes simples pour valider les proportions</span> },
+  { value: 'standard', label: <span><strong>Intermédiaire</strong> - Modèle fonctionnel avec détails essentiels</span> },
+  { value: 'hd', label: <span><strong>Avancé</strong> - haute fidélité et détails soignés</span> }
+];
 
 const ProjectForm = () => {
   const { user } = useAuth();
@@ -11,7 +18,7 @@ const ProjectForm = () => {
   const [formData, setFormData] = useState({
     title: '',
     descriptionClient: '',
-    typeProject: '',
+    typeProject: user?.user_metadata?.role === 'professionnel' ? 'professionnel' : 'personnel',
     goal: '',
     files: [],
     nbElements: 'unique',
@@ -126,7 +133,7 @@ const ProjectForm = () => {
       setFormData({
         title: '',
         descriptionClient: '',
-        typeProject: '',
+        typeProject: user?.user_metadata?.role === 'professionnel' ? 'professionnel' : 'personnel',
         goal: '',
         files: [],
         nbElements: 'unique',
@@ -162,7 +169,7 @@ const ProjectForm = () => {
 
   const nextStep = () => {
     if (step === 1) {
-      if (!formData.title || !formData.descriptionClient || !formData.typeProject || !formData.goal) {
+      if (!formData.title || !formData.descriptionClient || !formData.goal) {
         alert("Veuillez remplir tous les champs obligatoires");
         return;
       }
@@ -192,6 +199,7 @@ const ProjectForm = () => {
       <form onSubmit={handleSubmit}>
         {step === 1 && (
           <>
+            <h3 className="mb-4">Informations générales</h3>
             <div className="mb-3">
               <label htmlFor="title" className="form-label">Titre du projet *</label>
               <input
@@ -219,34 +227,24 @@ const ProjectForm = () => {
               ></textarea>
             </div>
 
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label htmlFor="typeProject" className="form-label">Type de projet *</label>
-                <select
-                  className="form-select"
-                  id="typeProject"
-                  name="typeProject"
-                  value={formData.typeProject}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="professionnel">Professionnel</option>
-                  <option value="personnel">Personnel</option>
-                </select>
-              </div>
-              <div className="col-md-6 mb-3">
-                <label htmlFor="goal" className="form-label">Quel est l'objectif ? *</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  id="goal"
-                  name="goal"
-                  value={formData.goal}
-                  onChange={handleChange}
-                  placeholder="Ex: Visualisation, Impression 3D, etc."
-                  required
-                />
-              </div>
+            <div className="mb-3">
+              <label htmlFor="goal" className="form-label">Usage final du modèle *</label>
+              <select
+                className="form-select"
+                id="goal"
+                name="goal"
+                value={formData.goal}
+                onChange={handleChange}
+                required
+              >
+                <option value="">Sélectionnez un usage...</option>
+                <option value="personnel">Usage personnel</option>
+                <option value="personnel">Usage éducatif/pédagogique</option>
+                <option value="personnel">Usage créatif/artistique</option>
+                <option value="commercial">Usage événementiel</option>
+                <option value="commercial">Usage lié aux jeux/divertissement</option>
+                <option value="commercial">Usage commercial</option>
+              </select>
             </div>
 
             <div className="mb-3">
@@ -286,6 +284,7 @@ const ProjectForm = () => {
 
         {step === 2 && (
           <>
+            <h3 className="mb-4">Caractéristiques du modèle</h3>
             <div className="mb-3">
               <label className="form-label">Nombre d'éléments à modéliser</label>
               <div>
@@ -374,17 +373,20 @@ const ProjectForm = () => {
             </div>
 
             <div className="mb-3">
-              <label className="form-label">Niveau de détail souhaité</label>
-              <select
-                className="form-select"
-                name="detailLevel"
-                value={formData.detailLevel}
-                onChange={handleChange}
-              >
-                <option value="basique">Basique</option>
-                <option value="standard">Standard</option>
-                <option value="hd">HD</option>
-              </select>
+              <label className="form-label">Complexité du modèle</label>
+              <Select
+                options={detailLevelOptions}
+                value={detailLevelOptions.find(option => option.value === formData.detailLevel)}
+                onChange={(selectedOption) => {
+                  setFormData(prev => ({
+                    ...prev,
+                    detailLevel: selectedOption.value
+                  }));
+                }}
+                placeholder="Sélectionnez un niveau de détail"
+                className="react-select-container"
+                classNamePrefix="react-select"
+              />
             </div>
 
             <div className="d-flex justify-content-between">
