@@ -1,0 +1,27 @@
+.project-request-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding-bottom: 120px;
+  position: relative;
+  overflow: hidden;
+}
+
+.project-request-header .custom-shape-divider-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+  transform: rotate(180deg);
+}
+
+.project-request-header .custom-shape-divider-bottom svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 80px;
+}
+
+.project-request-header .custom-shape-divider-bottom .shape-fill {
+  fill: #ffffff;
+}

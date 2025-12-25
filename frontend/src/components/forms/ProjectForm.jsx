@@ -207,6 +207,10 @@ const ProjectForm = () => {
   return (
     <>
       <div className="mb-4">
+        <div className="d-flex justify-content-between mb-2">
+            <span className="fw-bold step-label">Étape {step} sur 4</span>
+            <span className="text-muted">{step === 1 ? '25%' : step === 2 ? '50%' : step === 3 ? '75%' : '100%'}</span>
+        </div>
         <div className="progress project-form-progress">
           <div 
             className="progress-bar" 
@@ -216,7 +220,6 @@ const ProjectForm = () => {
             aria-valuemin="0" 
             aria-valuemax="100"
           >
-            Étape {step} / 4
           </div>
         </div>
       </div>

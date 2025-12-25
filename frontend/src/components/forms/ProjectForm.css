@@ -1,12 +1,128 @@
 .project-form-progress {
-  height: 20px;
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  margin-bottom: 2.5rem;
+  overflow: hidden;
+}
+
+.project-form-progress .progress-bar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  transition: width 0.5s ease;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.form-control, .form-select {
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  border: 1px solid #cbd5e0;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(118, 75, 162, 0.3);
+  background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+}
+
+.btn-primary:disabled {
+  background: #cbd5e0;
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-secondary {
+  background: #edf2f7;
+  color: #4a5568;
+  border: none;
+  padding: 0.75rem 2rem;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+  color: #2d3748;
+}
+
+/* Cards for selection (Format, etc) */
+.card {
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.card.border-primary {
+  border-color: #667eea !important;
+  background-color: #f7fafc !important;
+}
+
+.card:hover {
+  border-color: #b794f4;
+  transform: translateY(-2px);
+}
+
+.form-check-input:checked {
+  background-color: #667eea;
+  border-color: #667eea;
 }
 
 .unit-indicator {
   position: absolute;
-  right: 45px;
+  right: 15px;
   top: 50%;
   transform: translateY(-50%);
-  pointer-events: none;
+  color: #718096;
   font-weight: 500;
+  pointer-events: none;
+}
+
+h3 {
+  color: #2d3748;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+}
+
+.text-muted {
+  color: #718096 !important;
+}
+
+/* React Select Customization */
+.react-select__control {
+  border-radius: 8px !important;
+  border-color: #cbd5e0 !important;
+  padding: 2px;
+}
+
+.react-select__control--is-focused {
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 1px #667eea !important;
+}
+
+.react-select__option--is-selected {
+  background-color: #667eea !important;
+}
+
+.react-select__option--is-focused {
+  background-color: #ebf4ff !important;
 }
