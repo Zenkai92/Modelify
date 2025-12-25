@@ -26,7 +26,10 @@ const ProjectForm = () => {
     dimensionWidth: '',
     dimensionHeight: '',
     dimensionNoConstraint: false,
-    detailLevel: 'standard'
+    detailLevel: 'standard',
+    deadlineType: '',
+    deadlineDate: '',
+    budget: ''
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -84,12 +87,6 @@ const ProjectForm = () => {
     console.log("--- DEBUG SUBMIT ---");
     console.log("Files in state:", formData.files);
 
-    if (formData.format.length === 0) {
-        alert("Veuillez sélectionner au moins un format de fichier");
-        setIsSubmitting(false);
-        return;
-    }
-
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
@@ -100,6 +97,9 @@ const ProjectForm = () => {
       formDataToSend.append('nbElements', formData.nbElements);
       formDataToSend.append('detailLevel', formData.detailLevel);
       formDataToSend.append('dimensionNoConstraint', formData.dimensionNoConstraint);
+      formDataToSend.append('deadlineType', formData.deadlineType);
+      if (formData.deadlineDate) formDataToSend.append('deadlineDate', formData.deadlineDate);
+      formDataToSend.append('budget', formData.budget);
       
       if (!formData.dimensionNoConstraint) {
           if (formData.dimensionLength) formDataToSend.append('dimensionLength', formData.dimensionLength);
@@ -157,7 +157,10 @@ const ProjectForm = () => {
         dimensionWidth: '',
         dimensionHeight: '',
         dimensionNoConstraint: false,
-        detailLevel: 'standard'
+        detailLevel: 'standard',
+        deadlineType: '',
+        deadlineDate: '',
+        budget: ''
       });
       
       const fileInput = document.getElementById('files');
@@ -190,6 +193,12 @@ const ProjectForm = () => {
         return;
       }
     }
+    if (step === 3) {
+      if (formData.format.length === 0) {
+        alert("Veuillez sélectionner au moins un format de fichier");
+        return;
+      }
+    }
     setStep(step + 1);
   };
 
@@ -202,12 +211,12 @@ const ProjectForm = () => {
           <div 
             className="progress-bar" 
             role="progressbar" 
-            style={{ width: step === 1 ? '33%' : step === 2 ? '66%' : '100%' }}
-            aria-valuenow={step === 1 ? 33 : step === 2 ? 66 : 100} 
+            style={{ width: step === 1 ? '25%' : step === 2 ? '50%' : step === 3 ? '75%' : '100%' }}
+            aria-valuenow={step === 1 ? 25 : step === 2 ? 50 : step === 3 ? 75 : 100} 
             aria-valuemin="0" 
             aria-valuemax="100"
           >
-            Étape {step} / 3
+            Étape {step} / 4
           </div>
         </div>
       </div>
@@ -431,7 +440,7 @@ const ProjectForm = () => {
             
             <div className="mb-4">
               <div className="row g-3">
-                {['STL', 'OBJ', 'STEP', 'IGES'].map((format) => (
+                {['STL', 'OBJ', 'F3D'].map((format) => (
                   <div className="col-md-6" key={format}>
                     <div className={`card h-100 ${formData.format.includes(format) ? 'border-primary bg-light' : ''}`}>
                       <div className="card-body">
@@ -454,6 +463,119 @@ const ProjectForm = () => {
                   </div>
                 ))}
               </div>
+            </div>
+
+            <div className="d-flex justify-content-between mt-5">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={prevStep}
+              >
+                Précédent
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-lg"
+                onClick={nextStep}
+              >
+                Suivant
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 4 && (
+          <>
+            <h3 className="mb-4">Délais et Budget</h3>
+            
+            <div className="mb-4">
+              <label className="form-label fw-bold">Avez-vous une date limite ? *</label>
+              <div className="form-check mb-2">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="deadlineType"
+                  id="deadlineUrgent"
+                  value="urgent"
+                  checked={formData.deadlineType === 'urgent'}
+                  onChange={handleChange}
+                  required
+                />
+                <label className="form-check-label" htmlFor="deadlineUrgent">
+                  Oui, c'est urgent (préciser la date ci-dessous)
+                </label>
+              </div>
+              <div className="form-check mb-2">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="deadlineType"
+                  id="deadlineFlexible"
+                  value="flexible"
+                  checked={formData.deadlineType === 'flexible'}
+                  onChange={handleChange}
+                />
+                <label className="form-check-label" htmlFor="deadlineFlexible">
+                  Oui, mais je suis flexible (préciser la date souhaitée ci-dessous)
+                </label>
+              </div>
+              <div className="form-check mb-2">
+                <input
+                  className="form-check-input"
+                  type="radio"
+                  name="deadlineType"
+                  id="deadlineNone"
+                  value="none"
+                  checked={formData.deadlineType === 'none'}
+                  onChange={handleChange}
+                />
+                <label className="form-check-label" htmlFor="deadlineNone">
+                  Non, pas de contrainte de délai
+                </label>
+              </div>
+            </div>
+
+            {(formData.deadlineType === 'urgent' || formData.deadlineType === 'flexible') && (
+              <div className="mb-4">
+                <label htmlFor="deadlineDate" className="form-label">Date limite souhaitée</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  id="deadlineDate"
+                  name="deadlineDate"
+                  value={formData.deadlineDate}
+                  onChange={handleChange}
+                  required
+                />
+              </div>
+            )}
+
+            <div className="mb-4">
+              <label className="form-label fw-bold">Budget indicatif *</label>
+              {[
+                { value: 'less_100', label: 'Moins de 100€' },
+                { value: '100_300', label: '100€ - 300€' },
+                { value: '300_500', label: '300€ - 500€' },
+                { value: '500_1000', label: '500€ - 1000€' },
+                { value: 'more_1000', label: 'Plus de 1000€' },
+                { value: 'discuss', label: 'À discuter' }
+              ].map((option) => (
+                <div className="form-check mb-2" key={option.value}>
+                  <input
+                    className="form-check-input"
+                    type="radio"
+                    name="budget"
+                    id={`budget-${option.value}`}
+                    value={option.value}
+                    checked={formData.budget === option.value}
+                    onChange={handleChange}
+                    required
+                  />
+                  <label className="form-check-label" htmlFor={`budget-${option.value}`}>
+                    {option.label}
+                  </label>
+                </div>
+              ))}
             </div>
 
             <div className="d-flex justify-content-between mt-5">

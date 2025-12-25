@@ -147,6 +147,38 @@ const ProjectDetails = () => {
                       </div>
                     </div>
                   </div>
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <div className="detail-label">Budget indicatif</div>
+                      <div className="detail-value">
+                        {(() => {
+                          const budgets = {
+                            'less_100': 'Moins de 100€',
+                            '100_300': '100€ - 300€',
+                            '300_500': '300€ - 500€',
+                            '500_1000': '500€ - 1000€',
+                            'more_1000': 'Plus de 1000€',
+                            'discuss': 'À discuter'
+                          };
+                          return budgets[project.budget] || project.budget || '-';
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <div className="detail-label">Délai souhaité</div>
+                      <div className="detail-value">
+                        {(() => {
+                           if (!project.deadlineType || project.deadlineType === 'none') return 'Pas de contrainte';
+                           const dateStr = project.deadlineDate ? new Date(project.deadlineDate).toLocaleDateString() : '';
+                           if (project.deadlineType === 'urgent') return <span className="text-danger fw-bold"><i className="bi bi-exclamation-circle"></i> Urgent ({dateStr})</span>;
+                           if (project.deadlineType === 'flexible') return `Flexible (${dateStr})`;
+                           return project.deadlineType;
+                        })()}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

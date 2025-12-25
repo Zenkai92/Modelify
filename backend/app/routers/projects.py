@@ -21,6 +21,9 @@ async def create_project_request(
     dimensionHeight: Optional[float] = Form(None),
     dimensionNoConstraint: bool = Form(False),
     detailLevel: str = Form("standard"),
+    deadlineType: Optional[str] = Form(None),
+    deadlineDate: Optional[str] = Form(None),
+    budget: Optional[str] = Form(None),
     files: List[UploadFile] = File(None)
 ):
     """
@@ -54,6 +57,9 @@ async def create_project_request(
             "dimensionHeight": dimensionHeight,
             "dimensionNoConstraint": dimensionNoConstraint,
             "detailLevel": detailLevel,
+            "deadlineType": deadlineType,
+            "deadlineDate": deadlineDate,
+            "budget": budget,
             "status": "en attente",
             "created_at": datetime.utcnow().date().isoformat()  # .date() pour obtenir seulement YYYY-MM-DD
         }
