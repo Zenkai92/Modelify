@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import PersonalInfoCard from '../components/dashboard/PersonalInfoCard';
 import OrderStatusCard from '../components/dashboard/OrderStatusCard';
-import HistoryCard from '../components/dashboard/HistoryCard';
 import './UserDashboard.css';
 
 const UserDashboard = () => {
@@ -15,8 +14,6 @@ const UserDashboard = () => {
         return <PersonalInfoCard />;
       case '/status-commandes':
         return <OrderStatusCard />;
-      case '/historique-commandes':
-        return <HistoryCard />;
       default:
         return <PersonalInfoCard />;
     }
@@ -55,13 +52,6 @@ const UserDashboard = () => {
                 >
                   <i className="bi bi-activity me-2"></i>
                   Status des commandes
-                </Link>
-                <Link 
-                  to="/historique-commandes" 
-                  className={`list-group-item list-group-item-action py-3 dashboard-nav-link ${currentPath === '/historique-commandes' ? 'active' : ''}`}
-                >
-                  <i className="bi bi-clock-history me-2"></i>
-                  Historiques des commandes
                 </Link>
               </div>
             </div>

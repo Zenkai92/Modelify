@@ -42,12 +42,6 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route path="/historique-commandes" element={
-                <ProtectedRoute>
-                  <UserDashboard />
-                </ProtectedRoute>
-              }
-            />
             <Route path="/projects/:projectId" element={
                 <ProtectedRoute>
                   <ProjectDetails />

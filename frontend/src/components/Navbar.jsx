@@ -60,12 +60,6 @@ const Navbar = () => {
                       Status des commandes
                     </Link>
                   </li>
-                  <li>
-                    <Link className="dropdown-item" to="/historique-commandes">
-                      <i className="bi bi-clock-history me-2"></i>
-                      Historiques des commandes
-                    </Link>
-                  </li>
                   <li><hr className="dropdown-divider" /></li>
                   <li>
                     <button 
