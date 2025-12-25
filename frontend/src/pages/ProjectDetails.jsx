@@ -91,17 +91,11 @@ const ProjectDetails = () => {
                 </div>
 
                 <div className="mb-5">
-                  <h5 className="section-title"><i className="bi bi-bullseye"></i> Objectif</h5>
-                  <p className="card-text text-muted">{project.goal}</p>
+                  <h5 className="section-title"><i className="bi bi-bullseye"></i> Usage</h5>
+                  <p className="card-text text-muted">{project.use}</p>
                 </div>
 
                 <div className="row g-4">
-                  <div className="col-md-6">
-                    <div className="mb-3">
-                      <div className="detail-label">Type de projet</div>
-                      <div className="detail-value">{project.typeProject}</div>
-                    </div>
-                  </div>
                   <div className="col-md-6">
                     <div className="mb-3">
                       <div className="detail-label">Niveau de détail</div>

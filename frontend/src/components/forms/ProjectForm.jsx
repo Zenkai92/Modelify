@@ -18,8 +18,7 @@ const ProjectForm = () => {
   const [formData, setFormData] = useState({
     title: '',
     descriptionClient: '',
-    typeProject: user?.user_metadata?.role === 'professionnel' ? 'professionnel' : 'personnel',
-    goal: '',
+    use: '',
     files: [],
     nbElements: 'unique',
     dimensionLength: '',
@@ -78,8 +77,7 @@ const ProjectForm = () => {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
       formDataToSend.append('descriptionClient', formData.descriptionClient);
-      formDataToSend.append('typeProject', formData.typeProject);
-      formDataToSend.append('goal', formData.goal);
+      formDataToSend.append('use', formData.use);
       formDataToSend.append('userId', user.id);
       formDataToSend.append('nbElements', formData.nbElements);
       formDataToSend.append('detailLevel', formData.detailLevel);
@@ -133,8 +131,7 @@ const ProjectForm = () => {
       setFormData({
         title: '',
         descriptionClient: '',
-        typeProject: user?.user_metadata?.role === 'professionnel' ? 'professionnel' : 'personnel',
-        goal: '',
+        use: '',
         files: [],
         nbElements: 'unique',
         dimensionLength: '',
@@ -169,7 +166,7 @@ const ProjectForm = () => {
 
   const nextStep = () => {
     if (step === 1) {
-      if (!formData.title || !formData.descriptionClient || !formData.goal) {
+      if (!formData.title || !formData.descriptionClient || !formData.use) {
         alert("Veuillez remplir tous les champs obligatoires");
         return;
       }
@@ -228,22 +225,22 @@ const ProjectForm = () => {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="goal" className="form-label">Usage final du modèle *</label>
+              <label htmlFor="use" className="form-label">Usage final du modèle *</label>
               <select
                 className="form-select"
-                id="goal"
-                name="goal"
-                value={formData.goal}
+                id="use"
+                name="use"
+                value={formData.use}
                 onChange={handleChange}
                 required
               >
                 <option value="">Sélectionnez un usage...</option>
-                <option value="personnel">Usage personnel</option>
-                <option value="personnel">Usage éducatif/pédagogique</option>
-                <option value="personnel">Usage créatif/artistique</option>
-                <option value="commercial">Usage événementiel</option>
-                <option value="commercial">Usage lié aux jeux/divertissement</option>
-                <option value="commercial">Usage commercial</option>
+                <option value="Personnel">Usage personnel</option>
+                <option value="Éducatif / Pédagogique">Usage éducatif/pédagogique</option>
+                <option value="Créatif / Artistique">Usage créatif/artistique</option>
+                <option value="Événementiel">Usage événementiel</option>
+                <option value="Divertissement">Usage lié aux jeux/divertissement</option>
+                <option value="Commercial">Usage commercial</option>
               </select>
             </div>
 

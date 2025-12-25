@@ -61,8 +61,7 @@ class TestIntegration(unittest.TestCase):
         data = {
             "title": "Projet Test Intégration",
             "descriptionClient": "Description du projet de test",
-            "typeProject": "architecture",
-            "goal": "Vérifier le mocking",
+            "use": "Vérifier le mocking",
             "userId": "user-test-uuid",
             "nbElements": "1",
             "detailLevel": "high"
@@ -91,7 +90,7 @@ class TestIntegration(unittest.TestCase):
         """
         Test que l'API rejette bien une demande incomplète (champs manquants)
         """
-        # Données incomplètes (manque 'userId', 'goal', etc.)
+        # Données incomplètes (manque 'userId', 'use', etc.)
         data = {
             "title": "Projet Incomplet",
             # "descriptionClient": "Manquante", 
@@ -116,8 +115,7 @@ class TestIntegration(unittest.TestCase):
         data = {
             "title": "Projet Crash DB",
             "descriptionClient": "Test crash",
-            "typeProject": "test",
-            "goal": "Crash",
+            "use": "Crash",
             "userId": "user-123"
         }
 

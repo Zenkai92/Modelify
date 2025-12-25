@@ -12,8 +12,7 @@ router = APIRouter()
 async def create_project_request(
     title: str = Form(...),
     descriptionClient: str = Form(...),
-    typeProject: str = Form(..., alias="typeProject"),
-    goal: str = Form(...),
+    use: str = Form(...),
     userId: str = Form(...),
     nbElements: str = Form("unique"),
     dimensionLength: Optional[float] = Form(None),
@@ -45,8 +44,7 @@ async def create_project_request(
         project_data = {
             "title": title,
             "descriptionClient": descriptionClient,
-            "typeProject": typeProject,
-            "goal": goal,
+            "use": use,
             "userId": userId,
             "nbElements": nbElements,
             "dimensionLength": dimensionLength,
