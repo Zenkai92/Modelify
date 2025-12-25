@@ -133,6 +133,20 @@ const ProjectDetails = () => {
                       </div>
                     </div>
                   </div>
+                  <div className="col-md-6">
+                    <div className="mb-3">
+                      <div className="detail-label">Formats de fichiers</div>
+                      <div className="detail-value">
+                        {project.format ? (
+                          project.format.split(',').map((fmt, index) => (
+                            <span key={index} className="badge bg-secondary me-1">{fmt}</span>
+                          ))
+                        ) : (
+                          <span className="text-muted">-</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

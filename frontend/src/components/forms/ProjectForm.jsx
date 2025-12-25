@@ -19,6 +19,7 @@ const ProjectForm = () => {
     title: '',
     descriptionClient: '',
     use: '',
+    format: [],
     files: [],
     nbElements: 'unique',
     dimensionLength: '',
@@ -54,10 +55,20 @@ const ProjectForm = () => {
         [name]: fileArray
       }));
     } else if (type === 'checkbox') {
-      setFormData(prev => ({
-        ...prev,
-        [name]: checked
-      }));
+      if (name === 'format') {
+        setFormData(prev => {
+          if (checked) {
+            return { ...prev, format: [...prev.format, value] };
+          } else {
+            return { ...prev, format: prev.format.filter(f => f !== value) };
+          }
+        });
+      } else {
+        setFormData(prev => ({
+          ...prev,
+          [name]: checked
+        }));
+      }
     } else {
       setFormData(prev => ({
         ...prev,
@@ -73,11 +84,18 @@ const ProjectForm = () => {
     console.log("--- DEBUG SUBMIT ---");
     console.log("Files in state:", formData.files);
 
+    if (formData.format.length === 0) {
+        alert("Veuillez sélectionner au moins un format de fichier");
+        setIsSubmitting(false);
+        return;
+    }
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
       formDataToSend.append('descriptionClient', formData.descriptionClient);
       formDataToSend.append('use', formData.use);
+      formDataToSend.append('format', formData.format.join(','));
       formDataToSend.append('userId', user.id);
       formDataToSend.append('nbElements', formData.nbElements);
       formDataToSend.append('detailLevel', formData.detailLevel);
@@ -132,6 +150,7 @@ const ProjectForm = () => {
         title: '',
         descriptionClient: '',
         use: '',
+        format: [],
         files: [],
         nbElements: 'unique',
         dimensionLength: '',
@@ -183,12 +202,12 @@ const ProjectForm = () => {
           <div 
             className="progress-bar" 
             role="progressbar" 
-            style={{ width: step === 1 ? '50%' : '100%' }}
-            aria-valuenow={step === 1 ? 50 : 100} 
+            style={{ width: step === 1 ? '33%' : step === 2 ? '66%' : '100%' }}
+            aria-valuenow={step === 1 ? 33 : step === 2 ? 66 : 100} 
             aria-valuemin="0" 
             aria-valuemax="100"
           >
-            Étape {step} / 2
+            Étape {step} / 3
           </div>
         </div>
       </div>
@@ -291,8 +310,8 @@ const ProjectForm = () => {
                     type="radio"
                     name="nbElements"
                     id="nbUnique"
-                    value="unique"
-                    checked={formData.nbElements === 'unique'}
+                    value="Objet unique monobloc"
+                    checked={formData.nbElements === 'Objet unique monobloc'}
                     onChange={handleChange}
                   />
                   <label className="form-check-label" htmlFor="nbUnique">Objet unique monobloc</label>
@@ -303,8 +322,8 @@ const ProjectForm = () => {
                     type="radio"
                     name="nbElements"
                     id="nbMultiple"
-                    value="multiple"
-                    checked={formData.nbElements === 'multiple'}
+                    value="Plusieurs pièces assemblées"
+                    checked={formData.nbElements === 'Plusieurs pièces assemblées'}
                     onChange={handleChange}
                   />
                   <label className="form-check-label" htmlFor="nbMultiple">Plusieurs pièces assemblées</label>
@@ -387,6 +406,57 @@ const ProjectForm = () => {
             </div>
 
             <div className="d-flex justify-content-between">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={prevStep}
+              >
+                Précédent
+              </button>
+              <button
+                type="button"
+                className="btn btn-primary btn-lg"
+                onClick={nextStep}
+              >
+                Suivant
+              </button>
+            </div>
+          </>
+        )}
+
+        {step === 3 && (
+          <>
+            <h3 className="mb-4">Formats de fichiers souhaités</h3>
+            <p className="text-muted mb-4">Sélectionnez un ou plusieurs formats de livraison pour votre modèle 3D.</p>
+            
+            <div className="mb-4">
+              <div className="row g-3">
+                {['STL', 'OBJ', 'STEP', 'IGES'].map((format) => (
+                  <div className="col-md-6" key={format}>
+                    <div className={`card h-100 ${formData.format.includes(format) ? 'border-primary bg-light' : ''}`}>
+                      <div className="card-body">
+                        <div className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            name="format"
+                            value={format}
+                            id={`format-${format}`}
+                            checked={formData.format.includes(format)}
+                            onChange={handleChange}
+                          />
+                          <label className="form-check-label stretched-link fw-bold" htmlFor={`format-${format}`}>
+                            {format}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="d-flex justify-content-between mt-5">
               <button
                 type="button"
                 className="btn btn-secondary"
