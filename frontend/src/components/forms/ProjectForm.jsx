@@ -193,6 +193,16 @@ const ProjectForm = () => {
         return;
       }
     }
+    if (step === 2) {
+      if (formData.nbElements !== 'Objet unique monobloc' && formData.nbElements !== 'Plusieurs pièces assemblées') {
+        alert("Veuillez indiquer le nombre d'éléments à modéliser");
+        return;
+      }
+      if (!formData.dimensionNoConstraint && (!formData.dimensionLength || !formData.dimensionWidth || !formData.dimensionHeight)) {
+        alert("Veuillez renseigner les dimensions ou cocher 'Pas de contrainte dimensionnelle'");
+        return;
+      }
+    }
     if (step === 3) {
       if (formData.format.length === 0) {
         alert("Veuillez sélectionner au moins un format de fichier");
