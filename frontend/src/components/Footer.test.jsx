@@ -4,8 +4,7 @@ import { describe, it, expect } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
 import Footer from './Footer'
 
-// Le composant Footer utilise probablement des liens (Link) de react-router-dom, 
-// donc on doit l'envelopper dans un BrowserRouter pour le test.
+// Helper pour envelopper le composant dans un Router
 const renderWithRouter = (component) => {
   return render(
     <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>

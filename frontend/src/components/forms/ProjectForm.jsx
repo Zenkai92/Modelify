@@ -12,7 +12,7 @@ const detailLevelOptions = [
 ];
 
 const ProjectForm = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -128,6 +128,9 @@ const ProjectForm = () => {
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        },
         body: formDataToSend,
       });
 

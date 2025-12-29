@@ -6,15 +6,20 @@ import './ProjectDetails.css';
 
 const ProjectDetails = () => {
   const { projectId } = useParams();
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchProject = async () => {
+      if (!session) return;
       try {
-        const response = await fetch(`http://localhost:8000/api/projects/${projectId}`);
+        const response = await fetch(`http://localhost:8000/api/projects/${projectId}`, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération du projet');
         }
@@ -28,7 +33,7 @@ const ProjectDetails = () => {
     };
 
     fetchProject();
-  }, [projectId]);
+  }, [projectId, session]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';

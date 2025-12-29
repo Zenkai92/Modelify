@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import './OrderStatusCard.css';
 
 const OrderStatusCard = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,9 +12,13 @@ const OrderStatusCard = () => {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      if (!user) return;
+      if (!user || !session) return;
       try {
-        const response = await fetch(`http://localhost:8000/api/projects?userId=${user.id}`);
+        const response = await fetch(`http://localhost:8000/api/projects`, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des commandes');
         }
@@ -28,7 +32,7 @@ const OrderStatusCard = () => {
     };
 
     fetchProjects();
-  }, [user]);
+  }, [user, session]);
 
   const formatDate = (dateString) => {
     if (!dateString) return '';

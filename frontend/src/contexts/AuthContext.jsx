@@ -13,12 +13,14 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null)
+  const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     // Récupérer la session actuelle
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
+      setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
     }
@@ -28,6 +30,7 @@ export const AuthProvider = ({ children }) => {
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
       }
@@ -117,6 +120,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    session,
     loading,
     signUp,
     signIn,

@@ -6,10 +6,6 @@ import './Navbar.css';
 const Navbar = () => {
   const { user, signOut } = useAuth();
 
-  const handleSignOut = async () => {
-    await signOut();
-  };
-
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
       <div className="container">
@@ -35,18 +31,17 @@ const Navbar = () => {
             )}
             {user ? (
               <li className="nav-item dropdown">
-                <a 
-                  className="nav-link dropdown-toggle text-white navbar-cursor-pointer" 
-                  href="#"
+                <button 
+                  className="nav-link dropdown-toggle text-white navbar-cursor-pointer btn btn-link text-decoration-none" 
                   id="userDropdown" 
-                  role="button" 
+                  type="button"
                   data-bs-toggle="dropdown" 
                   aria-expanded="false"
                 >
                   {user.user_metadata?.role === 'professionnel' 
                     ? user.user_metadata?.companyName 
                     : `${user.user_metadata?.firstName} ${user.user_metadata?.lastName}`}
-                </a>
+                </button>
                 <ul className="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                   <li>
                     <Link className="dropdown-item" to="/profile">
@@ -64,7 +59,7 @@ const Navbar = () => {
                   <li>
                     <button 
                       className="dropdown-item text-danger" 
-                      onClick={handleSignOut}
+                      onClick={() => signOut()}
                     >
                       <i className="bi bi-box-arrow-right me-2"></i>
                       Déconnexion

@@ -1,19 +1,32 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
-from fastapi.responses import JSONResponse
-from app.schemas import ProjectRequestCreate, ProjectRequestResponse
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
 from app.database import supabase
+from app.dependencies import get_current_user
 from typing import Optional, List
-import json
-from datetime import datetime
+from datetime import datetime, timezone
+import os
+import re
+import logging
+
+# Tentative d'import de python-magic pour la validation des fichiers
+try:
+    import magic
+except ImportError:
+    magic = None
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
+
+ALLOWED_MIME_TYPES = [
+    "image/jpeg", "image/png", "image/webp", 
+    "application/pdf", 
+    "application/x-zip-compressed", "application/zip"
+]
 
 @router.post("/projects", response_model=dict)
 async def create_project_request(
     title: str = Form(...),
     descriptionClient: str = Form(...),
     use: str = Form(...),
-    userId: str = Form(...),
     format: Optional[str] = Form(None),
     nbElements: str = Form("unique"),
     dimensionLength: Optional[float] = Form(None),
@@ -24,32 +37,19 @@ async def create_project_request(
     deadlineType: Optional[str] = Form(None),
     deadlineDate: Optional[str] = Form(None),
     budget: Optional[str] = Form(None),
-    files: List[UploadFile] = File(None)
+    files: List[UploadFile] = File(None),
+    current_user = Depends(get_current_user)
 ):
     """
     Créer une nouvelle demande de projet de modélisation 3D
     """
-    # DEBUG LOGGING TO FILE
-    import os
-    log_path = "backend_debug.log"
-    try:
-        with open(log_path, "a") as f:
-            f.write(f"\n--- NEW REQUEST {datetime.utcnow()} ---\n")
-            f.write(f"Title: {title}\n")
-            f.write(f"Files received: {len(files) if files else 'None'}\n")
-            if files:
-                for file in files:
-                    f.write(f"File: {file.filename}, Content-Type: {file.content_type}\n")
-    except Exception as e:
-        print(f"Failed to write log: {e}")
-
     try:
         # Création de l'objet projet (sans ID, Supabase l'auto-génère)
         project_data = {
             "title": title,
             "descriptionClient": descriptionClient,
             "use": use,
-            "userId": userId,
+            "userId": current_user.id, # Utilisation de l'ID de l'utilisateur authentifié
             "format": format,
             "nbElements": nbElements,
             "dimensionLength": dimensionLength,
@@ -61,7 +61,7 @@ async def create_project_request(
             "deadlineDate": deadlineDate,
             "budget": budget,
             "status": "en attente",
-            "created_at": datetime.utcnow().date().isoformat()  # .date() pour obtenir seulement YYYY-MM-DD
+            "created_at": datetime.now(timezone.utc).date().isoformat()
         }
         
         # Sauvegarde en Supabase
@@ -72,57 +72,47 @@ async def create_project_request(
             
             # Gestion des fichiers uploadés
             if files:
-                with open(log_path, "a") as f:
-                    f.write(f"Project created with ID: {projectId}. Processing {len(files)} files...\n")
-
                 for file in files:
                     try:
                         file_content = await file.read()
+                        
+                        # Validation du type de fichier
+                        mime_type = file.content_type
+                        if magic:
+                            mime_type = magic.from_buffer(file_content, mime=True)
+                        
+                        if mime_type not in ALLOWED_MIME_TYPES:
+                            logger.warning(f"Fichier rejeté (type non autorisé): {file.filename} ({mime_type})")
+                            continue # On ignore ce fichier mais on continue
+
                         # Sanitize filename to avoid encoding issues
-                        import re
                         clean_filename = re.sub(r'[^a-zA-Z0-9._-]', '', file.filename)
                         
                         # Nom de fichier unique : ID_PROJET/TIMESTAMP_NOM
-                        file_path = f"{projectId}/{datetime.utcnow().timestamp()}_{clean_filename}"
+                        file_path = f"{projectId}/{datetime.now(timezone.utc).timestamp()}_{clean_filename}"
                         
-                        with open(log_path, "a") as f:
-                            f.write(f"Uploading file to path: {file_path}\n")
-
                         # Upload vers Supabase Storage
                         upload_response = supabase.storage.from_('project-images').upload(
                             file_path,
                             file_content,
-                            {"content-type": file.content_type}
+                            {"content-type": mime_type}
                         )
                         
-                        with open(log_path, "a") as f:
-                            f.write(f"Upload response: {upload_response}\n")
-
                         # Récupération de l'URL publique
                         public_url = supabase.storage.from_('project-images').get_public_url(file_path)
                         
-                        with open(log_path, "a") as f:
-                            f.write(f"Public URL: {public_url}\n")
-
-                        # Détermination du type de fichier
-                        content_type = file.content_type
-                        file_type = "image" if content_type.startswith("image/") else "document"
+                        # Détermination du type de fichier pour la DB
+                        file_type = "image" if mime_type.startswith("image/") else "document"
 
                         # Enregistrement dans la table ProjectsImages
-                        insert_response = supabase.table('ProjectsImages').insert({
+                        supabase.table('ProjectsImages').insert({
                             "projectId": projectId,
                             "fileUrl": public_url,
                             "file_type": file_type
                         }).execute()
                         
-                        with open(log_path, "a") as f:
-                            f.write(f"DB Insert response: {insert_response}\n")
-                        
                     except Exception as upload_error:
-                        with open(log_path, "a") as f:
-                            f.write(f"ERROR processing file {file.filename}: {str(upload_error)}\n")
-                            import traceback
-                            f.write(traceback.format_exc() + "\n")
+                        logger.error(f"ERROR processing file {file.filename}: {str(upload_error)}")
                         # On continue pour les autres fichiers même si un échoue
             
             return {
@@ -132,6 +122,7 @@ async def create_project_request(
             }
         
     except Exception as e:
+        logger.error(f"Erreur lors de la création du projet: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur lors de la création du projet: {str(e)}")
 
 @router.get("/projects")
@@ -175,7 +166,7 @@ async def update_project_status(projectId: str, status: str):
     
     update_data = {
         "status": status,
-        "updatedAt": datetime.utcnow().date().isoformat() 
+        "updatedAt": datetime.now(timezone.utc).date().isoformat() 
     }
     
     result = supabase.table('Projects').update(update_data).eq('id', projectId).execute()
