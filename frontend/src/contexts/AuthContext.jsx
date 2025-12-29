@@ -17,12 +17,47 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Fonction pour enrichir l'utilisateur avec les données de la table Users
+    const enrichUserWithProfile = async (sessionUser) => {
+      if (!sessionUser) return null;
+      
+      try {
+        const { data: profile, error } = await supabase
+          .from('Users')
+          .select('role')
+          .eq('id', sessionUser.id)
+          .single();
+          
+        if (profile && !error) {
+          // On met à jour les métadonnées locales pour que l'UI reflète le rôle de la BDD
+          // sans modifier les métadonnées Auth de Supabase de façon persistante ici
+          return {
+            ...sessionUser,
+            user_metadata: {
+              ...sessionUser.user_metadata,
+              role: profile.role
+            }
+          };
+        }
+      } catch (err) {
+        console.error("Erreur lors de la récupération du profil:", err);
+      }
+      
+      return sessionUser;
+    };
+
     // Récupérer la session actuelle
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
       setUser(session?.user ?? null)
       setLoading(false)
+      
+      if (session?.user) {
+        enrichUserWithProfile(session.user).then(enrichedUser => {
+          if (enrichedUser) setUser(enrichedUser)
+        })
+      }
     }
 
     getSession()
@@ -33,6 +68,12 @@ export const AuthProvider = ({ children }) => {
         setSession(session)
         setUser(session?.user ?? null)
         setLoading(false)
+        
+        if (session?.user) {
+          enrichUserWithProfile(session.user).then(enrichedUser => {
+            if (enrichedUser) setUser(enrichedUser)
+          })
+        }
       }
     )
 

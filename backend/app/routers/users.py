@@ -1,11 +1,39 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas.users import UserCreate
 from app.database import supabase
+from app.dependencies import get_current_user
 from datetime import datetime, timezone
 import logging
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+@router.get("/users", status_code=status.HTTP_200_OK)
+async def get_users(current_user = Depends(get_current_user)):
+    """
+    Récupérer la liste de tous les utilisateurs (Admin uniquement).
+    """
+    # 1. Vérification du rôle Admin en base de données (Guidelines de sécurité)
+    try:
+        admin_check = supabase.table("Users").select("role").eq("id", current_user.id).single().execute()
+        
+        if not admin_check.data or admin_check.data['role'] != 'admin':
+            logger.warning(f"Accès refusé à /users pour l'utilisateur {current_user.id}")
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Accès réservé aux administrateurs"
+            )
+            
+        # 2. Récupération de tous les utilisateurs
+        response = supabase.table("Users").select("*").execute()
+        return response.data
+        
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des utilisateurs: {e}")
+        # Si l'erreur vient déjà d'une HTTPException, on la relance
+        if isinstance(e, HTTPException):
+            raise e
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 @router.post("/users", status_code=status.HTTP_201_CREATED)
 async def create_user(user: UserCreate):
