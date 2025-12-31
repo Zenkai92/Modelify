@@ -55,6 +55,7 @@ const Navbar = () => {
                       Status des commandes
                     </Link>
                   </li>
+                  <li><hr className="dropdown-divider" /></li>
                   {user.user_metadata?.role === 'admin' && (
                     <li>
                       <Link className="dropdown-item" to="/admin/users">

@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import UserProjectsModal from './UserProjectsModal';
 
 const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showProjectsModal, setShowProjectsModal] = useState(false);
   const { session, user } = useAuth();
   const navigate = useNavigate();
 
@@ -48,6 +51,16 @@ const UserManagement = () => {
     fetchUsers();
   }, [session, user, navigate]);
 
+  const handleShowProjects = (user) => {
+    setSelectedUser(user);
+    setShowProjectsModal(true);
+  };
+
+  const handleCloseProjectsModal = () => {
+    setShowProjectsModal(false);
+    setSelectedUser(null);
+  };
+
   if (loading) {
     return (
       <div className="container py-5 text-center">
@@ -88,7 +101,7 @@ const UserManagement = () => {
               </thead>
               <tbody>
                 {users.map((u) => (
-                  <tr key={u.id}>
+                  <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => handleShowProjects(u)}>
                     <td><small className="text-muted">{u.id.substring(0, 8)}...</small></td>
                     <td>{u.firstName} {u.lastName}</td>
                     <td>{u.email}</td>
@@ -107,7 +120,7 @@ const UserManagement = () => {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="text-center py-4">Aucun utilisateur trouvé</td>
+                    <td colSpan="7" className="text-center py-4">Aucun utilisateur trouvé</td>
                   </tr>
                 )}
               </tbody>
@@ -115,6 +128,12 @@ const UserManagement = () => {
           </div>
         </div>
       </div>
+
+      <UserProjectsModal 
+        show={showProjectsModal} 
+        onClose={handleCloseProjectsModal} 
+        user={selectedUser} 
+      />
     </div>
   );
 };
