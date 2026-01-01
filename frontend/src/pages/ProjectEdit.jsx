@@ -7,7 +7,7 @@ import './ProjectRequest.css';
 
 const ProjectEdit = () => {
   const { projectId } = useParams();
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -27,6 +27,10 @@ const ProjectEdit = () => {
         }
         const data = await response.json();
         
+        if (user && data.userId !== user.id) {
+          throw new Error("Vous n'êtes pas autorisé à modifier ce projet.");
+        }
+
         if (data.status !== 'en attente') {
             throw new Error("Ce projet ne peut plus être modifié.");
         }

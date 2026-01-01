@@ -212,11 +212,8 @@ async def update_project(
         
         project = project_query.data[0]
         
-        # Vérification des droits (propriétaire ou admin)
-        user_role_data = supabase.table("Users").select("role").eq("id", current_user.id).single().execute()
-        is_admin = user_role_data.data and user_role_data.data.get('role') == 'admin'
-        
-        if project['userId'] != current_user.id and not is_admin:
+        # Vérification des droits (propriétaire uniquement)
+        if project['userId'] != current_user.id:
             raise HTTPException(status_code=403, detail="Non autorisé")
 
         # Vérification du statut
