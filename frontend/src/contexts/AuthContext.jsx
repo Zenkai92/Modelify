@@ -50,14 +50,16 @@ export const AuthProvider = ({ children }) => {
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession()
       setSession(session)
-      setUser(session?.user ?? null)
-      setLoading(false)
       
-      if (session?.user) {
-        enrichUserWithProfile(session.user).then(enrichedUser => {
-          if (enrichedUser) setUser(enrichedUser)
-        })
+      let currentUser = session?.user ?? null
+      
+      if (currentUser) {
+        const enrichedUser = await enrichUserWithProfile(currentUser)
+        if (enrichedUser) currentUser = enrichedUser
       }
+      
+      setUser(currentUser)
+      setLoading(false)
     }
 
     getSession()
@@ -66,14 +68,16 @@ export const AuthProvider = ({ children }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         setSession(session)
-        setUser(session?.user ?? null)
-        setLoading(false)
         
-        if (session?.user) {
-          enrichUserWithProfile(session.user).then(enrichedUser => {
-            if (enrichedUser) setUser(enrichedUser)
-          })
+        let currentUser = session?.user ?? null
+        
+        if (currentUser) {
+          const enrichedUser = await enrichUserWithProfile(currentUser)
+          if (enrichedUser) currentUser = enrichedUser
         }
+        
+        setUser(currentUser)
+        setLoading(false)
       }
     )
 

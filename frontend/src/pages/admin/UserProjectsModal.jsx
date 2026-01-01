@@ -2,6 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+const budgetLabels = {
+  'less_100': 'Moins de 100€',
+  '100_300': '100€ - 300€',
+  '300_500': '300€ - 500€',
+  '500_1000': '500€ - 1000€',
+  'more_1000': 'Plus de 1000€',
+  'discuss': 'À discuter'
+};
+
 const UserProjectsModal = ({ show, onClose, user }) => {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -97,7 +106,7 @@ const UserProjectsModal = ({ show, onClose, user }) => {
                             {project.status}
                           </span>
                         </td>
-                        <td>{project.budget || '-'}</td>
+                        <td>{budgetLabels[project.budget] || project.budget || '-'}</td>
                       </tr>
                     ))}
                   </tbody>

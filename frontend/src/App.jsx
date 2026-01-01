@@ -10,6 +10,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import AuthCallback from './pages/auth/AuthCallback';
 import ProjectDetails from './pages/ProjectDetails';
+import ProjectEdit from './pages/ProjectEdit';
 import UserManagement from './pages/admin/UserManagement';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -46,6 +47,12 @@ function App() {
             <Route path="/projects/:projectId" element={
                 <ProtectedRoute>
                   <ProjectDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/projects/:projectId/edit" element={
+                <ProtectedRoute>
+                  <ProjectEdit />
                 </ProtectedRoute>
               }
             />

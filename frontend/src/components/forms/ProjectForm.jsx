@@ -11,11 +11,21 @@ const detailLevelOptions = [
   { value: 'hd', label: <span><strong>Avancé</strong> - haute fidélité et détails soignés</span> }
 ];
 
-const ProjectForm = () => {
+const ProjectForm = ({ initialData = null }) => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(initialData ? {
+    ...initialData,
+    format: initialData.format ? (typeof initialData.format === 'string' ? initialData.format.split(',') : initialData.format) : [],
+    files: [], // Les fichiers ne peuvent pas être pré-remplis
+    dimensionLength: initialData.dimensionLength || '',
+    dimensionWidth: initialData.dimensionWidth || '',
+    dimensionHeight: initialData.dimensionHeight || '',
+    dimensionNoConstraint: initialData.dimensionNoConstraint || false,
+    deadlineDate: initialData.deadlineDate || '',
+    budget: initialData.budget || ''
+  } : {
     title: '',
     descriptionClient: '',
     use: '',
@@ -126,8 +136,14 @@ const ProjectForm = () => {
         }
       }
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects`, {
-        method: 'POST',
+      const url = initialData 
+        ? `${import.meta.env.VITE_API_URL}/api/projects/${initialData.id}`
+        : `${import.meta.env.VITE_API_URL}/api/projects`;
+      
+      const method = initialData ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method: method,
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         },
@@ -140,13 +156,13 @@ const ProjectForm = () => {
       }
 
       const data = await response.json();
-      const projectId = data.projectId;
+      const projectId = data.projectId || (initialData && initialData.id);
 
       setModalState({
         show: true,
         status: 'success',
         projectId: projectId,
-        message: 'Votre demande a été soumise avec succès !'
+        message: initialData ? 'Votre projet a été modifié avec succès !' : 'Votre demande a été soumise avec succès !'
       });
 
       setFormData({

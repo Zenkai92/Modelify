@@ -79,9 +79,16 @@ const ProjectDetails = () => {
       <div className="container project-details-container">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1 className="text-white fw-bold mb-0">Détails du projet</h1>
-          <Link to="/status-commandes" className="btn back-btn">
-            <i className="bi bi-arrow-left me-2"></i> Retour
-          </Link>
+          <div>
+            {project.status === 'en attente' && (
+              <Link to={`/projects/${projectId}/edit`} className="btn btn-warning me-2 text-white">
+                <i className="bi bi-pencil me-2"></i> Modifier
+              </Link>
+            )}
+            <Link to="/status-commandes" className="btn back-btn">
+              <i className="bi bi-arrow-left me-2"></i> Retour
+            </Link>
+          </div>
         </div>
 
         <div className="row">
@@ -211,6 +218,15 @@ const ProjectDetails = () => {
                   
                   <div className="status-date">
                     Mis à jour le {formatDate(project.updatedAt || project.created_at)}
+                  </div>
+
+                  <div className="mt-3 text-center border-top pt-3">
+                    <small className="text-muted d-block fst-italic">
+                        <i className="bi bi-info-circle me-1"></i>
+                        {project.status === 'en attente' 
+                            ? "Vous pouvez modifier ce projet tant qu'il est en attente."
+                            : "Ce projet ne peut plus être modifié car il est en cours de traitement ou terminé."}
+                    </small>
                   </div>
                 </div>
 

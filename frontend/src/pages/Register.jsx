@@ -57,8 +57,16 @@ const Register = () => {
         setError('Les mots de passe ne correspondent pas')
         return false
       }
-      if (formData.password.length < 6) {
-        setError('Le mot de passe doit contenir au moins 6 caractères')
+      if (formData.password.length < 12) {
+        setError('Le mot de passe doit contenir au moins 12 caractères')
+        return false
+      }
+      if (!/[A-Z]/.test(formData.password)) {
+        setError('Le mot de passe doit contenir au moins une majuscule')
+        return false
+      }
+      if (!/[0-9]/.test(formData.password)) {
+        setError('Le mot de passe doit contenir au moins un chiffre')
         return false
       }
       return true
@@ -100,6 +108,7 @@ const Register = () => {
     
     if (error) {
       setError(error.message)
+      setStep(2)
     } else {
       navigate('/login', { 
         state: { message: 'Inscription réussie ! Vérifiez votre email pour confirmer votre compte.' }

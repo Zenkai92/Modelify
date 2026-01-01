@@ -93,9 +93,9 @@ const UserManagement = () => {
                 <tr>
                   <th>ID</th>
                   <th>Nom</th>
+                  <th>Entreprise</th>
                   <th>Email</th>
                   <th>Rôle</th>
-                  <th>Entreprise</th>
                   <th>Date d'inscription</th>
                 </tr>
               </thead>
@@ -104,6 +104,7 @@ const UserManagement = () => {
                   <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => handleShowProjects(u)}>
                     <td><small className="text-muted">{u.id.substring(0, 8)}...</small></td>
                     <td>{u.firstName} {u.lastName}</td>
+                    <td>{u.companyName || '-'}</td>
                     <td>{u.email}</td>
                     <td>
                       <span className={`badge ${
@@ -114,7 +115,6 @@ const UserManagement = () => {
                         {u.role}
                       </span>
                     </td>
-                    <td>{u.companyName || '-'}</td>
                     <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))}

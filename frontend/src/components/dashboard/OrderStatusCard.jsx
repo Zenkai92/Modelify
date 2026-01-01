@@ -14,7 +14,7 @@ const OrderStatusCard = () => {
     const fetchProjects = async () => {
       if (!user || !session) return;
       try {
-        const response = await fetch(`http://localhost:8000/api/projects`, {
+        const response = await fetch(`http://localhost:8000/api/projects?userId=${user.id}`, {
           headers: {
             'Authorization': `Bearer ${session.access_token}`
           }

@@ -126,13 +126,21 @@ async def create_project_request(
         raise HTTPException(status_code=500, detail=f"Erreur lors de la création du projet: {str(e)}")
 
 @router.get("/projects")
-async def get_all_projects(userId: Optional[str] = None):
+async def get_all_projects(userId: Optional[str] = None, current_user = Depends(get_current_user)):
     """
     Récupérer toutes les demandes de projets, optionnellement filtrées par userId
     """
+    # Vérification du rôle de l'utilisateur
+    user_role_data = supabase.table("Users").select("role").eq("id", current_user.id).single().execute()
+    is_admin = user_role_data.data and user_role_data.data.get('role') == 'admin'
+
     query = supabase.table('Projects').select('*')
-    if userId:
-        query = query.eq('userId', userId)
+    
+    if is_admin:
+        if userId:
+            query = query.eq('userId', userId)
+    else:
+        query = query.eq('userId', current_user.id)
     
     result = query.execute()
     return {"projects": result.data, "total": len(result.data)}
@@ -174,3 +182,77 @@ async def update_project_status(projectId: str, status: str):
         raise HTTPException(status_code=404, detail="Projet non trouvé")
     
     return {"message": "Statut mis à jour", "project": result.data[0]}
+
+@router.put("/projects/{projectId}")
+async def update_project(
+    projectId: str,
+    title: Optional[str] = Form(None),
+    descriptionClient: Optional[str] = Form(None),
+    use: Optional[str] = Form(None),
+    format: Optional[str] = Form(None),
+    nbElements: Optional[str] = Form(None),
+    dimensionLength: Optional[float] = Form(None),
+    dimensionWidth: Optional[float] = Form(None),
+    dimensionHeight: Optional[float] = Form(None),
+    dimensionNoConstraint: Optional[bool] = Form(None),
+    detailLevel: Optional[str] = Form(None),
+    deadlineType: Optional[str] = Form(None),
+    deadlineDate: Optional[str] = Form(None),
+    budget: Optional[str] = Form(None),
+    current_user = Depends(get_current_user)
+):
+    """
+    Mettre à jour un projet existant (uniquement si statut 'en attente')
+    """
+    try:
+        # Vérification du projet existant
+        project_query = supabase.table('Projects').select('*').eq('id', projectId).execute()
+        if not project_query.data:
+            raise HTTPException(status_code=404, detail="Projet non trouvé")
+        
+        project = project_query.data[0]
+        
+        # Vérification des droits (propriétaire ou admin)
+        user_role_data = supabase.table("Users").select("role").eq("id", current_user.id).single().execute()
+        is_admin = user_role_data.data and user_role_data.data.get('role') == 'admin'
+        
+        if project['userId'] != current_user.id and not is_admin:
+            raise HTTPException(status_code=403, detail="Non autorisé")
+
+        # Vérification du statut
+        if project['status'] != 'en attente':
+            raise HTTPException(status_code=400, detail="Le projet ne peut être modifié que s'il est en attente")
+
+        # Préparation des données à mettre à jour
+        update_data = {
+            "updatedAt": datetime.now(timezone.utc).date().isoformat()
+        }
+        
+        if title is not None: update_data['title'] = title
+        if descriptionClient is not None: update_data['descriptionClient'] = descriptionClient
+        if use is not None: update_data['use'] = use
+        if format is not None: update_data['format'] = format
+        if nbElements is not None: update_data['nbElements'] = nbElements
+        if dimensionLength is not None: update_data['dimensionLength'] = dimensionLength
+        if dimensionWidth is not None: update_data['dimensionWidth'] = dimensionWidth
+        if dimensionHeight is not None: update_data['dimensionHeight'] = dimensionHeight
+        if dimensionNoConstraint is not None: update_data['dimensionNoConstraint'] = dimensionNoConstraint
+        if detailLevel is not None: update_data['detailLevel'] = detailLevel
+        if deadlineType is not None: update_data['deadlineType'] = deadlineType
+        if deadlineDate is not None: update_data['deadlineDate'] = deadlineDate
+        if budget is not None: update_data['budget'] = budget
+
+        # Mise à jour en base
+        result = supabase.table('Projects').update(update_data).eq('id', projectId).execute()
+        
+        return {
+            "message": "Projet mis à jour avec succès",
+            "project": result.data[0],
+            "status": "success"
+        }
+
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        logger.error(f"Erreur lors de la mise à jour du projet: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erreur lors de la mise à jour du projet: {str(e)}")
