@@ -48,18 +48,29 @@ export const AuthProvider = ({ children }) => {
 
     // Récupérer la session actuelle
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setSession(session)
-      
-      let currentUser = session?.user ?? null
-      
-      if (currentUser) {
-        const enrichedUser = await enrichUserWithProfile(currentUser)
-        if (enrichedUser) currentUser = enrichedUser
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
+        setSession(session)
+        
+        let currentUser = session?.user ?? null
+        
+        if (currentUser) {
+          // On tente de récupérer le profil avec un timeout de 5s
+          // Si ça prend trop de temps, on continue avec l'utilisateur de base (sans rôle admin)
+          const enrichedUser = await Promise.race([
+            enrichUserWithProfile(currentUser),
+            new Promise(resolve => setTimeout(() => resolve(null), 5000))
+          ]);
+          
+          if (enrichedUser) currentUser = enrichedUser
+        }
+        
+        setUser(currentUser)
+      } catch (error) {
+        console.error("Erreur lors de l'initialisation de la session:", error);
+      } finally {
+        setLoading(false)
       }
-      
-      setUser(currentUser)
-      setLoading(false)
     }
 
     getSession()
@@ -67,17 +78,26 @@ export const AuthProvider = ({ children }) => {
     // Écouter les changements d'authentification
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        setSession(session)
-        
-        let currentUser = session?.user ?? null
-        
-        if (currentUser) {
-          const enrichedUser = await enrichUserWithProfile(currentUser)
-          if (enrichedUser) currentUser = enrichedUser
+        try {
+          setSession(session)
+          
+          let currentUser = session?.user ?? null
+          
+          if (currentUser) {
+            const enrichedUser = await Promise.race([
+              enrichUserWithProfile(currentUser),
+              new Promise(resolve => setTimeout(() => resolve(null), 5000))
+            ]);
+            
+            if (enrichedUser) currentUser = enrichedUser
+          }
+          
+          setUser(currentUser)
+        } catch (error) {
+          console.error("Erreur lors du changement d'état auth:", error);
+        } finally {
+          setLoading(false)
         }
-        
-        setUser(currentUser)
-        setLoading(false)
       }
     )
 
