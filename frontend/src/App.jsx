@@ -11,7 +11,7 @@ import Register from './pages/Register';
 import AuthCallback from './pages/auth/AuthCallback';
 import ProjectDetails from './pages/ProjectDetails';
 import ProjectEdit from './pages/ProjectEdit';
-import UserManagement from './pages/admin/UserManagement';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -58,7 +58,25 @@ function App() {
             />
             <Route path="/admin/users" element={
                 <ProtectedRoute>
-                  <UserManagement />
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/admin/projects/pending" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/admin/projects/in-progress" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/admin/projects/completed" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />
