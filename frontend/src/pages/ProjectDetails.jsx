@@ -10,6 +10,8 @@ const ProjectDetails = () => {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [pendingStatus, setPendingStatus] = useState(null);
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -34,6 +36,37 @@ const ProjectDetails = () => {
 
     fetchProject();
   }, [projectId, session]);
+
+  const handleStatusChange = (newStatus) => {
+    setPendingStatus(newStatus);
+    setShowConfirmModal(true);
+  };
+
+  const confirmStatusChange = async () => {
+    if (!pendingStatus) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/api/projects/${projectId}/status?status=${pendingStatus}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la mise à jour du statut');
+      }
+
+      const data = await response.json();
+      setProject(data.project);
+      setShowConfirmModal(false);
+      setPendingStatus(null);
+    } catch (err) {
+      console.error(err);
+      alert('Erreur lors du changement de statut');
+      setShowConfirmModal(false);
+    }
+  };
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -80,6 +113,26 @@ const ProjectDetails = () => {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1 className="text-white fw-bold mb-0">Détails du projet</h1>
           <div>
+            {user?.user_metadata?.role === 'admin' && (
+              <>
+                {project.status === 'en attente' && (
+                  <button 
+                    className="btn btn-light text-primary fw-bold px-4 shadow-sm me-3"
+                    onClick={() => handleStatusChange('en cours')}
+                  >
+                    <i className="bi bi-play-fill me-2"></i> Traiter le projet
+                  </button>
+                )}
+                {project.status === 'en cours' && (
+                  <button 
+                    className="btn btn-success fw-bold px-4 shadow-sm me-3"
+                    onClick={() => handleStatusChange('terminé')}
+                  >
+                    <i className="bi bi-check-lg me-2"></i> Terminer le projet
+                  </button>
+                )}
+              </>
+            )}
             {project.status === 'en attente' && user && project.userId === user.id && (
               <Link to={`/projects/${projectId}/edit`} className="btn btn-warning me-2 text-white">
                 <i className="bi bi-pencil me-2"></i> Modifier
@@ -287,6 +340,31 @@ const ProjectDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal de confirmation */}
+      {showConfirmModal && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title text-dark">Confirmation</h5>
+                <button type="button" className="btn-close" onClick={() => setShowConfirmModal(false)}></button>
+              </div>
+              <div className="modal-body text-dark">
+                <p>
+                  {pendingStatus === 'en cours' 
+                    ? 'Êtes-vous sûr de vouloir traiter ce projet ?' 
+                    : 'Êtes-vous sûr de vouloir marquer ce projet comme terminé ?'}
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowConfirmModal(false)}>Annuler</button>
+                <button type="button" className="btn btn-primary" onClick={confirmStatusChange}>Confirmer</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

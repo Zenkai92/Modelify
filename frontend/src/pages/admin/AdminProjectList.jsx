@@ -44,6 +44,18 @@ const AdminProjectList = ({ statusFilter, title }) => {
     navigate(`/projects/${projectId}`);
   };
 
+  const formatBudget = (budget) => {
+    switch (budget) {
+      case 'less_100': return 'Moins de 100€';
+      case '100_300': return '100€ - 300€';
+      case '300_500': return '300€ - 500€';
+      case '500_1000': return '500€ - 1000€';
+      case 'more_1000': return 'Plus de 1000€';
+      case 'discuss': return 'À discuter';
+      default: return budget || '-';
+    }
+  };
+
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'en attente': return 'bg-warning text-dark';
@@ -82,7 +94,7 @@ const AdminProjectList = ({ statusFilter, title }) => {
                       {project.status}
                     </span>
                   </td>
-                  <td>{project.budget || '-'}</td>
+                  <td>{formatBudget(project.budget)}</td>
                 </tr>
               ))}
               {projects.length === 0 && (

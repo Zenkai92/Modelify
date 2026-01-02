@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Select from 'react-select';
 import { useAuth } from '../../contexts/AuthContext';
 import ModalStatusProject from '../modalStatusProject';
+import Toast from '../Toast';
 import './ProjectForm.css';
 
 const detailLevelOptions = [
@@ -49,6 +50,12 @@ const ProjectForm = ({ initialData = null }) => {
     projectId: null,
     message: ''
   });
+
+  const [toast, setToast] = useState({ message: '', type: 'error' });
+
+  const showToast = (message, type = 'error') => {
+    setToast({ message, type });
+  };
 
   const getUnit = (value) => {
     const val = parseFloat(value);
@@ -208,23 +215,23 @@ const ProjectForm = ({ initialData = null }) => {
   const nextStep = () => {
     if (step === 1) {
       if (!formData.title || !formData.descriptionClient || !formData.use) {
-        alert("Veuillez remplir tous les champs obligatoires");
+        showToast("Veuillez remplir tous les champs obligatoires");
         return;
       }
     }
     if (step === 2) {
       if (formData.nbElements !== 'Objet unique monobloc' && formData.nbElements !== 'Plusieurs pièces assemblées') {
-        alert("Veuillez indiquer le nombre d'éléments à modéliser");
+        showToast("Veuillez indiquer le nombre d'éléments à modéliser");
         return;
       }
       if (!formData.dimensionNoConstraint && (!formData.dimensionLength || !formData.dimensionWidth || !formData.dimensionHeight)) {
-        alert("Veuillez renseigner les dimensions ou cocher 'Pas de contrainte dimensionnelle'");
+        showToast("Veuillez renseigner les dimensions ou cocher 'Pas de contrainte dimensionnelle'");
         return;
       }
     }
     if (step === 3) {
       if (formData.format.length === 0) {
-        alert("Veuillez sélectionner au moins un format de fichier");
+        showToast("Veuillez sélectionner au moins un format de fichier");
         return;
       }
     }
@@ -235,6 +242,11 @@ const ProjectForm = ({ initialData = null }) => {
 
   return (
     <>
+      <Toast 
+        message={toast.message} 
+        type={toast.type} 
+        onClose={() => setToast({ ...toast, message: '' })} 
+      />
       <div className="mb-4">
         <div className="d-flex justify-content-between mb-2">
             <span className="fw-bold step-label">Étape {step} sur 4</span>
@@ -521,54 +533,46 @@ const ProjectForm = ({ initialData = null }) => {
             <h3 className="mb-4">Délais et Budget</h3>
             
             <div className="mb-4">
-              <label className="form-label fw-bold">Avez-vous une date limite ? *</label>
-              <div className="form-check mb-2">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="deadlineType"
-                  id="deadlineUrgent"
-                  value="urgent"
-                  checked={formData.deadlineType === 'urgent'}
-                  onChange={handleChange}
-                  required
-                />
-                <label className="form-check-label" htmlFor="deadlineUrgent">
-                  Oui, c'est urgent (préciser la date ci-dessous)
-                </label>
-              </div>
-              <div className="form-check mb-2">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="deadlineType"
-                  id="deadlineFlexible"
-                  value="flexible"
-                  checked={formData.deadlineType === 'flexible'}
-                  onChange={handleChange}
-                />
-                <label className="form-check-label" htmlFor="deadlineFlexible">
-                  Oui, mais je suis flexible (préciser la date souhaitée ci-dessous)
-                </label>
-              </div>
-              <div className="form-check mb-2">
-                <input
-                  className="form-check-input"
-                  type="radio"
-                  name="deadlineType"
-                  id="deadlineNone"
-                  value="none"
-                  checked={formData.deadlineType === 'none'}
-                  onChange={handleChange}
-                />
-                <label className="form-check-label" htmlFor="deadlineNone">
-                  Non, pas de contrainte de délai
-                </label>
+              <label className="form-label fw-bold mb-3">Avez-vous une date limite ? *</label>
+              <div className="row g-3">
+                {[
+                  { id: 'deadlineUrgent', value: 'urgent', label: 'Oui, c\'est urgent', sub: '(préciser la date)', icon: 'bi-exclamation-circle text-danger' },
+                  { id: 'deadlineFlexible', value: 'flexible', label: 'Oui, mais flexible', sub: '(préciser la date)', icon: 'bi-calendar-check text-primary' },
+                  { id: 'deadlineNone', value: 'none', label: 'Non', sub: 'Pas de contrainte', icon: 'bi-infinity text-success' }
+                ].map((option) => (
+                   <div className="col-md-4" key={option.id}>
+                    <div 
+                        className={`card h-100 cursor-pointer selection-card ${formData.deadlineType === option.value ? 'border-primary bg-light ring-2' : ''}`}
+                        onClick={() => handleChange({ target: { name: 'deadlineType', value: option.value, type: 'radio', checked: true } })}
+                        style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                    >
+                      <div className="card-body text-center p-3">
+                        <i className={`bi ${option.icon} fs-3 mb-2 d-block`}></i>
+                        <div className="form-check d-none">
+                            <input
+                            className="form-check-input"
+                            type="radio"
+                            name="deadlineType"
+                            id={option.id}
+                            value={option.value}
+                            checked={formData.deadlineType === option.value}
+                            onChange={handleChange}
+                            required
+                            />
+                        </div>
+                        <label className="form-check-label w-100 cursor-pointer" htmlFor={option.id}>
+                            <div className="fw-bold mb-0">{option.label}</div>
+                            <small className="text-muted small-text">{option.sub}</small>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
             {(formData.deadlineType === 'urgent' || formData.deadlineType === 'flexible') && (
-              <div className="mb-4">
+              <div className="mb-4 animate-fade-in">
                 <label htmlFor="deadlineDate" className="form-label">Date limite souhaitée</label>
                 <input
                   type="date"
@@ -583,7 +587,8 @@ const ProjectForm = ({ initialData = null }) => {
             )}
 
             <div className="mb-4">
-              <label className="form-label fw-bold">Budget indicatif *</label>
+              <label className="form-label fw-bold mb-3">Budget indicatif *</label>
+              <div className="row g-3">
               {[
                 { value: 'less_100', label: 'Moins de 100€' },
                 { value: '100_300', label: '100€ - 300€' },
@@ -592,22 +597,33 @@ const ProjectForm = ({ initialData = null }) => {
                 { value: 'more_1000', label: 'Plus de 1000€' },
                 { value: 'discuss', label: 'À discuter' }
               ].map((option) => (
-                <div className="form-check mb-2" key={option.value}>
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="budget"
-                    id={`budget-${option.value}`}
-                    value={option.value}
-                    checked={formData.budget === option.value}
-                    onChange={handleChange}
-                    required
-                  />
-                  <label className="form-check-label" htmlFor={`budget-${option.value}`}>
-                    {option.label}
-                  </label>
+                <div className="col-6 col-md-4" key={option.value}>
+                    <div 
+                        className={`card h-100 cursor-pointer selection-card ${formData.budget === option.value ? 'border-primary bg-light' : ''}`}
+                        onClick={() => handleChange({ target: { name: 'budget', value: option.value, type: 'radio', checked: true } })}
+                        style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                    >
+                      <div className="card-body text-center d-flex align-items-center justify-content-center p-2">
+                        <div className="form-check d-none">
+                          <input
+                            className="form-check-input"
+                            type="radio"
+                            name="budget"
+                            id={`budget-${option.value}`}
+                            value={option.value}
+                            checked={formData.budget === option.value}
+                            onChange={handleChange}
+                            required
+                          />
+                        </div>
+                        <label className="form-check-label fw-bold w-100 cursor-pointer small" htmlFor={`budget-${option.value}`}>
+                            {option.label}
+                        </label>
+                      </div>
+                    </div>
                 </div>
               ))}
+              </div>
             </div>
 
             <div className="d-flex justify-content-between mt-5">
