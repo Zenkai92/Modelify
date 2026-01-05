@@ -17,7 +17,21 @@ This document serves as the reference for the project structure and development 
     *   `Projects` table: readable/writable by owner (and admins).
 *   **Validation**: Backend must validate all inputs (Pydantic schemas) before insertion.
 
-## 🛠 Tech Stack & Configuration
+## � Development Principles
+
+### 1. Simplicity First (KISS)
+*   **RULE**: Always favor the simplest solution that solves the problem. Avoid over-engineering.
+*   **Code Style**: Write clean, readable, and self-documenting code. Complex logic should be broken down into smaller, testable functions.
+*   **Dependencies**: Minimize external dependencies. Use standard libraries when possible.
+
+### 2. Architecture & Data Flow
+*   **RULE**: The Frontend **MUST NEVER** communicate directly with the Database.
+*   **Implementation**:
+    *   All data operations (CRUD) must go through the **Backend API** (FastAPI).
+    *   The Frontend uses the Supabase client **ONLY** for Authentication (Auth) and Storage (if strictly necessary), but **NEVER** for direct table access (`supabase.from('table').select...` is FORBIDDEN in frontend code).
+    *   **Reason**: This ensures business logic, validation, and security rules are centralized and enforced in the backend.
+
+## �🛠 Tech Stack & Configuration
 
 ### Environment Variables
 *   **Backend** (`backend/.env`):

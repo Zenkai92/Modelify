@@ -8,6 +8,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from main import app
+from app.dependencies import get_current_user
 
 class TestIntegration(unittest.TestCase):
     """
@@ -17,7 +18,15 @@ class TestIntegration(unittest.TestCase):
     """
     
     def setUp(self):
+        # Override authentication dependency
+        self.mock_user = MagicMock()
+        self.mock_user.id = "test_user_id"
+        app.dependency_overrides[get_current_user] = lambda: self.mock_user
+        
         self.client = TestClient(app)
+
+    def tearDown(self):
+        app.dependency_overrides = {}
 
     def test_health_check(self):
         """Vérifie que l'API est en ligne"""
@@ -34,27 +43,20 @@ class TestIntegration(unittest.TestCase):
         3. Upload de fichier (simulé)
         4. Réponse API
         """
-        # --- CONFIGURATION DES MOCKS ---
-        
-        # 1. Mock pour l'insertion dans 'Projects' et 'ProjectsImages'
         def table_side_effect(table_name):
             mock_t = MagicMock()
             if table_name == 'Projects':
-                # Simule le retour de l'ID 123 après insertion
                 mock_t.insert.return_value.execute.return_value.data = [{"id": 123}]
             elif table_name == 'ProjectsImages':
-                # Simule le retour de l'ID 456 après insertion d'image
                 mock_t.insert.return_value.execute.return_value.data = [{"id": 456}]
             return mock_t
             
         mock_supabase.table.side_effect = table_side_effect
 
-        # 2. Mock pour le stockage (Storage)
         mock_storage_response = MagicMock()
         mock_bucket = mock_supabase.storage.from_.return_value
         mock_bucket.upload.return_value = mock_storage_response
 
-        # --- PRÉPARATION DES DONNÉES ---
         files = [
             ('files', ('test_image.jpg', b'fake image content', 'image/jpeg'))
         ]
@@ -67,22 +69,15 @@ class TestIntegration(unittest.TestCase):
             "detailLevel": "high"
         }
 
-        # --- EXÉCUTION ---
         response = self.client.post("/api/projects", data=data, files=files)
 
-        # --- VÉRIFICATIONS ---
-        # 1. Code HTTP
         self.assertEqual(response.status_code, 200)
         
-        # 2. Contenu de la réponse
         json_resp = response.json()
         self.assertEqual(json_resp['message'], "Demande de projet créée avec succès")
         self.assertEqual(json_resp['projectId'], 123)
 
-        # 3. Vérifier que Supabase a été appelé correctement
-        # On vérifie qu'on a bien essayé d'insérer dans la table Projects
         mock_supabase.table.assert_any_call('Projects')
-        # On vérifie qu'on a bien essayé d'uploader dans le bucket 'project-images'
         mock_supabase.storage.from_.assert_called_with('project-images')
 
     @patch('app.routers.projects.supabase')
@@ -124,6 +119,91 @@ class TestIntegration(unittest.TestCase):
         # L'API doit capturer l'erreur et renvoyer 500
         self.assertEqual(response.status_code, 500)
         self.assertIn("Erreur lors de la création", response.json()['detail'])
+
+    @patch('app.routers.projects.supabase')
+    def test_get_all_projects(self, mock_supabase):
+        """Test récupération de la liste des projets"""
+        # Mock user role check (standard user)
+        mock_user_query = MagicMock()
+        mock_user_query.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {'role': 'particulier'}
+        
+        # Mock projects query
+        mock_project_query = MagicMock()
+        mock_project_query.select.return_value.eq.return_value.execute.return_value.data = [{'id': 123, 'title': 'Test Project'}]
+        
+        def table_side_effect(table_name):
+            if table_name == "Users":
+                return mock_user_query
+            elif table_name == "Projects":
+                return mock_project_query
+            return MagicMock()
+            
+        mock_supabase.table.side_effect = table_side_effect
+        
+        response = self.client.get("/api/projects")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.json()['projects']), 1)
+
+    @patch('app.routers.projects.supabase')
+    def test_get_project_detail(self, mock_supabase):
+        """Test récupération d'un projet spécifique"""
+        mock_project_query = MagicMock()
+        mock_project_query.select.return_value.eq.return_value.execute.return_value.data = [{'id': 123, 'title': 'Test Project'}]
+        
+        mock_images_query = MagicMock()
+        mock_images_query.select.return_value.eq.return_value.execute.return_value.data = []
+        
+        def table_side_effect(table_name):
+            if table_name == "Projects":
+                return mock_project_query
+            elif table_name == "ProjectsImages":
+                return mock_images_query
+            return MagicMock()
+            
+        mock_supabase.table.side_effect = table_side_effect
+        
+        response = self.client.get("/api/projects/123")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['title'], 'Test Project')
+
+    @patch('app.routers.projects.supabase')
+    def test_update_project(self, mock_supabase):
+        """Test mise à jour d'un projet"""
+        # Mock existing project check
+        mock_project_query = MagicMock()
+        # First call for check (select), Second call for update
+        mock_project_query.select.return_value.eq.return_value.execute.return_value.data = [{'id': 123, 'userId': 'test_user_id', 'status': 'en attente'}]
+        mock_project_query.update.return_value.eq.return_value.execute.return_value.data = [{'id': 123, 'title': 'Updated Title'}]
+        
+        mock_supabase.table.return_value = mock_project_query
+        
+        response = self.client.put("/api/projects/123", data={"title": "Updated Title"})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()['project']['title'], 'Updated Title')
+
+    @patch('app.routers.users.supabase')
+    def test_create_user(self, mock_supabase):
+        """Test création d'un utilisateur"""
+        mock_supabase.table.return_value.insert.return_value.execute.return_value.data = [{'id': 'new_user_id'}]
+        
+        user_data = {
+            "id": "new_user_id",
+            "email": "new@test.com",
+            "firstName": "New",
+            "lastName": "User",
+            "role": "particulier"
+        }
+        response = self.client.post("/api/users", json=user_data)
+        self.assertEqual(response.status_code, 201)
+
+    @patch('app.routers.users.supabase')
+    def test_get_users_forbidden(self, mock_supabase):
+        """Test accès refusé à la liste des utilisateurs pour non-admin"""
+        # Mock user role check returning 'particulier'
+        mock_supabase.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {'role': 'particulier'}
+        
+        response = self.client.get("/api/users")
+        self.assertEqual(response.status_code, 403)
 
 if __name__ == '__main__':
     unittest.main()

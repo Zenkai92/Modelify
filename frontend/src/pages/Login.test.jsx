@@ -4,7 +4,6 @@ import { describe, it, expect, vi } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
 import Login from './Login'
 
-// Mock du hook useAuth
 const mockSignIn = vi.fn()
 vi.mock('../contexts/AuthContext', () => ({
   useAuth: () => ({
@@ -31,14 +30,11 @@ describe('Page Login', () => {
       </BrowserRouter>
     )
     
-    // Simuler la saisie
     fireEvent.change(screen.getByLabelText(/Email/i), { target: { value: 'test@example.com' } })
     fireEvent.change(screen.getByLabelText(/Mot de passe/i), { target: { value: 'password123' } })
     
-    // Simuler le succès de signIn
     mockSignIn.mockResolvedValue({ error: null })
 
-    // Soumettre
     fireEvent.click(screen.getByRole('button', { name: /Se connecter/i }))
 
     await waitFor(() => {
@@ -62,6 +58,7 @@ describe('Page Login', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Se connecter/i }))
 
+    
     expect(await screen.findByText('Identifiants invalides')).toBeInTheDocument()
   })
 })

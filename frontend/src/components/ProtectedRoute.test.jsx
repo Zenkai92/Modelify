@@ -7,7 +7,6 @@ import * as AuthContext from '../contexts/AuthContext'
 
 describe('Composant ProtectedRoute', () => {
   it('redirige vers /login si l\'utilisateur n\'est pas connecté', () => {
-    // Mock user null
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({ user: null, loading: false })
 
     render(
@@ -31,7 +30,6 @@ describe('Composant ProtectedRoute', () => {
   })
 
   it('affiche le contenu enfant si l\'utilisateur est connecté', () => {
-    // Mock user présent
     vi.spyOn(AuthContext, 'useAuth').mockReturnValue({ user: { id: 1 }, loading: false })
 
     render(

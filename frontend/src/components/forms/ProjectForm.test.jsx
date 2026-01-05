@@ -4,29 +4,13 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import ProjectForm from './ProjectForm'
 
-const mockInsert = vi.fn()
-const mockSelect = vi.fn()
-
-// Mock global fetch
 global.fetch = vi.fn()
 
-vi.mock('../../lib/supabase', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      insert: mockInsert,
-    })),
-    storage: {
-      from: vi.fn(() => ({
-        upload: vi.fn(),
-        getPublicUrl: vi.fn(() => ({ data: { publicUrl: 'http://fake-url.com' } }))
-      }))
-    }
-  }
-}))
 
 vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
-    user: { id: 'user-123-test' }
+    user: { id: 'user-123-test' },
+    session: { access_token: 'fake-token' }
   })
 }))
 
@@ -34,18 +18,9 @@ describe('Composant ProjectForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     
-    // Mock fetch response
     global.fetch.mockResolvedValue({
       ok: true,
       json: async () => ({ projectId: 999 })
-    })
-
-    mockInsert.mockReturnValue({
-      select: mockSelect
-    })
-    mockSelect.mockResolvedValue({
-      data: [{ id: 999 }],
-      error: null
     })
   })
 
@@ -68,7 +43,6 @@ describe('Composant ProjectForm', () => {
       </MemoryRouter>
     )
 
-    // --- Étape 1 ---
     fireEvent.change(screen.getByLabelText(/Titre du projet/i), {
       target: { value: 'Mon Super Projet 3D' }
     })
@@ -83,8 +57,6 @@ describe('Composant ProjectForm', () => {
 
     fireEvent.click(screen.getByText(/Suivant/i))
 
-    // --- Étape 2 ---
-    // Attendre que l'étape 2 s'affiche
     await waitFor(() => {
       expect(screen.getByText(/Caractéristiques du modèle/i)).toBeInTheDocument()
     })
@@ -94,7 +66,6 @@ describe('Composant ProjectForm', () => {
 
     fireEvent.click(screen.getByText(/Suivant/i))
 
-    // --- Étape 3 ---
     await waitFor(() => {
       expect(screen.getByText(/Formats de fichiers souhaités/i)).toBeInTheDocument()
     })
@@ -103,21 +74,18 @@ describe('Composant ProjectForm', () => {
 
     fireEvent.click(screen.getByText(/Suivant/i))
 
-    // --- Étape 4 ---
     await waitFor(() => {
       expect(screen.getByText(/Délais et Budget/i)).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByLabelText(/Non, pas de contrainte de délai/i))
+    fireEvent.click(screen.getByLabelText(/Pas de contrainte/i))
     fireEvent.click(screen.getByLabelText(/Moins de 100€/i))
 
-    // Soumission
     const submitButton = screen.getByText(/Soumettre la demande/i)
     fireEvent.click(submitButton)
 
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledTimes(1)
-      // Vérification basique de l'URL et de la méthode
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining('/api/projects'),
         expect.objectContaining({

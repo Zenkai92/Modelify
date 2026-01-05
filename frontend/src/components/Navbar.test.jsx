@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { BrowserRouter } from 'react-router-dom'
 import Navbar from './Navbar'
@@ -34,8 +34,6 @@ describe('Composant Navbar', () => {
     )
     
     expect(screen.getByText('John Doe')).toBeInTheDocument()
-    // Note: Déconnexion est dans un dropdown, il faut parfois cliquer pour le voir, 
-    // mais il est présent dans le DOM
     expect(screen.getByText('Déconnexion')).toBeInTheDocument()
   })
 })

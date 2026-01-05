@@ -22,6 +22,27 @@ ALLOWED_MIME_TYPES = [
     "application/x-zip-compressed", "application/zip"
 ]
 
+
+def sanitize_filename(filename: str) -> str:
+    """
+    Nettoie le nom de fichier pour éviter les problèmes d'encodage et de sécurité.
+    Ne garde que les caractères alphanumériques, points, tirets et underscores.
+    """
+    return re.sub(r'[^a-zA-Z0-9._-]', '', filename)
+
+def validate_mime_type(content: bytes, declared_type: str) -> str:
+    """
+    Valide le type MIME du fichier en utilisant python-magic si disponible,
+    sinon se fie au type déclaré.
+    """
+    mime_type = declared_type
+    if magic:
+        try:
+            mime_type = magic.from_buffer(content, mime=True)
+        except Exception as e:
+            logger.warning(f"Erreur lors de la détection magic du type MIME: {e}")
+    return mime_type
+
 @router.post("/projects", response_model=dict)
 async def create_project_request(
     title: str = Form(...),
@@ -44,12 +65,11 @@ async def create_project_request(
     Créer une nouvelle demande de projet de modélisation 3D
     """
     try:
-        # Création de l'objet projet (sans ID, Supabase l'auto-génère)
         project_data = {
             "title": title,
             "descriptionClient": descriptionClient,
             "use": use,
-            "userId": current_user.id, # Utilisation de l'ID de l'utilisateur authentifié
+            "userId": current_user.id,
             "format": format,
             "nbElements": nbElements,
             "dimensionLength": dimensionLength,
@@ -64,47 +84,36 @@ async def create_project_request(
             "created_at": datetime.now(timezone.utc).date().isoformat()
         }
         
-        # Sauvegarde en Supabase
         result = supabase.table('Projects').insert(project_data).execute()
         
         if result.data:
             projectId = result.data[0]['id']
             
-            # Gestion des fichiers uploadés
             if files:
                 for file in files:
                     try:
                         file_content = await file.read()
                         
-                        # Validation du type de fichier
-                        mime_type = file.content_type
-                        if magic:
-                            mime_type = magic.from_buffer(file_content, mime=True)
+                        mime_type = validate_mime_type(file_content, file.content_type)
                         
                         if mime_type not in ALLOWED_MIME_TYPES:
                             logger.warning(f"Fichier rejeté (type non autorisé): {file.filename} ({mime_type})")
-                            continue # On ignore ce fichier mais on continue
+                            continue
 
-                        # Sanitize filename to avoid encoding issues
-                        clean_filename = re.sub(r'[^a-zA-Z0-9._-]', '', file.filename)
+                        clean_filename = sanitize_filename(file.filename)
                         
-                        # Nom de fichier unique : ID_PROJET/TIMESTAMP_NOM
                         file_path = f"{projectId}/{datetime.now(timezone.utc).timestamp()}_{clean_filename}"
-                        
-                        # Upload vers Supabase Storage
+
                         upload_response = supabase.storage.from_('project-images').upload(
                             file_path,
                             file_content,
                             {"content-type": mime_type}
                         )
                         
-                        # Récupération de l'URL publique
                         public_url = supabase.storage.from_('project-images').get_public_url(file_path)
                         
-                        # Détermination du type de fichier pour la DB
                         file_type = "image" if mime_type.startswith("image/") else "document"
 
-                        # Enregistrement dans la table ProjectsImages
                         supabase.table('ProjectsImages').insert({
                             "projectId": projectId,
                             "fileUrl": public_url,
@@ -113,7 +122,6 @@ async def create_project_request(
                         
                     except Exception as upload_error:
                         logger.error(f"ERROR processing file {file.filename}: {str(upload_error)}")
-                        # On continue pour les autres fichiers même si un échoue
             
             return {
                 "message": "Demande de projet créée avec succès",
@@ -130,7 +138,6 @@ async def get_all_projects(userId: Optional[str] = None, current_user = Depends(
     """
     Récupérer toutes les demandes de projets, optionnellement filtrées par userId
     """
-    # Vérification du rôle de l'utilisateur
     user_role_data = supabase.table("Users").select("role").eq("id", current_user.id).single().execute()
     is_admin = user_role_data.data and user_role_data.data.get('role') == 'admin'
 
@@ -150,14 +157,12 @@ async def get_project(projectId: str):
     """
     Récupérer une demande de projet spécifique avec ses images
     """
-    # Récupération du projet
     result = supabase.table('Projects').select('*').eq('id', projectId).execute()
     if not result.data:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
     
     project = result.data[0]
     
-    # Récupération des images associées
     images_result = supabase.table('ProjectsImages').select('*').eq('projectId', projectId).execute()
     project['images'] = images_result.data if images_result.data else []
     
@@ -205,22 +210,18 @@ async def update_project(
     Mettre à jour un projet existant (uniquement si statut 'en attente')
     """
     try:
-        # Vérification du projet existant
         project_query = supabase.table('Projects').select('*').eq('id', projectId).execute()
         if not project_query.data:
             raise HTTPException(status_code=404, detail="Projet non trouvé")
         
         project = project_query.data[0]
         
-        # Vérification des droits (propriétaire uniquement)
         if project['userId'] != current_user.id:
             raise HTTPException(status_code=403, detail="Non autorisé")
 
-        # Vérification du statut
         if project['status'] != 'en attente':
             raise HTTPException(status_code=400, detail="Le projet ne peut être modifié que s'il est en attente")
 
-        # Préparation des données à mettre à jour
         update_data = {
             "updatedAt": datetime.now(timezone.utc).date().isoformat()
         }
@@ -239,7 +240,6 @@ async def update_project(
         if deadlineDate is not None: update_data['deadlineDate'] = deadlineDate
         if budget is not None: update_data['budget'] = budget
 
-        # Mise à jour en base
         result = supabase.table('Projects').update(update_data).eq('id', projectId).execute()
         
         return {
