@@ -1,6 +1,9 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends, Request
+from pydantic import BaseModel
 from app.database import supabase
 from app.dependencies import get_current_user
+from app.services.stripe_service import get_or_create_customer, create_quote, create_checkout_session
+import stripe
 from typing import Optional, List
 from datetime import datetime, timezone
 import os
@@ -173,7 +176,7 @@ async def update_project_status(projectId: str, status: str):
     """
     Mettre à jour le statut d'un projet
     """
-    valid_statuses = ["en attente", "en cours", "terminé"]
+    valid_statuses = ["en attente", "devis_envoyé", "paiement_attente", "payé", "en cours", "terminé"]
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail="Statut invalide")
     
@@ -187,6 +190,130 @@ async def update_project_status(projectId: str, status: str):
         raise HTTPException(status_code=404, detail="Projet non trouvé")
     
     return {"message": "Statut mis à jour", "project": result.data[0]}
+
+class ProjectQuote(BaseModel):
+    price: float
+
+@router.post("/projects/{projectId}/quote")
+async def create_project_quote(projectId: str, quote: ProjectQuote, current_user = Depends(get_current_user)):
+    """
+    Définir un prix pour le projet (Admin uniquement), créer un devis Stripe 
+    et passer en statut 'devis_envoyé'.
+    """
+    try:
+        # 1. Vérification Admin
+        user_role_data = supabase.table("Users").select("role").eq("id", current_user.id).single().execute()
+        if not user_role_data.data or user_role_data.data.get('role') != 'admin':
+            raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
+
+        # 2. Récuperer les infos du projet et du client
+        project_data = supabase.table('Projects').select('*').eq('id', projectId).single().execute()
+        if not project_data.data:
+             raise HTTPException(status_code=404, detail="Projet non trouvé")
+        project = project_data.data
+
+        client_id = project['userId']
+        client_data = supabase.table('Users').select('*').eq('id', client_id).single().execute()
+        if not client_data.data:
+            raise HTTPException(status_code=404, detail="Client introuvable")
+        client = client_data.data
+
+        # 3. Stripe : Récupérer ou créer le Customer
+        # On utilise le nom complet ou juste le prénom si pas de nom
+        client_name = f"{client.get('firstName', '')} {client.get('lastName', '')}".strip() or client.get('email')
+        
+        stripe_customer_id = client.get('stripe_customer_id')
+        
+        # Si pas d'ID Stripe en base, on interroge Stripe
+        if not stripe_customer_id:
+            stripe_customer_id = get_or_create_customer(client['email'], client_name, client['id'])
+            # On sauvegarde le nouvel ID pour la prochaine fois
+            supabase.table('Users').update({'stripe_customer_id': stripe_customer_id}).eq('id', client_id).execute()
+
+        # 4. Stripe : Créer le Devis (Quote)
+        stripe_quote = create_quote(
+            customer_id=stripe_customer_id,
+            amount_eur=quote.price,
+            project_title=project['title']
+        )
+
+        # 5. Mise à jour du projet avec l'ID du devis Stripe
+        update_data = {
+            "price": quote.price,
+            "status": "devis_envoyé",
+            "stripe_quote_id": stripe_quote.id,
+            "updatedAt": datetime.now(timezone.utc).date().isoformat()
+        }
+        
+        result = supabase.table('Projects').update(update_data).eq('id', projectId).execute()
+        
+        return {
+            "message": "Devis Stripe créé avec succès", 
+            "project": result.data[0],
+            "stripe_quote_url": stripe_quote.id # On pourrait renvoyer l'URL si on l'avait
+        }
+
+    except Exception as e:
+        logger.error(f"Erreur lors de la création du devis: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/projects/{projectId}/pay")
+async def pay_project(projectId: str, current_user = Depends(get_current_user)):
+    """
+    Initier le paiement Stripe pour le projet (Client uniquement)
+    Retourne l'URL de redirection vers Stripe Checkout
+    """
+    try:
+        # 1. Récupérer le projet
+        project_query = supabase.table('Projects').select('*').eq('id', projectId).execute()
+        if not project_query.data:
+            raise HTTPException(status_code=404, detail="Projet non trouvé")
+        
+        project = project_query.data[0]
+        
+        # 2. Vérifier que c'est bien le client
+        if project['userId'] != current_user.id:
+             raise HTTPException(status_code=403, detail="Non autorisé")
+             
+        # 3. Vérifier le statut
+        if project['status'] != 'devis_envoyé':
+            raise HTTPException(status_code=400, detail="Paiement non disponible pour ce statut")
+
+        # 4. Récupérer les infos client (Stripe ID)
+        user_data = supabase.table('Users').select('*').eq('id', current_user.id).single().execute()
+        stripe_customer_id = user_data.data.get('stripe_customer_id')
+        
+        # Si pour une raison quelconque l'ID manque, on le recrée
+        if not stripe_customer_id:
+             client_name = f"{user_data.data.get('firstName', '')} {user_data.data.get('lastName', '')}".strip() or user_data.data.get('email')
+             stripe_customer_id = get_or_create_customer(user_data.data['email'], client_name, current_user.id)
+             supabase.table('Users').update({'stripe_customer_id': stripe_customer_id}).eq('id', current_user.id).execute()
+
+        # 5. Créer la session Checkout Stripe
+        # URL de base du frontend (à configurer selon env prod/dev) ou referrer
+        base_url = os.getenv("FRONTEND_URL", "http://localhost:3000") # A adapter
+        
+        checkout_url = create_checkout_session(
+            customer_id=stripe_customer_id,
+            amount_eur=project['price'],
+            project_title=project['title'],
+            project_id=projectId,
+            success_url=f"{base_url}/projects/{projectId}?payment=success",
+            cancel_url=f"{base_url}/projects/{projectId}?payment=cancel"
+        )
+        
+        # On passe le statut à 'paiement_attente' le temps que l'utilisateur finisse sur Stripe
+        supabase.table('Projects').update({
+            "status": "paiement_attente",
+            "updatedAt": datetime.now(timezone.utc).date().isoformat()
+        }).eq('id', projectId).execute()
+        
+        return {"url": checkout_url}
+
+    except Exception as e:
+        logger.error(f"Erreur lors de l'initiation du paiement: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/projects/{projectId}")
 async def update_project(
@@ -253,3 +380,57 @@ async def update_project(
     except Exception as e:
         logger.error(f"Erreur lors de la mise à jour du projet: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur lors de la mise à jour du projet: {str(e)}")
+
+@router.post("/webhook")
+async def stripe_webhook(request: Request):
+    """
+    Webhook pour recevoir les confirmations de paiement de Stripe
+    """
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    webhook_secret = os.getenv("STRIPE_WEBHOOK_SECRET")
+
+    # Log pour le débogage (ne pas laisser en prod si très verbeux)
+    # logger.info(f"Webhook reçu. Signature: {sig_header[:10]}...")
+
+    if not webhook_secret:
+        logger.error("STRIPE_WEBHOOK_SECRET manquant dans les variables d'environnement")
+        raise HTTPException(status_code=500, detail="Configuration serveur manquante")
+
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, webhook_secret
+        )
+    except ValueError as e:
+        logger.error(f"Webhook Error (ValueError): {e}")
+        raise HTTPException(status_code=400, detail="Invalid payload")
+    except stripe.error.SignatureVerificationError as e:
+        logger.error(f"Webhook Error (SignatureVerificationError): {e}")
+        raise HTTPException(status_code=400, detail="Invalid signature")
+    except Exception as e:
+        logger.error(f"Webhook Error (Unknown): {e}")
+        raise HTTPException(status_code=400, detail="Webhook processing error")
+
+    # Gestion de l'événement 'checkout.session.completed'
+    if event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        
+        # Récupérer l'ID du projet stocké dans les métadonnées lors de la création de la session
+        project_id = session.get("metadata", {}).get("project_id")
+        
+        if project_id:
+            logger.info(f"WEBHOOK: Paiement confirmé pour le projet {project_id}")
+            
+            # Mise à jour du statut en 'payé'
+            try:
+                supabase.table('Projects').update({
+                    "status": "payé",
+                    "stripe_invoice_id": session.get("payment_intent"), 
+                    "updatedAt": datetime.now(timezone.utc).date().isoformat()
+                }).eq('id', project_id).execute()
+                logger.info("Statut projet mis à jour -> payé")
+            except Exception as db_error:
+                logger.error(f"Erreur DB update projet {project_id}: {db_error}")
+    
+    # On renvoie toujours 200 OK pour dire à Stripe "Bien reçu", même si l'event ne nous intéresse pas
+    return {"status": "success"}

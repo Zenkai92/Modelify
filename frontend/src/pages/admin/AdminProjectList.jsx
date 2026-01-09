@@ -26,9 +26,21 @@ const AdminProjectList = ({ statusFilter, title }) => {
         let filteredProjects = data.projects || [];
         
         if (statusFilter) {
-          filteredProjects = filteredProjects.filter(p => p.status === statusFilter);
+          if (Array.isArray(statusFilter)) {
+             filteredProjects = filteredProjects.filter(p => statusFilter.includes(p.status));
+          } else {
+             filteredProjects = filteredProjects.filter(p => p.status === statusFilter);
+          }
         }
         
+        // Tri personnalisé : 'payé' en priorité pour que l'admin voie ce qu'il doit traiter
+        filteredProjects.sort((a, b) => {
+            const priority = { 'payé': 1, 'en attente': 2, 'devis_envoyé': 3, 'paiement_attente': 4 };
+            const pA = priority[a.status] || 10;
+            const pB = priority[b.status] || 10;
+            return pA - pB; 
+        });
+
         setProjects(filteredProjects);
       } catch (err) {
         setError(err.message);
@@ -59,6 +71,9 @@ const AdminProjectList = ({ statusFilter, title }) => {
   const getStatusBadgeClass = (status) => {
     switch (status) {
       case 'en attente': return 'bg-warning text-dark';
+      case 'devis_envoyé': return 'bg-info text-dark';
+      case 'paiement_attente': return 'bg-info text-dark';
+      case 'payé': return 'bg-success';
       case 'en cours': return 'bg-primary';
       case 'terminé': return 'bg-success';
       default: return 'bg-secondary';

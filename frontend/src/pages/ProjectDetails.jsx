@@ -12,6 +12,8 @@ const ProjectDetails = () => {
   const [error, setError] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState(null);
+  const [showQuoteModal, setShowQuoteModal] = useState(false);
+  const [quotePrice, setQuotePrice] = useState('');
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -68,6 +70,66 @@ const ProjectDetails = () => {
     }
   };
 
+  const handleSendQuote = async () => {
+    if (!quotePrice || isNaN(quotePrice)) {
+        alert("Veuillez entrer un prix valide");
+        return;
+    }
+
+    try {
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/projects/${projectId}/quote`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({ price: parseFloat(quotePrice) })
+        });
+
+        if (!response.ok) {
+            throw new Error("Erreur lors de l'envoi du devis");
+        }
+
+        const data = await response.json();
+        setProject(data.project);
+        setShowQuoteModal(false);
+        setQuotePrice('');
+        alert("Devis envoyé avec succès !");
+
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    }
+  };
+
+  const handlePayment = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/projects/${projectId}/pay`, {
+          method: 'POST',
+          headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+          }
+      });
+
+      if (!response.ok) {
+          throw new Error("Erreur lors de l'initialisation du paiement");
+      }
+
+      const data = await response.json();
+      
+      // Redirection vers Stripe Checkout
+      if (data.url) {
+          window.location.href = data.url;
+      } else {
+          throw new Error("Aucune URL de paiement reçue");
+      }
+
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
+
   const formatDate = (dateString) => {
     if (!dateString) return '';
     return new Date(dateString).toLocaleDateString('fr-FR', {
@@ -118,6 +180,20 @@ const ProjectDetails = () => {
                 {project.status === 'en attente' && (
                   <button 
                     className="btn btn-light text-primary fw-bold px-4 shadow-sm me-3"
+                    onClick={() => setShowQuoteModal(true)}
+                  >
+                    <i className="bi bi-file-earmark-text me-2"></i> Faire un devis
+                  </button>
+                )}
+                 {project.status === 'devis_envoyé' && (
+                  <span className="badge bg-info me-3 py-2 px-3 text-dark">
+                    <i className="bi bi-envelope-paper me-2"></i> Devis envoyé : {project.price} €
+                  </span>
+                )}
+                {/* Le projet doit être payé pour être traité */}
+                {project.status === 'payé' && (
+                  <button 
+                    className="btn btn-light text-primary fw-bold px-4 shadow-sm me-3"
                     onClick={() => handleStatusChange('en cours')}
                   >
                     <i className="bi bi-play-fill me-2"></i> Traiter le projet
@@ -146,6 +222,25 @@ const ProjectDetails = () => {
 
         <div className="row">
           <div className="col-lg-8 mb-4">
+          
+            {/* Notification de devis pour le client */}
+            {!loading && project && (project.status === 'devis_envoyé' || project.status === 'paiement_attente') && user && project.userId === user.id && (
+              <div className="card border-0 shadow-sm mb-4 bg-white">
+                <div className="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
+                  <div>
+                    <h4 className="text-primary mb-1"><i className="bi bi-receipt me-2"></i>Devis reçu</h4>
+                    <p className="mb-0 text-muted">Un devis de <strong>{project.price} €</strong> a été établi pour ce projet.</p>
+                    {project.status === 'paiement_attente' && (
+                        <small className="text-warning"><i className="bi bi-hourglass-split me-1"></i>Paiement initié mais non finalisé.</small>
+                    )}
+                  </div>
+                  <button onClick={handlePayment} className="btn btn-success btn-lg fw-bold px-4 shadow-sm">
+                    <i className="bi bi-credit-card-2-front me-2"></i> Payer {project.price} €
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="card project-card h-100">
               <div className="card-body p-4 p-lg-5">
                 <h2 className="project-title mb-4">{project.title}</h2>
@@ -340,6 +435,40 @@ const ProjectDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Modal Devis */}
+      {showQuoteModal && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title text-dark">Établir un devis</h5>
+                <button type="button" className="btn-close" onClick={() => setShowQuoteModal(false)}></button>
+              </div>
+              <div className="modal-body text-dark">
+                <div className="mb-3">
+                  <label htmlFor="quotePrice" className="form-label">Prix du devis (€)</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    id="quotePrice"
+                    value={quotePrice}
+                    onChange={(e) => setQuotePrice(e.target.value)}
+                    placeholder="Ex: 150.00"
+                    min="0"
+                    step="0.01"
+                  />
+                  <small className="text-muted">En validant, le client recevra une notification et pourra payer ce montant.</small>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowQuoteModal(false)}>Annuler</button>
+                <button type="button" className="btn btn-primary" onClick={handleSendQuote}>Envoyer le devis</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modal de confirmation */}
       {showConfirmModal && (

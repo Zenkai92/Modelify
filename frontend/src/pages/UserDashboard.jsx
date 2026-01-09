@@ -13,7 +13,7 @@ const UserDashboard = () => {
       case '/profile':
         return <PersonalInfoCard />;
       case '/status-commandes':
-        return <OrderStatusCard title="Status des commandes" allowedStatuses={['en cours', 'en attente']} />;
+        return <OrderStatusCard title="Status des commandes" allowedStatuses={['en cours', 'en attente', 'devis_envoyé', 'paiement_attente', 'payé']} />;
       case '/completed-projects':
         return <OrderStatusCard title="Projets terminés" allowedStatuses={['terminé']} />;
       default:

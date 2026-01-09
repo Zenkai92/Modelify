@@ -22,7 +22,7 @@ const AdminDashboard = () => {
       case '/admin/users':
         return <AdminUserList />;
       case '/admin/projects/pending':
-        return <AdminProjectList statusFilter="en attente" title="Projets en attente" />;
+        return <AdminProjectList statusFilter={['en attente', 'devis_envoyé', 'paiement_attente', 'payé']} title="Projets à gérer" />;
       case '/admin/projects/in-progress':
         return <AdminProjectList statusFilter="en cours" title="Projets en cours" />;
       case '/admin/projects/completed':
