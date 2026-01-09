@@ -13,7 +13,9 @@ const UserDashboard = () => {
       case '/profile':
         return <PersonalInfoCard />;
       case '/status-commandes':
-        return <OrderStatusCard />;
+        return <OrderStatusCard title="Status des commandes" allowedStatuses={['en cours', 'en attente']} />;
+      case '/completed-projects':
+        return <OrderStatusCard title="Projets terminés" allowedStatuses={['terminé']} />;
       default:
         return <PersonalInfoCard />;
     }
@@ -52,6 +54,13 @@ const UserDashboard = () => {
                 >
                   <i className="bi bi-activity me-2"></i>
                   Status des commandes
+                </Link>
+                <Link 
+                  to="/completed-projects" 
+                  className={`list-group-item list-group-item-action py-3 dashboard-nav-link ${currentPath === '/completed-projects' ? 'active' : ''}`}
+                >
+                  <i className="bi bi-check-circle me-2"></i>
+                  Projets terminés
                 </Link>
               </div>
             </div>

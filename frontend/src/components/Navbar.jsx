@@ -55,6 +55,12 @@ const Navbar = () => {
                       Status des commandes
                     </Link>
                   </li>
+                  <li>
+                    <Link className="dropdown-item" to="/completed-projects">
+                      <i className="bi bi-check-circle me-2"></i>
+                      Projets terminés
+                    </Link>
+                  </li>
                   {user.user_metadata?.role === 'admin' && (
                     <>
                       <li><hr className="dropdown-divider" /></li>

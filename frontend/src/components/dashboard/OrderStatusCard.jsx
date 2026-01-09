@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import './OrderStatusCard.css';
 
-const OrderStatusCard = () => {
+const OrderStatusCard = ({ allowedStatuses, title = "Status des commandes" }) => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
   const [projects, setProjects] = useState([]);
@@ -33,6 +33,23 @@ const OrderStatusCard = () => {
 
     fetchProjects();
   }, [user, session]);
+
+  const getFilteredAndSortedProjects = () => {
+    let filtered = projects;
+    
+    if (allowedStatuses) {
+      filtered = projects.filter(project => allowedStatuses.includes(project.status));
+    }
+
+    return filtered.sort((a, b) => {
+      const priority = { 'en cours': 1, 'en attente': 2, 'terminé': 3 };
+      const pA = priority[a.status] || 4;
+      const pB = priority[b.status] || 4;
+      return pA - pB;
+    });
+  };
+
+  const displayProjects = getFilteredAndSortedProjects();
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
@@ -66,18 +83,20 @@ const OrderStatusCard = () => {
       <div className="card-header bg-white border-bottom py-3">
         <h5 className="mb-0 fw-bold order-status-title">
           <i className="bi bi-activity me-2"></i>
-          Status des commandes
+          {title}
         </h5>
       </div>
       <div className="card-body p-0">
-        {projects.length === 0 ? (
+        {displayProjects.length === 0 ? (
           <div className="p-5 text-center text-muted">
             <i className="bi bi-inbox display-4 d-block mb-3"></i>
-            <p className="mb-3">Aucune commande en cours.</p>
-            <Link to="/demande-projet" className="btn text-white order-status-btn">
-              <i className="bi bi-plus-lg me-2"></i>
-              Créer une nouvelle demande
-            </Link>
+            <p className="mb-3">Aucune commande pour le moment.</p>
+            {!allowedStatuses && (
+              <Link to="/demande-projet" className="btn text-white order-status-btn">
+                <i className="bi bi-plus-lg me-2"></i>
+                Créer une nouvelle demande
+              </Link>
+            )}
           </div>
         ) : (
           <div className="table-responsive">
@@ -90,7 +109,7 @@ const OrderStatusCard = () => {
                 </tr>
               </thead>
               <tbody>
-                {projects.map((project) => (
+                {displayProjects.map((project) => (
                   <tr 
                     key={project.id} 
                     onClick={() => navigate(`/projects/${project.id}`)}

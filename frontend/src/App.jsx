@@ -44,6 +44,12 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/completed-projects" element={
+                <ProtectedRoute>
+                  <UserDashboard />
+                </ProtectedRoute>
+              }
+            />
             <Route path="/projects/:projectId" element={
                 <ProtectedRoute>
                   <ProjectDetails />
