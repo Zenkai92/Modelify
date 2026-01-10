@@ -72,30 +72,35 @@ const AdminUserList = () => {
 
   return (
     <>
-      <div className="card shadow-sm">
-        <div className="card-body">
-          <h3 className="card-title mb-4">Gestion des utilisateurs</h3>
+      <div className="card shadow-sm border-0 rounded-3">
+        <div className="card-header bg-white border-bottom py-3">
+          <h5 className="mb-0 fw-bold dashboard-card-title">
+            <i className="bi bi-people me-2"></i>
+            Gestion des utilisateurs
+          </h5>
+        </div>
+        <div className="card-body p-0">
           <div className="table-responsive">
-            <table className="table table-hover align-middle">
-              <thead className="table-light">
+            <table className="table table-hover align-middle mb-0">
+              <thead className="bg-light">
                 <tr>
-                  <th>ID</th>
-                  <th>Nom</th>
-                  <th>Entreprise</th>
-                  <th>Email</th>
-                  <th>Rôle</th>
-                  <th>Date d'inscription</th>
+                  <th className="border-0 py-3 ps-4">ID</th>
+                  <th className="border-0 py-3">Nom</th>
+                  <th className="border-0 py-3">Entreprise</th>
+                  <th className="border-0 py-3">Email</th>
+                  <th className="border-0 py-3">Rôle</th>
+                  <th className="border-0 py-3 pe-4">Date d'inscription</th>
                 </tr>
               </thead>
               <tbody>
                 {users.map((u) => (
                   <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => handleShowProjects(u)}>
-                    <td><small className="text-muted">{u.id.substring(0, 8)}...</small></td>
-                    <td>{u.firstName} {u.lastName}</td>
+                    <td className="ps-4"><small className="text-muted">{u.id.substring(0, 8)}...</small></td>
+                    <td><span className="fw-bold text-dark">{u.firstName} {u.lastName}</span></td>
                     <td>{u.companyName || '-'}</td>
                     <td>{u.email}</td>
                     <td>
-                      <span className={`badge ${
+                      <span className={`badge rounded-pill ${
                         u.role === 'admin' ? 'bg-danger' : 
                         u.role === 'professionnel' ? 'bg-info text-dark' : 
                         'bg-secondary'
@@ -103,12 +108,15 @@ const AdminUserList = () => {
                         {u.role}
                       </span>
                     </td>
-                    <td>{new Date(u.createdAt).toLocaleDateString()}</td>
+                    <td className="pe-4">{new Date(u.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="text-center py-4">Aucun utilisateur trouvé</td>
+                    <td colSpan="6" className="text-center py-5 text-muted">
+                      <i className="bi bi-people display-4 d-block mb-3"></i>
+                      Aucun utilisateur trouvé
+                    </td>
                   </tr>
                 )}
               </tbody>

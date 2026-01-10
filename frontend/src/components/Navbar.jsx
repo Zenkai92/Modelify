@@ -70,6 +70,24 @@ const Navbar = () => {
                           Gestion utilisateur
                         </Link>
                       </li>
+                      <li>
+                        <Link className="dropdown-item" to="/admin/projects/pending">
+                          <i className="bi bi-hourglass-split me-2"></i>
+                          Projets en attente
+                        </Link>
+                      </li>
+                      <li>
+                        <Link className="dropdown-item" to="/admin/projects/in-progress">
+                          <i className="bi bi-tools me-2"></i>
+                          Projets en cours
+                        </Link>
+                      </li>
+                      <li>
+                        <Link className="dropdown-item" to="/admin/projects/completed">
+                          <i className="bi bi-check-circle me-2"></i>
+                          Projets terminés
+                        </Link>
+                      </li>
                     </>
                   )}
                   <li><hr className="dropdown-divider" /></li>

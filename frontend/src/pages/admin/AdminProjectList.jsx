@@ -84,37 +84,51 @@ const AdminProjectList = ({ statusFilter, title }) => {
   if (error) return <div className="alert alert-danger">{error}</div>;
 
   return (
-    <div className="card shadow-sm">
-      <div className="card-body">
-        <h3 className="card-title mb-4">{title || 'Liste des projets'}</h3>
+    <div className="card shadow-sm border-0 rounded-3">
+      <div className="card-header bg-white border-bottom py-3">
+        <h5 className="mb-0 fw-bold dashboard-card-title">
+          <i className="bi bi-collection me-2"></i>
+          {title || 'Liste des projets'}
+        </h5>
+      </div>
+      <div className="card-body p-0">
         <div className="table-responsive">
-          <table className="table table-hover align-middle">
-            <thead className="table-light">
+          <table className="table table-hover align-middle mb-0">
+            <thead className="bg-light">
               <tr>
-                <th>Titre</th>
-                <th>Client ID</th>
-                <th>Date</th>
-                <th>Statut</th>
-                <th>Budget</th>
+                <th className="border-0 py-3 ps-4">Titre</th>
+                <th className="border-0 py-3">Client ID</th>
+                <th className="border-0 py-3">Date</th>
+                <th className="border-0 py-3">Statut</th>
+                <th className="border-0 py-3 pe-4">Budget</th>
               </tr>
             </thead>
             <tbody>
               {projects.map((project) => (
-                <tr key={project.id} onClick={() => handleProjectClick(project.id)} style={{ cursor: 'pointer' }}>
-                  <td>{project.title}</td>
-                  <td><small className="text-muted">{project.userId.substring(0, 8)}...</small></td>
+                <tr 
+                  key={project.id} 
+                  onClick={() => handleProjectClick(project.id)} 
+                  style={{ cursor: 'pointer' }}
+                >
+                  <td className="ps-4">
+                    <span className="fw-bold text-dark">{project.title}</span>
+                  </td>
+                  <td><small className="text-muted">{project.userId?.substring(0, 8)}...</small></td>
                   <td>{new Date(project.created_at).toLocaleDateString()}</td>
                   <td>
                     <span className={`badge rounded-pill ${getStatusBadgeClass(project.status)}`}>
                       {project.status}
                     </span>
                   </td>
-                  <td>{formatBudget(project.budget)}</td>
+                  <td className="pe-4">{formatBudget(project.budget)}</td>
                 </tr>
               ))}
               {projects.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="text-center py-4">Aucun projet trouvé</td>
+                  <td colSpan="5" className="text-center py-5 text-muted">
+                    <i className="bi bi-folder2-open display-4 d-block mb-3"></i>
+                    Aucun projet trouvé
+                  </td>
                 </tr>
               )}
             </tbody>
