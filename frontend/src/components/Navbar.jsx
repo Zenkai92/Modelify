@@ -1,10 +1,34 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, session } = useAuth();
+  const [projectCount, setProjectCount] = useState(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (user && session) {
+        fetchProjectCount();
+    }
+  }, [user, session, location.pathname]); // Refresh on route change to keep it updated
+
+  const fetchProjectCount = async () => {
+      try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/count`, {
+              headers: {
+                  'Authorization': `Bearer ${session.access_token}`
+              }
+          });
+          if (response.ok) {
+              const data = await response.json();
+              setProjectCount(data);
+          }
+      } catch (error) {
+          console.error("Failed to fetch project count", error);
+      }
+  };
 
   return (
     <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
@@ -25,8 +49,10 @@ const Navbar = () => {
         <div className="collapse navbar-collapse" id="navbarNav">
           <ul className="navbar-nav ms-auto">
             {user && (
-              <li className="nav-item">
-                <Link className="nav-link text-white" to="/demande-projet">Demander un projet</Link>
+              <li className="nav-item d-flex align-items-center">
+                <Link className="nav-link text-white d-flex align-items-center gap-2" to="/demande-projet">
+                  Demander un projet
+                </Link>
               </li>
             )}
             {user ? (

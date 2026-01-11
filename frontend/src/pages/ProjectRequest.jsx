@@ -1,9 +1,35 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import ProjectForm from '../components/forms/ProjectForm';
 import FloatingShapes from '../components/FloatingShapes';
+import { useAuth } from '../contexts/AuthContext';
 import './ProjectRequest.css';
 
 const ProjectRequest = () => {
+  const { session } = useAuth();
+  const [projectCount, setProjectCount] = useState(null);
+
+  useEffect(() => {
+    if (session) {
+        fetchProjectCount();
+    }
+  }, [session]);
+
+  const fetchProjectCount = async () => {
+      try {
+          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/count`, {
+              headers: {
+                  'Authorization': `Bearer ${session.access_token}`
+              }
+          });
+          if (response.ok) {
+              const data = await response.json();
+              setProjectCount(data);
+          }
+      } catch (error) {
+          console.error("Failed to fetch project count", error);
+      }
+  };
+
   return (
     <div className="project-request-page">
       <div className="project-request-header">
@@ -11,6 +37,12 @@ const ProjectRequest = () => {
         <div className="container position-relative z-1 text-center text-white pt-5">
           <h1 className="fw-bold mb-3">Lancer un nouveau projet</h1>
           <p className="lead">Décrivez votre besoin, nous nous occupons de la modélisation.</p>
+          {projectCount && (
+            <div className={`limit-indicator ${projectCount.active_projects >= projectCount.limit ? 'limit-reached' : ''}`}>
+                <i className={`bi ${projectCount.active_projects >= projectCount.limit ? 'bi-exclamation-circle' : 'bi-info-circle'}`}></i>
+                <span>Projets en cours : <strong>{projectCount.active_projects} / {projectCount.limit}</strong></span>
+            </div>
+          )}
         </div>
         <div className="custom-shape-divider-bottom">
             <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">

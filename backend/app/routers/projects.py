@@ -46,6 +46,19 @@ def validate_mime_type(content: bytes, declared_type: str) -> str:
             logger.warning(f"Erreur lors de la détection magic du type MIME: {e}")
     return mime_type
 
+@router.get("/projects/count")
+async def get_project_count(current_user = Depends(get_current_user)):
+    """
+    Récupérer le nombre de projets actifs (non 'terminé') pour l'utilisateur courant
+    """
+    result = supabase.table('Projects')\
+        .select("id", count="exact")\
+        .eq('userId', current_user.id)\
+        .neq('status', 'terminé')\
+        .execute()
+    
+    return {"active_projects": result.count or 0, "limit": 2}
+
 @router.post("/projects", response_model=dict)
 async def create_project_request(
     title: str = Form(...),
@@ -68,6 +81,19 @@ async def create_project_request(
     Créer une nouvelle demande de projet de modélisation 3D
     """
     try:
+        # Vérification de la limite de projets actifs (non "terminé")
+        active_projects = supabase.table('Projects')\
+            .select("id", count="exact")\
+            .eq('userId', current_user.id)\
+            .neq('status', 'terminé')\
+            .execute()
+            
+        if active_projects.count and active_projects.count >= 2:
+            raise HTTPException(
+                status_code=400, 
+                detail="Limite de projets atteinte. Vous ne pouvez pas avoir plus de 2 projets en cours simultanément (hors projets terminés)."
+            )
+
         project_data = {
             "title": title,
             "descriptionClient": descriptionClient,
@@ -132,6 +158,8 @@ async def create_project_request(
                 "status": "success"
             }
         
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Erreur lors de la création du projet: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Erreur lors de la création du projet: {str(e)}")

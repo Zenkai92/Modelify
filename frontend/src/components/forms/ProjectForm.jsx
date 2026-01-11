@@ -198,7 +198,7 @@ const ProjectForm = ({ initialData = null }) => {
         show: true,
         status: 'error',
         projectId: null,
-        message: 'Une erreur est survenue. Veuillez réessayer.'
+        message: error.message || 'Une erreur est survenue. Veuillez réessayer.'
       });
     }
     

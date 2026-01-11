@@ -25,3 +25,28 @@
 .project-request-header .custom-shape-divider-bottom .shape-fill {
   fill: #ffffff;
 }
+
+.limit-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.95);
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.limit-indicator i {
+  font-size: 1.1em;
+}
+
+.limit-indicator.limit-reached {
+  background: rgba(255, 80, 80, 0.15);
+  border-color: rgba(255, 100, 100, 0.3);
+  color: #ffe0e0;
+}
