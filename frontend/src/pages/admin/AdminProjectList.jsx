@@ -97,7 +97,7 @@ const AdminProjectList = ({ statusFilter, title }) => {
             <thead className="bg-light">
               <tr>
                 <th className="border-0 py-3 ps-4">Titre</th>
-                <th className="border-0 py-3">Client ID</th>
+                <th className="border-0 py-3">Rôle</th>
                 <th className="border-0 py-3">Date</th>
                 <th className="border-0 py-3">Statut</th>
                 <th className="border-0 py-3 pe-4">Budget</th>
@@ -113,7 +113,21 @@ const AdminProjectList = ({ statusFilter, title }) => {
                   <td className="ps-4">
                     <span className="fw-bold text-dark">{project.title}</span>
                   </td>
-                  <td><small className="text-muted">{project.userId?.substring(0, 8)}...</small></td>
+
+
+
+
+                  <td><span className={`badge ${
+                        project.Users.role === 'admin' ? 'bg-danger' : 
+                        project.Users.role === 'professionnel' ? 'bg-info text-dark' : 
+                        'bg-secondary'
+                      }`}>
+                        {project.Users.role}
+                      </span>
+                  </td>
+
+
+
                   <td>{new Date(project.created_at).toLocaleDateString()}</td>
                   <td>
                     <span className={`badge rounded-pill ${getStatusBadgeClass(project.status)}`}>

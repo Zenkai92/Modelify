@@ -91,7 +91,6 @@ const UserManagement = () => {
             <table className="table table-hover align-middle">
               <thead className="table-light">
                 <tr>
-                  <th>ID</th>
                   <th>Nom</th>
                   <th>Entreprise</th>
                   <th>Email</th>
@@ -102,7 +101,6 @@ const UserManagement = () => {
               <tbody>
                 {users.map((u) => (
                   <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => handleShowProjects(u)}>
-                    <td><small className="text-muted">{u.id.substring(0, 8)}...</small></td>
                     <td>{u.firstName} {u.lastName}</td>
                     <td>{u.companyName || '-'}</td>
                     <td>{u.email}</td>

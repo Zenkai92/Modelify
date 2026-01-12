@@ -84,7 +84,6 @@ const AdminUserList = () => {
             <table className="table table-hover align-middle mb-0">
               <thead className="bg-light">
                 <tr>
-                  <th className="border-0 py-3 ps-4">ID</th>
                   <th className="border-0 py-3">Nom</th>
                   <th className="border-0 py-3">Entreprise</th>
                   <th className="border-0 py-3">Email</th>
@@ -95,7 +94,6 @@ const AdminUserList = () => {
               <tbody>
                 {users.map((u) => (
                   <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => handleShowProjects(u)}>
-                    <td className="ps-4"><small className="text-muted">{u.id.substring(0, 8)}...</small></td>
                     <td><span className="fw-bold text-dark">{u.firstName} {u.lastName}</span></td>
                     <td>{u.companyName || '-'}</td>
                     <td>{u.email}</td>

@@ -175,10 +175,13 @@ async def get_all_projects(userId: Optional[str] = None, current_user = Depends(
     query = supabase.table('Projects').select('*')
     
     if is_admin:
+        # On récupère aussi les infos utilisateur si c'est un admin
+        # Attention: cela suppose qu'une Foreign Key existe entre Projects.userId et Users.id
+        query = supabase.table('Projects').select('*, Users(firstName, lastName, companyName, role)')
         if userId:
             query = query.eq('userId', userId)
     else:
-        query = query.eq('userId', current_user.id)
+        query = supabase.table('Projects').select('*').eq('userId', current_user.id)
     
     result = query.execute()
     return {"projects": result.data, "total": len(result.data)}
