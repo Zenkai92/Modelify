@@ -1,11 +1,12 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import projects, users
 import uvicorn
 import os
-from dotenv import load_dotenv
-
-load_dotenv()
 
 app = FastAPI(
     title="Modelify API",
