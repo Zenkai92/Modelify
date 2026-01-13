@@ -12,7 +12,7 @@ Modelify est une plateforme web complète permettant aux utilisateurs (particuli
 - **Gestion de Projets** :
     - Soumission détaillée de projets (titre, description, usage, dimensions, budget, délais).
     - Upload de fichiers (images, PDF, ZIP) sécurisé avec validation MIME.
-    - Suivi du statut des projets (en attente, validé, etc.).
+    - Suivi du statut des projets (en attente, en cours, etc.).
 
 - **Administration** :
     - Dashboard administrateur pour visualiser les métriques clés.
@@ -45,8 +45,6 @@ Modelify est une plateforme web complète permettant aux utilisateurs (particuli
 - **Stockage de Fichiers** : Supabase Storage
 
 ## 🏗️ Architecture et Flux de Données
-
-⚠️ **Règle d'or** : Le Frontend ne communique **JAMAIS** directement avec la base de données pour les opérations CRUD. Toutes les requêtes passent par l'API Backend (FastAPI) pour garantir la validation, la sécurité et la logique métier.
 
 ```mermaid
 graph TD
@@ -94,6 +92,19 @@ graph TD
 1.  Aller dans le dossier frontend : `cd frontend`
 2.  Installer les dépendances : `npm install`
 3.  Lancer le serveur de développement : `npm run dev`
+
+#### Stripe test (lors du développement)
+1.  A la racine : `./stripe listen --forward-to localhost:8000/api/webhook`
+
+## Tests (unitaires et intégrations)
+
+### Frontend
+1.  Exectuer tous les tests : `npm run test`
+2.  Executer un test spécifique : `npm run test <Nom_du_test>`
+
+### Backend
+1.  Executer tous les tests : `python -m unittest discover tests`
+2.  Executer un test spécifique : `python -m unittest <dossier>.<fichier_sans_extension>.<ClasseDeTest>.<nom_de_la_methode>`
 
 ## ⚙️ Configuration (Variables d'Environnement)
 

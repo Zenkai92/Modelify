@@ -15,11 +15,14 @@ const detailLevelOptions = [
 const ProjectForm = ({ initialData = null }) => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
-  const [step, setStep] = useState(1);
+  // If editing, start at step 2 and assume knowledgeable to show all fields
+  const [step, setStep] = useState(initialData ? 2 : 1);
+  const [userLevel, setUserLevel] = useState(initialData ? 'knowledgeable' : null); // 'beginner' | 'knowledgeable'
+
   const [formData, setFormData] = useState(initialData ? {
     ...initialData,
     format: initialData.format ? (typeof initialData.format === 'string' ? initialData.format.split(',') : initialData.format) : [],
-    files: [], // Les fichiers ne peuvent pas être pré-remplis
+    files: [], // Files cannot be pre-filled
     dimensionLength: initialData.dimensionLength || '',
     dimensionWidth: initialData.dimensionWidth || '',
     dimensionHeight: initialData.dimensionHeight || '',
@@ -69,7 +72,6 @@ const ProjectForm = ({ initialData = null }) => {
     const { name, value, type, files, checked } = e.target;
     if (type === 'file') {
       const fileArray = Array.from(files || []);
-      console.log("Files selected:", fileArray);
       setFormData(prev => ({
         ...prev,
         [name]: fileArray
@@ -97,13 +99,14 @@ const ProjectForm = ({ initialData = null }) => {
     }
   };
 
+  const handleLevelSelect = (level) => {
+    setUserLevel(level);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    console.log("--- DEBUG SUBMIT ---");
-    console.log("Files in state:", formData.files);
-
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
@@ -125,22 +128,9 @@ const ProjectForm = ({ initialData = null }) => {
       }
 
       if (formData.files && formData.files.length > 0) {
-        console.log(`Appending ${formData.files.length} files to FormData`);
-        formData.files.forEach((file, index) => {
-          console.log(`File ${index}:`, file.name, file.size, file.type);
+        formData.files.forEach((file) => {
           formDataToSend.append('files', file);
         });
-      } else {
-        console.log("No files to append");
-      }
-
-      // Log FormData entries for debugging
-      for (let pair of formDataToSend.entries()) {
-        if (pair[0] === 'files') {
-            console.log('FormData Entry: files', pair[1].name);
-        } else {
-            console.log('FormData Entry:', pair[0], pair[1]);
-        }
       }
 
       const url = initialData 
@@ -172,25 +162,29 @@ const ProjectForm = ({ initialData = null }) => {
         message: initialData ? 'Votre projet a été modifié avec succès !' : 'Votre demande a été soumise avec succès !'
       });
 
-      setFormData({
-        title: '',
-        descriptionClient: '',
-        use: '',
-        format: [],
-        files: [],
-        nbElements: 'unique',
-        dimensionLength: '',
-        dimensionWidth: '',
-        dimensionHeight: '',
-        dimensionNoConstraint: false,
-        detailLevel: 'standard',
-        deadlineType: '',
-        deadlineDate: '',
-        budget: ''
-      });
-      
-      const fileInput = document.getElementById('files');
-      if (fileInput) fileInput.value = '';
+      // Reset form if just created
+      if (!initialData) {
+        setFormData({
+          title: '',
+          descriptionClient: '',
+          use: '',
+          format: [],
+          files: [],
+          nbElements: 'unique',
+          dimensionLength: '',
+          dimensionWidth: '',
+          dimensionHeight: '',
+          dimensionNoConstraint: false,
+          detailLevel: 'standard',
+          deadlineType: '',
+          deadlineDate: '',
+          budget: ''
+        });
+        setStep(1);
+        setUserLevel(null);
+        const fileInput = document.getElementById('files');
+        if (fileInput) fileInput.value = '';
+      }
       
     } catch (error) {
       console.error('Erreur:', error);
@@ -213,13 +207,42 @@ const ProjectForm = ({ initialData = null }) => {
   };
 
   const nextStep = () => {
-    if (step === 1) {
+    if (step === 1) { // Level Selection
+      if (!userLevel) {
+        showToast("Veuillez sélectionner votre niveau d'expérience");
+        return;
+      }
+      
+      if (userLevel === 'beginner') {
+          // Set defaults for beginner
+          setFormData(prev => ({
+              ...prev,
+              nbElements: 'Objet unique monobloc',
+              dimensionNoConstraint: true,
+              format: ['STL'], 
+              detailLevel: 'standard'
+          }));
+      }
+
+      setStep(2);
+      return;
+    }
+
+    if (step === 2) { // General Info
       if (!formData.title || !formData.descriptionClient || !formData.use) {
         showToast("Veuillez remplir tous les champs obligatoires");
         return;
       }
+      
+      if (userLevel === 'beginner') {
+          setStep(5); // Go to Budget/Deadline
+      } else {
+          setStep(3); // Go to Characteristics
+      }
+      return;
     }
-    if (step === 2) {
+
+    if (step === 3) { // Characteristics
       if (formData.nbElements !== 'Objet unique monobloc' && formData.nbElements !== 'Plusieurs pièces assemblées') {
         showToast("Veuillez indiquer le nombre d'éléments à modéliser");
         return;
@@ -228,17 +251,56 @@ const ProjectForm = ({ initialData = null }) => {
         showToast("Veuillez renseigner les dimensions ou cocher 'Pas de contrainte dimensionnelle'");
         return;
       }
+      setStep(4);
+      return;
     }
-    if (step === 3) {
+
+    if (step === 4) { // Formats
       if (formData.format.length === 0) {
         showToast("Veuillez sélectionner au moins un format de fichier");
         return;
       }
+      setStep(5);
+      return;
     }
-    setStep(step + 1);
   };
 
-  const prevStep = () => setStep(step - 1);
+  const prevStep = () => {
+      if (step === 2) {
+          if (initialData) return; // Cannot go back to level selection if editing
+          setStep(1);
+      } else if (step === 3) {
+          setStep(2);
+      } else if (step === 4) {
+          setStep(3);
+      } else if (step === 5) {
+          if (userLevel === 'beginner') {
+              setStep(2);
+          } else {
+              setStep(4);
+          }
+      }
+  };
+
+  const getProgress = () => {
+    if (userLevel === 'beginner') {
+        if (step === 1) return 33;
+        if (step === 2) return 66;
+        if (step === 5) return 100;
+        return 0; // Should not happen
+    } else {
+        return step * 20;
+    }
+  };
+
+  const getStepLabel = () => {
+      if (userLevel === 'beginner') {
+          if (step === 1) return "Étape 1 sur 3";
+          if (step === 2) return "Étape 2 sur 3";
+          if (step === 5) return "Étape 3 sur 3";
+      }
+      return `Étape ${step} sur 5`;
+  };
 
   return (
     <>
@@ -247,17 +309,18 @@ const ProjectForm = ({ initialData = null }) => {
         type={toast.type} 
         onClose={() => setToast({ ...toast, message: '' })} 
       />
+      
+      {/* Do not show progress bar description on step 1 if not selected yet, or just show general "Start" */}
       <div className="mb-4">
         <div className="d-flex justify-content-between mb-2">
-            <span className="fw-bold step-label">Étape {step} sur 4</span>
-            <span className="text-muted">{step === 1 ? '25%' : step === 2 ? '50%' : step === 3 ? '75%' : '100%'}</span>
+            <span className="fw-bold step-label">{getStepLabel()}</span>
         </div>
         <div className="progress project-form-progress">
           <div 
             className="progress-bar" 
             role="progressbar" 
-            style={{ width: step === 1 ? '25%' : step === 2 ? '50%' : step === 3 ? '75%' : '100%' }}
-            aria-valuenow={step === 1 ? 25 : step === 2 ? 50 : step === 3 ? 75 : 100} 
+            style={{ width: `${getProgress()}%` }}
+            aria-valuenow={getProgress()} 
             aria-valuemin="0" 
             aria-valuemax="100"
           >
@@ -267,6 +330,54 @@ const ProjectForm = ({ initialData = null }) => {
 
       <form onSubmit={handleSubmit}>
         {step === 1 && (
+            <>
+                <h3 className="mb-4 text-center">Quel est votre niveau de connaissance en modélisation 3D ?</h3>
+                <div className="row justify-content-center g-4 mb-5">
+                    <div className="col-md-5">
+                        <div 
+                            className={`card h-100 cursor-pointer selection-card ${userLevel === 'beginner' ? 'border-primary bg-light ring-2' : ''}`}
+                            onClick={() => handleLevelSelect('beginner')}
+                            style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                        >
+                            <div className="card-body text-center p-4">
+                                <i className="bi bi-emoji-smile fs-1 text-success mb-3"></i>
+                                <h4 className="card-title">Débutant</h4>
+                                <p className="card-text text-muted">
+                                    Je ne connais pas les détails techniques. Je veux juste expliquer mon idée.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="col-md-5">
+                        <div 
+                            className={`card h-100 cursor-pointer selection-card ${userLevel === 'knowledgeable' ? 'border-primary bg-light ring-2' : ''}`}
+                            onClick={() => handleLevelSelect('knowledgeable')}
+                            style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                        >
+                            <div className="card-body text-center p-4">
+                                <i className="bi bi-gear-wide-connected fs-1 text-primary mb-3"></i>
+                                <h4 className="card-title">Initié / Expert</h4>
+                                <p className="card-text text-muted">
+                                    Je sais spécifier les formats de fichiers, les dimensions et les niveaux de détails.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="text-center">
+                    <button
+                        type="button"
+                        className="btn btn-primary btn-lg"
+                        onClick={nextStep}
+                        disabled={!userLevel}
+                    >
+                        Commencer
+                    </button>
+                </div>
+            </>
+        )}
+
+        {step === 2 && (
           <>
             <h3 className="mb-4">Informations générales</h3>
             <div className="mb-3">
@@ -339,7 +450,15 @@ const ProjectForm = ({ initialData = null }) => {
               )}
             </div>
 
-            <div className="text-center">
+            <div className="d-flex justify-content-between mt-5">
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={prevStep}
+                disabled={initialData} // Disable back button on first visible step if editing
+              >
+                Précédent
+              </button>
               <button
                 type="button"
                 className="btn btn-primary btn-lg"
@@ -351,7 +470,7 @@ const ProjectForm = ({ initialData = null }) => {
           </>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <>
             <h3 className="mb-4">Caractéristiques du modèle</h3>
             <div className="mb-3">
@@ -458,7 +577,7 @@ const ProjectForm = ({ initialData = null }) => {
               />
             </div>
 
-            <div className="d-flex justify-content-between">
+            <div className="d-flex justify-content-between mt-5">
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -477,7 +596,7 @@ const ProjectForm = ({ initialData = null }) => {
           </>
         )}
 
-        {step === 3 && (
+        {step === 4 && (
           <>
             <h3 className="mb-4">Formats de fichiers souhaités</h3>
             <p className="text-muted mb-4">Sélectionnez un ou plusieurs formats de livraison pour votre modèle 3D.</p>
@@ -528,7 +647,7 @@ const ProjectForm = ({ initialData = null }) => {
           </>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <>
             <h3 className="mb-4">Délais et Budget</h3>
             

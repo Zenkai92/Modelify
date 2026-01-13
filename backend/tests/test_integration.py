@@ -46,7 +46,19 @@ class TestIntegration(unittest.TestCase):
         def table_side_effect(table_name):
             mock_t = MagicMock()
             if table_name == 'Projects':
+                # Mock pour l'insertion
                 mock_t.insert.return_value.execute.return_value.data = [{"id": 123}]
+                
+                # Mock pour le count (select -> eq -> neq -> execute)
+                mock_select_chain = MagicMock()
+                mock_t.select.return_value = mock_select_chain
+                mock_select_chain.eq.return_value = mock_select_chain
+                mock_select_chain.neq.return_value = mock_select_chain
+                
+                mock_count_result = MagicMock()
+                mock_count_result.count = 0
+                mock_select_chain.execute.return_value = mock_count_result
+                
             elif table_name == 'ProjectsImages':
                 mock_t.insert.return_value.execute.return_value.data = [{"id": 456}]
             return mock_t
