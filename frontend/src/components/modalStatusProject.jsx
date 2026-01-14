@@ -1,15 +1,29 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import './modalStatusProject.css';
 
 const ModalStatusProject = ({ show, status, projectId, message, onClose }) => {
+  // Gestion du scroll du body quand la modale est ouverte
+  useEffect(() => {
+    if (show) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [show]);
+
   if (!show) return null;
 
   const isSuccess = status === 'success';
 
-  return (
-    <div className="modal d-block modal-overlay">
+  // Utilisation de Portal pour sortir la modale du flux parent (évite les conflits CSS/z-index)
+  return createPortal(
+    <div className="modal d-block modal-overlay fade-in">
       <div className="modal-dialog modal-dialog-centered">
-        <div className="modal-content border-0 shadow-lg modal-content-custom">
+        <div className="modal-content border-0 shadow-lg modal-content-custom slide-in">
           
           {/* Header with Gradient */}
           <div className="modal-header text-white border-0 modal-gradient">
@@ -64,7 +78,8 @@ const ModalStatusProject = ({ show, status, projectId, message, onClose }) => {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
