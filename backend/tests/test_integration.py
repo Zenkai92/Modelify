@@ -160,7 +160,7 @@ class TestIntegration(unittest.TestCase):
     def test_get_project_detail(self, mock_supabase):
         """Test récupération d'un projet spécifique"""
         mock_project_query = MagicMock()
-        mock_project_query.select.return_value.eq.return_value.execute.return_value.data = [{'id': 123, 'title': 'Test Project'}]
+        mock_project_query.select.return_value.eq.return_value.execute.return_value.data = [{'id': 123, 'title': 'Test Project', 'userId': 'test_user_id'}]
         
         mock_images_query = MagicMock()
         mock_images_query.select.return_value.eq.return_value.execute.return_value.data = []

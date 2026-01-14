@@ -24,16 +24,17 @@ describe('Composant ProjectForm', () => {
     })
   })
 
-  it('affiche correctement le formulaire (étape 1)', () => {
+  it('affiche correctement le formulaire (étape 1: Niveau)', () => {
     render(
       <MemoryRouter>
         <ProjectForm />
       </MemoryRouter>
     )
-    expect(screen.getByLabelText(/Titre du projet/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Description détaillée/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/Usage final du modèle/i)).toBeInTheDocument()
-    expect(screen.getByText(/Suivant/i)).toBeInTheDocument()
+    expect(screen.getByText(/Quel est votre niveau de connaissance en modélisation 3D/i)).toBeInTheDocument()
+    expect(screen.getByText(/Débutant/i)).toBeInTheDocument()
+    expect(screen.getByText(/Initié \/ Expert/i)).toBeInTheDocument()
+    // Le bouton commencer doit être présent (initialement disabled)
+    expect(screen.getByText(/Commencer/i)).toBeInTheDocument()
   })
 
   it('parcourt toutes les étapes et envoie les données', async () => {
@@ -42,6 +43,18 @@ describe('Composant ProjectForm', () => {
         <ProjectForm />
       </MemoryRouter>
     )
+
+    // --- Étape 1 : Sélection du niveau ---
+    // On clique sur le card "Initié / Expert"
+    fireEvent.click(screen.getByText(/Initié \/ Expert/i))
+    
+    // Le bouton commencer s'active, on clique dessus
+    fireEvent.click(screen.getByText(/Commencer/i))
+
+    // --- Étape 2 : Infos générales ---
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Titre du projet/i)).toBeInTheDocument()
+    })
 
     fireEvent.change(screen.getByLabelText(/Titre du projet/i), {
       target: { value: 'Mon Super Projet 3D' }
@@ -57,6 +70,7 @@ describe('Composant ProjectForm', () => {
 
     fireEvent.click(screen.getByText(/Suivant/i))
 
+    // --- Étape 3 : Caractéristiques ---
     await waitFor(() => {
       expect(screen.getByText(/Caractéristiques du modèle/i)).toBeInTheDocument()
     })
@@ -66,6 +80,7 @@ describe('Composant ProjectForm', () => {
 
     fireEvent.click(screen.getByText(/Suivant/i))
 
+    // --- Étape 4 : Formats ---
     await waitFor(() => {
       expect(screen.getByText(/Formats de fichiers souhaités/i)).toBeInTheDocument()
     })
@@ -74,12 +89,16 @@ describe('Composant ProjectForm', () => {
 
     fireEvent.click(screen.getByText(/Suivant/i))
 
+    // --- Étape 5 : Délais et Budget ---
     await waitFor(() => {
       expect(screen.getByText(/Délais et Budget/i)).toBeInTheDocument()
     })
 
-    fireEvent.click(screen.getByLabelText(/Pas de contrainte/i))
-    fireEvent.click(screen.getByLabelText(/Moins de 100€/i))
+    // Sélection du délai "Non" qui contient le texte "Pas de contrainte"
+    fireEvent.click(screen.getByText(/Pas de contrainte/i))
+    
+    // Sélection du budget "Moins de 100€"
+    fireEvent.click(screen.getByText(/Moins de 100€/i))
 
     const submitButton = screen.getByText(/Soumettre la demande/i)
     fireEvent.click(submitButton)
