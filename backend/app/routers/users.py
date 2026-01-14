@@ -8,6 +8,31 @@ import logging
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+@router.get("/users/me", status_code=status.HTTP_200_OK)
+async def get_current_user_profile(current_user = Depends(get_current_user)):
+    """
+    Récupérer le profil complet de l'utilisateur connecté via la table Users.
+    Enriched user profile (safe, server-side).
+    """
+    try:
+        response = supabase.table("Users").select("*").eq("id", current_user.id).single().execute()
+        
+        if not response.data:
+            # Fallback si l'utilisateur n'est pas encore dans la table Users
+            logger.warning(f"User {current_user.id} not found in Users table during /me call")
+            return {
+                "id": current_user.id,
+                "email": current_user.email,
+                "role": "particulier", # Default
+                "firstName": "",
+                "lastName": "" 
+            }
+            
+        return response.data
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération du profil utilisateur /me: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
 @router.get("/users", status_code=status.HTTP_200_OK)
 async def get_users(current_user = Depends(get_current_user)):
     """

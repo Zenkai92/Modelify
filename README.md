@@ -94,7 +94,8 @@ graph TD
 3.  Lancer le serveur de développement : `npm run dev`
 
 #### Stripe test (lors du développement)
-1.  A la racine : `./stripe listen --forward-to localhost:8000/api/webhook`
+1.  Connexion au service test de Stripe : `./stripe login`
+2.  Lancer l'écoute : `./stripe listen --forward-to localhost:8000/api/webhook`
 
 ## Tests (unitaires et intégrations)
 

@@ -221,7 +221,7 @@ const ProjectDetails = () => {
         </div>
 
         <div className="row">
-          <div className="col-lg-8 mb-4">
+          <div className="col-lg-8 mb-4 d-flex flex-column">
           
             {/* Notification de devis pour le client */}
             {!loading && project && (project.status === 'devis_envoyé' || project.status === 'paiement_attente') && user && project.userId === user.id && (
@@ -241,7 +241,7 @@ const ProjectDetails = () => {
               </div>
             )}
 
-            <div className="card project-card h-100">
+            <div className="card project-card flex-grow-1">
               <div className="card-body p-4 p-lg-5">
                 <h2 className="project-title mb-4">{project.title}</h2>
                 

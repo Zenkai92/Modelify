@@ -17,20 +17,19 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Fonction pour enrichir l'utilisateur avec les données de la table Users
-    const enrichUserWithProfile = async (sessionUser) => {
-      if (!sessionUser) return null;
+    // Fonction pour enrichir l'utilisateur avec les données de la table Users via API (Architecture Safe)
+    const enrichUserWithProfile = async (sessionUser, token) => {
+      if (!sessionUser || !token) return sessionUser;
       
       try {
-        const { data: profile, error } = await supabase
-          .from('Users')
-          .select('role')
-          .eq('id', sessionUser.id)
-          .single();
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
           
-        if (profile && !error) {
-          // On met à jour les métadonnées locales pour que l'UI reflète le rôle de la BDD
-          // sans modifier les métadonnées Auth de Supabase de façon persistante ici
+        if (response.ok) {
+          const profile = await response.json();
           return {
             ...sessionUser,
             user_metadata: {
@@ -40,7 +39,7 @@ export const AuthProvider = ({ children }) => {
           };
         }
       } catch (err) {
-        console.error("Erreur lors de la récupération du profil:", err);
+        console.error("Erreur lors de la récupération du profil via API:", err);
       }
       
       return sessionUser;
@@ -48,13 +47,11 @@ export const AuthProvider = ({ children }) => {
 
     const updateAuthUser = (baseUser, enrichedResult) => {
       setUser(prev => {
-        // Cas 1 : On a réussi à récupérer le rôle, on utilise le résultat enrichi
         if (enrichedResult && enrichedResult.user_metadata?.role) {
           return enrichedResult;
         }
         
-        // Cas 2 : Échec/Timeout de récupération du rôle, mais on l'avait déjà en mémoire pour ce user
-        // On préserve le rôle existant pour éviter qu'il disparaisse de l'interface
+        // Si on a déjà un utilisateur avec rôle en mémoire, on le garde
         if (prev && baseUser && prev.id === baseUser.id && prev.user_metadata?.role) {
           return {
             ...baseUser,
@@ -65,7 +62,6 @@ export const AuthProvider = ({ children }) => {
           };
         }
         
-        // Cas 3 : Pas de rôle trouvé et pas d'historique, on rend l'utilisateur de base
         return baseUser;
       });
     };
@@ -80,10 +76,15 @@ export const AuthProvider = ({ children }) => {
         let enrichedUser = null;
         
         if (currentUser) {
-          // On tente de récupérer le profil avec un timeout augmenté à 10s
+          // Timeout de sécurité : si la DB est trop lente, on utilise l'utilisateur de base
+          // pour ne pas bloquer l'interface ou déconnecter l'utilisateur
+          // Augmentation du timeout à 10s pour éviter la perte de rôle sur connexion lente
           enrichedUser = await Promise.race([
-            enrichUserWithProfile(currentUser),
-            new Promise(resolve => setTimeout(() => resolve(null), 10000))
+            enrichUserWithProfile(currentUser, session?.access_token),
+            new Promise(resolve => setTimeout(() => {
+              console.warn("Timeout récupération profil utilisateur qui a duré plus de 10s");
+              resolve(currentUser); 
+            }, 10000))
           ]);
         }
         
@@ -108,8 +109,8 @@ export const AuthProvider = ({ children }) => {
           
           if (currentUser) {
             enrichedUser = await Promise.race([
-              enrichUserWithProfile(currentUser),
-              new Promise(resolve => setTimeout(() => resolve(null), 10000))
+              enrichUserWithProfile(currentUser, session?.access_token),
+              new Promise(resolve => setTimeout(() => resolve(currentUser), 10000))
             ]);
           }
           

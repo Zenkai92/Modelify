@@ -187,26 +187,44 @@ async def get_all_projects(userId: Optional[str] = None, current_user = Depends(
     return {"projects": result.data, "total": len(result.data)}
 
 @router.get("/projects/{projectId}")
-async def get_project(projectId: str):
+async def get_project(projectId: str, current_user = Depends(get_current_user)):
     """
     Récupérer une demande de projet spécifique avec ses images
+    Sécurisé: Admin ou propriétaire seulement
     """
+    # 1. Récupérer le projet
     result = supabase.table('Projects').select('*').eq('id', projectId).execute()
     if not result.data:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
     
     project = result.data[0]
     
+    # 2. Vérification des droits (Admin ou Owner)
+    if project['userId'] != current_user.id:
+         # Check if admin
+        user_role_data = supabase.table("Users").select("role").eq("id", current_user.id).single().execute()
+        if not user_role_data.data or user_role_data.data.get('role') != 'admin':
+             raise HTTPException(status_code=403, detail="Accès non autorisé à ce projet")
+    
+    # 3. Récupérer les images
     images_result = supabase.table('ProjectsImages').select('*').eq('projectId', projectId).execute()
     project['images'] = images_result.data if images_result.data else []
     
     return project
 
 @router.put("/projects/{projectId}/status")
-async def update_project_status(projectId: str, status: str):
+async def update_project_status(projectId: str, status: str, current_user = Depends(get_current_user)):
     """
-    Mettre à jour le statut d'un projet
+    Mettre à jour le statut d'un projet (Admin uniquement)
     """
+    # 1. Vérification Admin
+    try:
+        user_role_data = supabase.table("Users").select("role").eq("id", current_user.id).single().execute()
+        if not user_role_data.data or user_role_data.data.get('role') != 'admin':
+            raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
+    except Exception:
+         raise HTTPException(status_code=403, detail="Erreur de vérification des droits")
+
     valid_statuses = ["en attente", "devis_envoyé", "paiement_attente", "payé", "en cours", "terminé"]
     if status not in valid_statuses:
         raise HTTPException(status_code=400, detail="Statut invalide")
