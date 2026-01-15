@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import FloatingShapes from '../components/FloatingShapes';
+import Model3D from '../components/Model3D';
 import './Home.css';
 
 const Home = () => {
@@ -49,9 +50,12 @@ const Home = () => {
             <div className="col-md-4 mb-4">
               <div className="card h-100 project-card">
                 <div className="card-body text-center">
-                  <div className="mb-3">
-                    <i className="fas fa-cube fa-3x text-primary"></i>
-                  </div>
+                  <Model3D 
+                    type="cube"
+                    color="#0d6efd" 
+                    modelPath="/models/gun_epee_plasma.3mf" 
+                    rotation={[-Math.PI / 2, 0, 0]} // Rotation de -90° sur l'axe X
+                  />
                   <h5 className="card-title">Modélisation de produits</h5>
                   <p className="card-text">
                     Créez des modèles 3D détaillés de vos produits pour le prototypage et la présentation.
@@ -62,9 +66,7 @@ const Home = () => {
             <div className="col-md-4 mb-4">
               <div className="card h-100 project-card">
                 <div className="card-body text-center">
-                  <div className="mb-3">
-                    <i className="fas fa-lightbulb fa-3x text-warning"></i>
-                  </div>
+                  <Model3D type="torus" color="#ffc107" />
                   <h5 className="card-title">Concepts créatifs</h5>
                   <p className="card-text">
                     Transformez vos idées créatives en modèles 3D réalistes et professionnels.
@@ -75,9 +77,7 @@ const Home = () => {
             <div className="col-md-4 mb-4">
               <div className="card h-100 project-card">
                 <div className="card-body text-center">
-                  <div className="mb-3">
-                    <i className="fas fa-cogs fa-3x text-success"></i>
-                  </div>
+                  <Model3D type="sphere" color="#198754" />
                   <h5 className="card-title">Prototypage rapide</h5>
                   <p className="card-text">
                     Accélérez votre processus de développement avec nos solutions de prototypage 3D.
