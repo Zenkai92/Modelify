@@ -34,8 +34,9 @@ class TestIntegration(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {"status": "healthy"})
 
+    @patch("app.routers.projects.validate_mime_type", return_value="image/jpeg")
     @patch("app.routers.projects.supabase")
-    def test_create_project_complete_flow(self, mock_supabase):
+    def test_create_project_complete_flow(self, mock_supabase, mock_validate_mime):
         """
         Test le flux complet de création de projet :
         1. Réception des données

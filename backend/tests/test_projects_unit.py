@@ -70,8 +70,9 @@ class TestProjectsUnit(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(result, "image/jpeg")
         mock_magic.from_buffer.assert_called_once()
 
+    @patch("app.routers.projects.validate_mime_type", return_value="image/png")
     @patch("app.routers.projects.supabase")
-    async def test_create_project_file_validation_success(self, mock_supabase):
+    async def test_create_project_file_validation_success(self, mock_supabase, mock_validate_mime):
         """
         Teste la création de projet avec un fichier valide.
         """
