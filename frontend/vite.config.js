@@ -15,12 +15,14 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: './src/setupTests.js',
-    css: true,
+    css: false,
     testTimeout: 10000,
-    hookTimeout: 10000,
-    teardownTimeout: 5000,
     watch: false,
-    reporters: ['default'],
-    pool: 'forks'
+    pool: 'forks',
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
+    }
   }
 })
