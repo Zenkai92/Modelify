@@ -6,7 +6,10 @@ from jose import jwt, JWTError
 
 security = HTTPBearer()
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+):
     """
     Valide le token JWT via Supabase et retourne l'utilisateur courant.
     Tente une validation locale si SUPABASE_JWT_SECRET est présent pour les performances.
@@ -19,24 +22,26 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         try:
             # Supabase utilise HS256 par défaut
             payload = jwt.decode(
-                token, 
-                secret, 
-                algorithms=["HS256"], 
+                token,
+                secret,
+                algorithms=["HS256"],
                 audience="authenticated",
-                options={"verify_aud": False} # Parfois l'audience peut varier, mais 'authenticated' est standard
+                options={
+                    "verify_aud": False
+                },  # Parfois l'audience peut varier, mais 'authenticated' est standard
             )
-            
+
             # Reconstruction d'un objet utilisateur minimal
             class User:
                 def __init__(self, id, email, user_metadata):
                     self.id = id
                     self.email = email
                     self.user_metadata = user_metadata
-            
+
             return User(
                 id=payload.get("sub"),
                 email=payload.get("email"),
-                user_metadata=payload.get("user_metadata", {})
+                user_metadata=payload.get("user_metadata", {}),
             )
         except JWTError:
             # Si échec local, fallback sur l'API
@@ -45,9 +50,9 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     try:
         # Vérification du token auprès de Supabase Auth
         user_response = supabase.auth.get_user(token)
-        
+
         if not user_response or not user_response.user:
-             raise HTTPException(
+            raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token invalide ou expiré",
                 headers={"WWW-Authenticate": "Bearer"},

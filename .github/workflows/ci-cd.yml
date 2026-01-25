@@ -137,5 +137,3 @@ jobs:
         context: ./frontend
         push: ${{ github.ref == 'refs/heads/main' }}
         tags: ghcr.io/${{ env.REPO_OWNER }}/modelify-frontend:latest
-
-
