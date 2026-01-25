@@ -57,6 +57,8 @@ jobs:
 
     - name: Run tests
       run: npm run test:ci
+      env:
+        CI: true
 
     - name: Build
       run: npm run build
