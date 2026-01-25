@@ -13,16 +13,10 @@ export default defineConfig({
 
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'happy-dom',
     setupFiles: './src/setupTests.js',
     css: false,
-    testTimeout: 10000,
-    watch: false,
-    pool: 'forks',
-    poolOptions: {
-      forks: {
-        singleFork: true
-      }
-    }
+    testTimeout: 30000,
+    watch: false
   }
 })
