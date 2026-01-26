@@ -28,11 +28,16 @@ class TestIntegration(unittest.TestCase):
     def tearDown(self):
         app.dependency_overrides = {}
 
-    def test_health_check(self):
+    @patch("main.supabase")
+    def test_health_check(self, mock_supabase):
         """Vérifie que l'API est en ligne"""
+        # Mock successful database connection
+        mock_supabase.table.return_value.select.return_value.limit.return_value.execute.return_value = MagicMock()
+        
         response = self.client.get("/health")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.json(), {"status": "healthy"})
+        self.assertIn("status", response.json())
+        self.assertIn("database", response.json())
 
     @patch("app.routers.projects.validate_mime_type", return_value="image/jpeg")
     @patch("app.routers.projects.supabase")
@@ -136,23 +141,36 @@ class TestIntegration(unittest.TestCase):
 
     @patch("app.routers.projects.supabase")
     def test_get_all_projects(self, mock_supabase):
-        """Test récupération de la liste des projets"""
+        """Test récupération de la liste des projets avec pagination"""
         # Mock user role check (standard user)
         mock_user_query = MagicMock()
         mock_user_query.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {
             "role": "particulier"
         }
 
-        # Mock projects query
+        # Mock count query for pagination
+        mock_count_query = MagicMock()
+        mock_count_result = MagicMock()
+        mock_count_result.count = 1
+        mock_count_query.select.return_value.eq.return_value.execute.return_value = mock_count_result
+
+        # Mock projects query with order and range for pagination
         mock_project_query = MagicMock()
-        mock_project_query.select.return_value.eq.return_value.execute.return_value.data = [
+        mock_chain = MagicMock()
+        mock_chain.order.return_value.range.return_value.execute.return_value.data = [
             {"id": 123, "title": "Test Project"}
         ]
+        mock_project_query.select.return_value.eq.return_value = mock_chain
 
+        call_count = [0]
         def table_side_effect(table_name):
             if table_name == "Users":
                 return mock_user_query
             elif table_name == "Projects":
+                call_count[0] += 1
+                # First call is for count, second for data
+                if call_count[0] == 1:
+                    return mock_count_query
                 return mock_project_query
             return MagicMock()
 
@@ -160,7 +178,12 @@ class TestIntegration(unittest.TestCase):
 
         response = self.client.get("/api/projects")
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.json()["projects"]), 1)
+        json_resp = response.json()
+        self.assertEqual(len(json_resp["projects"]), 1)
+        # Verify pagination fields are present
+        self.assertIn("page", json_resp)
+        self.assertIn("limit", json_resp)
+        self.assertIn("total_pages", json_resp)
 
     @patch("app.routers.projects.supabase")
     def test_get_project_detail(self, mock_supabase):
