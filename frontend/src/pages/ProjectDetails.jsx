@@ -19,7 +19,7 @@ const ProjectDetails = () => {
     const fetchProject = async () => {
       if (!session) return;
       try {
-        const response = await fetch(`http://localhost:8000/api/projects/${projectId}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}`, {
           headers: {
             'Authorization': `Bearer ${session.access_token}`
           }
@@ -48,7 +48,7 @@ const ProjectDetails = () => {
     if (!pendingStatus) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/projects/${projectId}/status?status=${pendingStatus}`, {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}/status?status=${pendingStatus}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${session.access_token}`,

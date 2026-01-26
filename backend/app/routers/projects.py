@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends, Request
-from pydantic import BaseModel
 from app.database import supabase
 from app.dependencies import get_current_user
+from app.schemas.projects import ProjectQuote
 from app.services.stripe_service import (
     get_or_create_customer,
     create_quote,
@@ -22,6 +22,10 @@ except ImportError:
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
+
+# Configuration des limites de fichiers
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
+MAX_FILES_PER_PROJECT = 10
 
 ALLOWED_MIME_TYPES = [
     "image/jpeg",
@@ -131,11 +135,25 @@ async def create_project_request(
 
         if result.data:
             projectId = result.data[0]["id"]
+            rejected_files = []
 
             if files:
+                # Vérification du nombre maximum de fichiers
+                if len(files) > MAX_FILES_PER_PROJECT:
+                    logger.warning(f"Trop de fichiers ({len(files)}), limite: {MAX_FILES_PER_PROJECT}")
+                    files = files[:MAX_FILES_PER_PROJECT]
+
                 for file in files:
                     try:
                         file_content = await file.read()
+
+                        # Vérification de la taille du fichier
+                        if len(file_content) > MAX_FILE_SIZE:
+                            logger.warning(
+                                f"Fichier rejeté (trop volumineux): {file.filename} ({len(file_content)} bytes)"
+                            )
+                            rejected_files.append({"filename": file.filename, "reason": "Fichier trop volumineux (max 10MB)"})
+                            continue
 
                         mime_type = validate_mime_type(file_content, file.content_type)
 
@@ -143,6 +161,7 @@ async def create_project_request(
                             logger.warning(
                                 f"Fichier rejeté (type non autorisé): {file.filename} ({mime_type})"
                             )
+                            rejected_files.append({"filename": file.filename, "reason": "Type de fichier non autorisé"})
                             continue
 
                         clean_filename = sanitize_filename(file.filename)
@@ -173,29 +192,49 @@ async def create_project_request(
                         logger.error(
                             f"ERROR processing file {file.filename}: {str(upload_error)}"
                         )
+                        rejected_files.append({"filename": file.filename, "reason": "Erreur lors de l'upload"})
 
-            return {
+            response_data = {
                 "message": "Demande de projet créée avec succès",
                 "projectId": projectId,
                 "status": "success",
             }
+            
+            # Informer l'utilisateur des fichiers rejetés
+            if rejected_files:
+                response_data["rejected_files"] = rejected_files
+                response_data["warning"] = f"{len(rejected_files)} fichier(s) n'ont pas pu être uploadés"
+            
+            return response_data
 
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Erreur lors de la création du projet: {str(e)}")
         raise HTTPException(
-            status_code=500, detail=f"Erreur lors de la création du projet: {str(e)}"
+            status_code=500, detail="Erreur lors de la création du projet"
         )
 
 
 @router.get("/projects")
 async def get_all_projects(
-    userId: Optional[str] = None, current_user=Depends(get_current_user)
+    userId: Optional[str] = None,
+    page: int = 1,
+    limit: int = 20,
+    current_user=Depends(get_current_user)
 ):
     """
-    Récupérer toutes les demandes de projets, optionnellement filtrées par userId
+    Récupérer toutes les demandes de projets, optionnellement filtrées par userId.
+    Supporte la pagination avec les paramètres page et limit.
     """
+    # Validation des paramètres de pagination
+    if page < 1:
+        page = 1
+    if limit < 1 or limit > 100:
+        limit = 20
+    
+    offset = (page - 1) * limit
+    
     user_role_data = (
         supabase.table("Users")
         .select("role")
@@ -205,11 +244,19 @@ async def get_all_projects(
     )
     is_admin = user_role_data.data and user_role_data.data.get("role") == "admin"
 
-    query = supabase.table("Projects").select("*")
-
+    # Requête pour le count total
     if is_admin:
-        # On récupère aussi les infos utilisateur si c'est un admin
-        # Attention: cela suppose qu'une Foreign Key existe entre Projects.userId et Users.id
+        count_query = supabase.table("Projects").select("id", count="exact")
+        if userId:
+            count_query = count_query.eq("userId", userId)
+    else:
+        count_query = supabase.table("Projects").select("id", count="exact").eq("userId", current_user.id)
+    
+    count_result = count_query.execute()
+    total_count = count_result.count or 0
+
+    # Requête pour les données paginées
+    if is_admin:
         query = supabase.table("Projects").select(
             "*, Users(firstName, lastName, companyName, role)"
         )
@@ -218,8 +265,16 @@ async def get_all_projects(
     else:
         query = supabase.table("Projects").select("*").eq("userId", current_user.id)
 
-    result = query.execute()
-    return {"projects": result.data, "total": len(result.data)}
+    # Appliquer pagination et tri
+    result = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
+    
+    return {
+        "projects": result.data,
+        "total": total_count,
+        "page": page,
+        "limit": limit,
+        "total_pages": (total_count + limit - 1) // limit
+    }
 
 
 @router.get("/projects/{projectId}")
@@ -308,10 +363,6 @@ async def update_project_status(
         raise HTTPException(status_code=404, detail="Projet non trouvé")
 
     return {"message": "Statut mis à jour", "project": result.data[0]}
-
-
-class ProjectQuote(BaseModel):
-    price: float
 
 
 @router.post("/projects/{projectId}/quote")

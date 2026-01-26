@@ -2,9 +2,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.database import supabase
 import os
+import logging
 from jose import jwt, JWTError
 
 security = HTTPBearer()
+logger = logging.getLogger(__name__)
 
 
 async def get_current_user(
@@ -59,8 +61,9 @@ async def get_current_user(
             )
         return user_response.user
     except Exception as e:
+        logger.error(f"Erreur d'authentification: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"Erreur d'authentification: {str(e)}",
+            detail="Erreur d'authentification",
             headers={"WWW-Authenticate": "Bearer"},
         )
