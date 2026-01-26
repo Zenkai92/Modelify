@@ -12,13 +12,14 @@ from app.schemas.users import UserCreate
 
 
 class TestUsersUnit(unittest.IsolatedAsyncioTestCase):
+    """Tests unitaires des utilisateurs"""
+
+    def setUp(self):
+        print("\n" + "="*60)
 
     @patch("app.routers.users.supabase")
     async def test_create_user_security_role_enforcement(self, mock_supabase):
-        """
-        Vérifie que le rôle est forcé à 'particulier' si un utilisateur tente de s'inscrire
-        avec un rôle 'admin' ou autre non autorisé.
-        """
+        """Rôle 'admin' injecté → forcé à 'particulier'"""
         user_input = UserCreate(
             id="user_123",
             email="hacker@example.com",
@@ -45,9 +46,7 @@ class TestUsersUnit(unittest.IsolatedAsyncioTestCase):
 
     @patch("app.routers.users.supabase")
     async def test_get_users_access_control_admin(self, mock_supabase):
-        """
-        Vérifie qu'un admin peut accéder à la liste des utilisateurs.
-        """
+        """Admin → accès liste utilisateurs autorisé"""
         mock_user = MagicMock()
         mock_user.id = "admin_id"
 
@@ -79,9 +78,7 @@ class TestUsersUnit(unittest.IsolatedAsyncioTestCase):
 
     @patch("app.routers.users.supabase")
     async def test_get_users_access_control_forbidden(self, mock_supabase):
-        """
-        Vérifie qu'un utilisateur non-admin reçoit une erreur 403.
-        """
+        """Non-admin → HTTP 403"""
         mock_user = MagicMock()
         mock_user.id = "user_id"
 

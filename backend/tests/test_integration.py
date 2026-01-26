@@ -12,12 +12,10 @@ from app.dependencies import get_current_user
 
 
 class TestIntegration(unittest.TestCase):
-    """
-    Suite de tests d'intégration (Mocked).
-    Ces tests vérifient le bon fonctionnement de l'API et de la logique métier
-    """
+    """Tests d'intégration API"""
 
     def setUp(self):
+        print("\n" + "="*60)
         # Override authentication dependency
         self.mock_user = MagicMock()
         self.mock_user.id = "test_user_id"
@@ -30,7 +28,7 @@ class TestIntegration(unittest.TestCase):
 
     @patch("main.supabase")
     def test_health_check(self, mock_supabase):
-        """Vérifie que l'API est en ligne"""
+        """GET /health → status OK"""
         # Mock successful database connection
         mock_supabase.table.return_value.select.return_value.limit.return_value.execute.return_value = MagicMock()
         
@@ -42,13 +40,7 @@ class TestIntegration(unittest.TestCase):
     @patch("app.routers.projects.validate_mime_type", return_value="image/jpeg")
     @patch("app.routers.projects.supabase")
     def test_create_project_complete_flow(self, mock_supabase, mock_validate_mime):
-        """
-        Test le flux complet de création de projet :
-        1. Réception des données
-        2. Insertion en base (simulée)
-        3. Upload de fichier (simulé)
-        4. Réponse API
-        """
+        """POST /api/projects → création complète OK"""
 
         def table_side_effect(table_name):
             mock_t = MagicMock()
@@ -99,9 +91,7 @@ class TestIntegration(unittest.TestCase):
 
     @patch("app.routers.projects.supabase")
     def test_create_project_validation_error(self, mock_supabase):
-        """
-        Test que l'API rejette bien une demande incomplète (champs manquants)
-        """
+        """Champs manquants → HTTP 422"""
         # Données incomplètes (manque 'userId', 'use', etc.)
         data = {
             "title": "Projet Incomplet",
@@ -118,9 +108,7 @@ class TestIntegration(unittest.TestCase):
 
     @patch("app.routers.projects.supabase")
     def test_create_project_db_error(self, mock_supabase):
-        """
-        Test la gestion d'erreur si la base de données est inaccessible
-        """
+        """Erreur DB → HTTP 500"""
         # On simule une exception lors de l'appel à la base
         mock_supabase.table.side_effect = Exception(
             "Erreur de connexion Supabase simulée"
@@ -141,7 +129,7 @@ class TestIntegration(unittest.TestCase):
 
     @patch("app.routers.projects.supabase")
     def test_get_all_projects(self, mock_supabase):
-        """Test récupération de la liste des projets avec pagination"""
+        """GET /api/projects → liste paginée"""
         # Mock user role check (standard user)
         mock_user_query = MagicMock()
         mock_user_query.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {
@@ -187,7 +175,7 @@ class TestIntegration(unittest.TestCase):
 
     @patch("app.routers.projects.supabase")
     def test_get_project_detail(self, mock_supabase):
-        """Test récupération d'un projet spécifique"""
+        """GET /api/projects/:id → détails projet"""
         mock_project_query = MagicMock()
         mock_project_query.select.return_value.eq.return_value.execute.return_value.data = [
             {"id": 123, "title": "Test Project", "userId": "test_user_id"}
@@ -213,7 +201,7 @@ class TestIntegration(unittest.TestCase):
 
     @patch("app.routers.projects.supabase")
     def test_update_project(self, mock_supabase):
-        """Test mise à jour d'un projet"""
+        """PUT /api/projects/:id → mise à jour OK"""
         # Mock existing project check
         mock_project_query = MagicMock()
         # First call for check (select), Second call for update
@@ -232,7 +220,7 @@ class TestIntegration(unittest.TestCase):
 
     @patch("app.routers.users.supabase")
     def test_create_user(self, mock_supabase):
-        """Test création d'un utilisateur"""
+        """POST /api/users → création user OK"""
         mock_supabase.table.return_value.insert.return_value.execute.return_value.data = [
             {"id": "new_user_id"}
         ]
@@ -249,7 +237,7 @@ class TestIntegration(unittest.TestCase):
 
     @patch("app.routers.users.supabase")
     def test_get_users_forbidden(self, mock_supabase):
-        """Test accès refusé à la liste des utilisateurs pour non-admin"""
+        """GET /api/users non-admin → HTTP 403"""
         # Mock user role check returning 'particulier'
         mock_supabase.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {
             "role": "particulier"

@@ -12,12 +12,14 @@ from app.dependencies import get_current_user
 
 
 class TestAuthUnit(unittest.IsolatedAsyncioTestCase):
+    """Tests unitaires d'authentification"""
+
+    def setUp(self):
+        print("\n" + "="*60)
 
     @patch("app.dependencies.supabase")
     async def test_get_current_user_valid_token(self, mock_supabase):
-        """
-        Teste la récupération d'un utilisateur avec un token valide.
-        """
+        """Token valide → retourne l'utilisateur"""
         token = "valid_token"
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
@@ -36,9 +38,7 @@ class TestAuthUnit(unittest.IsolatedAsyncioTestCase):
 
     @patch("app.dependencies.supabase")
     async def test_get_current_user_invalid_token(self, mock_supabase):
-        """
-        Teste le rejet d'un token invalide.
-        """
+        """Token invalide → HTTP 401"""
         token = "invalid_token"
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
@@ -51,9 +51,7 @@ class TestAuthUnit(unittest.IsolatedAsyncioTestCase):
 
     @patch("app.dependencies.supabase")
     async def test_get_current_user_exception(self, mock_supabase):
-        """
-        Teste la gestion des exceptions lors de l'appel à Supabase.
-        """
+        """Exception Supabase → HTTP 401"""
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="token")
         mock_supabase.auth.get_user.side_effect = Exception("Connection error")
 

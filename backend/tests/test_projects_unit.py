@@ -16,15 +16,15 @@ from app.routers.projects import (
 
 
 class TestProjectsUnit(unittest.IsolatedAsyncioTestCase):
+    """Tests unitaires des projets"""
 
     def setUp(self):
+        print("\n" + "="*60)
         self.mock_user = MagicMock()
         self.mock_user.id = "user123"
 
     async def test_get_project_count(self):
-        """
-        Teste la récupération du compteur de projets.
-        """
+        """Compteur projets actifs → retourne count et limite"""
         with patch("app.routers.projects.supabase") as mock_supabase:
             mock_count_response = MagicMock()
             mock_count_response.count = 1
@@ -38,9 +38,7 @@ class TestProjectsUnit(unittest.IsolatedAsyncioTestCase):
             mock_supabase.table.assert_called_with("Projects")
 
     def test_sanitize_filename(self):
-        """
-        Teste le nettoyage des noms de fichiers.
-        """
+        """Noms fichiers → nettoyage caractères spéciaux"""
         self.assertEqual(sanitize_filename("mon fichier.jpg"), "monfichier.jpg")
         self.assertEqual(sanitize_filename("test/hack.exe"), "testhack.exe")
         self.assertEqual(sanitize_filename("image_123.png"), "image_123.png")
@@ -49,18 +47,14 @@ class TestProjectsUnit(unittest.IsolatedAsyncioTestCase):
 
     @patch("app.routers.projects.magic", None)  # Force magic to None to test fallback
     def test_validate_mime_type_fallback(self):
-        """
-        Teste la validation MIME quand python-magic n'est pas disponible.
-        """
+        """Sans python-magic → fallback sur type déclaré"""
         content = b"%PDF-1.4..."
         declared = "application/pdf"
         self.assertEqual(validate_mime_type(content, declared), "application/pdf")
 
     @patch("app.routers.projects.magic")
     def test_validate_mime_type_magic(self, mock_magic):
-        """
-        Teste la validation MIME avec python-magic.
-        """
+        """Avec python-magic → détection MIME réelle"""
         mock_magic.from_buffer.return_value = "image/jpeg"
         content = b"\xff\xd8\xff..."
         declared = "application/octet-stream"  # Wrong declared type
@@ -73,9 +67,7 @@ class TestProjectsUnit(unittest.IsolatedAsyncioTestCase):
     @patch("app.routers.projects.validate_mime_type", return_value="image/png")
     @patch("app.routers.projects.supabase")
     async def test_create_project_file_validation_success(self, mock_supabase, mock_validate_mime):
-        """
-        Teste la création de projet avec un fichier valide.
-        """
+        """Fichier valide → upload effectué"""
         mock_file = AsyncMock(spec=UploadFile)
         mock_file.filename = "test.png"
         mock_file.content_type = "image/png"
@@ -114,9 +106,7 @@ class TestProjectsUnit(unittest.IsolatedAsyncioTestCase):
 
     @patch("app.routers.projects.supabase")
     async def test_create_project_file_validation_failure(self, mock_supabase):
-        """
-        Teste que les fichiers invalides sont ignorés.
-        """
+        """Fichier .exe → upload ignoré"""
         mock_file = AsyncMock(spec=UploadFile)
         mock_file.filename = "virus.exe"
         mock_file.content_type = "application/x-msdownload"
@@ -148,9 +138,7 @@ class TestProjectsUnit(unittest.IsolatedAsyncioTestCase):
 
     @patch("app.routers.projects.supabase")
     async def test_create_project_limit_reached(self, mock_supabase):
-        """
-        Teste que la création échoue si la limite de projets (2) est atteinte.
-        """
+        """Limite 2 projets atteinte → HTTP 400"""
         # Mock active projects count >= 2
         mock_count_response = MagicMock()
         mock_count_response.count = 2
