@@ -9,13 +9,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.routers.users import create_user, get_users
 from app.schemas.users import UserCreate
+from tests.base_test import BaseAsyncTestCase
 
 
-class TestUsersUnit(unittest.IsolatedAsyncioTestCase):
+class TestUsersUnit(BaseAsyncTestCase):
     """Tests unitaires des utilisateurs"""
 
     def setUp(self):
-        print("\n" + "="*60)
+        super().setUp()
 
     @patch("app.routers.users.supabase")
     async def test_create_user_security_role_enforcement(self, mock_supabase):

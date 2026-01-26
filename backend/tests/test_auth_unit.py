@@ -9,13 +9,14 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.dependencies import get_current_user
+from tests.base_test import BaseAsyncTestCase
 
 
-class TestAuthUnit(unittest.IsolatedAsyncioTestCase):
+class TestAuthUnit(BaseAsyncTestCase):
     """Tests unitaires d'authentification"""
 
     def setUp(self):
-        print("\n" + "="*60)
+        super().setUp()
 
     @patch("app.dependencies.supabase")
     async def test_get_current_user_valid_token(self, mock_supabase):

@@ -9,13 +9,14 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from main import app
 from app.dependencies import get_current_user
+from tests.base_test import BaseTestCase
 
 
-class TestIntegration(unittest.TestCase):
+class TestIntegration(BaseTestCase):
     """Tests d'intégration API"""
 
     def setUp(self):
-        print("\n" + "="*60)
+        super().setUp()
         # Override authentication dependency
         self.mock_user = MagicMock()
         self.mock_user.id = "test_user_id"
@@ -25,6 +26,7 @@ class TestIntegration(unittest.TestCase):
 
     def tearDown(self):
         app.dependency_overrides = {}
+        super().tearDown()
 
     @patch("main.supabase")
     def test_health_check(self, mock_supabase):

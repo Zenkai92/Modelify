@@ -13,13 +13,14 @@ from app.routers.projects import (
     create_project_request,
     get_project_count,
 )
+from tests.base_test import BaseAsyncTestCase
 
 
-class TestProjectsUnit(unittest.IsolatedAsyncioTestCase):
+class TestProjectsUnit(BaseAsyncTestCase):
     """Tests unitaires des projets"""
 
     def setUp(self):
-        print("\n" + "="*60)
+        super().setUp()
         self.mock_user = MagicMock()
         self.mock_user.id = "user123"
 
