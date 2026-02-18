@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, Navigate, useNavigate, useLocation } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import FloatingShapes from '../components/FloatingShapes'
+import { useAuth } from '../../contexts/AuthContext'
+import FloatingShapes from '../../components/FloatingShapes'
 import './Login.css'
 
 const Login = () => {
