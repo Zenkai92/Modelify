@@ -302,7 +302,7 @@ const ProjectDetails = () => {
                             <span key={index} className="badge bg-secondary me-1">{fmt}</span>
                           ))
                         ) : (
-                          <span className="text-muted">-</span>
+                          <span className="badge bg-light text-dark border">Aucune contrainte</span>
                         )}
                       </div>
                     </div>
@@ -320,7 +320,7 @@ const ProjectDetails = () => {
                             'more_1000': 'Plus de 1000€',
                             'discuss': 'À discuter'
                           };
-                          return budgets[project.budget] || project.budget || '-';
+                          return budgets[project.budget] || project.budget || <span className="badge bg-light text-dark border">Aucune contrainte</span>;
                         })()}
                       </div>
                     </div>
@@ -330,7 +330,7 @@ const ProjectDetails = () => {
                       <div className="detail-label">Délai souhaité</div>
                       <div className="detail-value">
                         {(() => {
-                           if (!project.deadlineType || project.deadlineType === 'none') return 'Pas de contrainte';
+                           if (!project.deadlineType || project.deadlineType === 'none') return <span className="badge bg-light text-dark border">Aucune contrainte</span>;
                            const dateStr = project.deadlineDate ? new Date(project.deadlineDate).toLocaleDateString() : '';
                            if (project.deadlineType === 'urgent') return <span className="text-danger fw-bold"><i className="bi bi-exclamation-circle"></i> Urgent ({dateStr})</span>;
                            if (project.deadlineType === 'flexible') return `Flexible (${dateStr})`;
