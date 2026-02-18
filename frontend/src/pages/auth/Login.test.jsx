@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom'
 import Login from './Login'
 
 const mockSignIn = vi.fn()
-vi.mock('../contexts/AuthContext', () => ({
+vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
     signIn: mockSignIn,
     user: null

@@ -8,7 +8,7 @@ import Register from './Register'
 const mockSignUp = vi.fn()
 
 // Mock the context
-vi.mock('../contexts/AuthContext', () => ({
+vi.mock('../../contexts/AuthContext', () => ({
   useAuth: () => ({
     signUp: mockSignUp,
     user: null

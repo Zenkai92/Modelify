@@ -94,7 +94,7 @@ const AdminUserList = () => {
               <tbody>
                 {users.map((u) => (
                   <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => handleShowProjects(u)}>
-                    <td><span className="fw-bold text-dark">{u.firstName} {u.lastName}</span></td>
+                    <td>{u.firstName} {u.lastName}</td>
                     <td>{u.companyName || '-'}</td>
                     <td>{u.email}</td>
                     <td>

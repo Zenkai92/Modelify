@@ -20,22 +20,27 @@ class BaseTestCase(unittest.TestCase):
 
     def tearDown(self):
         """Affiche le statut du test après son exécution"""
-        result = self._outcome.result
-        test_name = self._testMethodName
-        
-        # Vérifier si le test a échoué
-        if result is None:
-            status = "✅ OK"
-        else:
-            errors = [e for e in result.errors if e[0] is self]
-            failures = [f for f in result.failures if f[0] is self]
+        try:
+            result = self._outcome.result
             
-            if errors:
-                status = "❌ ERREUR"
-            elif failures:
-                status = "❌ ÉCHEC"
-            else:
+            # Vérifier si le test a échoué (compatible pytest et unittest)
+            if result is None:
                 status = "✅ OK"
+            elif hasattr(result, 'errors') and hasattr(result, 'failures'):
+                errors = [e for e in result.errors if e[0] is self]
+                failures = [f for f in result.failures if f[0] is self]
+                
+                if errors:
+                    status = "❌ ERREUR"
+                elif failures:
+                    status = "❌ ÉCHEC"
+                else:
+                    status = "✅ OK"
+            else:
+                # pytest doesn't use the same result structure
+                status = "✅ OK"
+        except (AttributeError, TypeError):
+            status = "✅ OK"
         
         print(f"📊 Statut: {status}")
         print("=" * 70)
@@ -56,22 +61,27 @@ class BaseAsyncTestCase(unittest.IsolatedAsyncioTestCase):
 
     def tearDown(self):
         """Affiche le statut du test après son exécution"""
-        result = self._outcome.result
-        test_name = self._testMethodName
-        
-        # Vérifier si le test a échoué
-        if result is None:
-            status = "✅ OK"
-        else:
-            errors = [e for e in result.errors if e[0] is self]
-            failures = [f for f in result.failures if f[0] is self]
+        try:
+            result = self._outcome.result
             
-            if errors:
-                status = "❌ ERREUR"
-            elif failures:
-                status = "❌ ÉCHEC"
-            else:
+            # Vérifier si le test a échoué (compatible pytest et unittest)
+            if result is None:
                 status = "✅ OK"
+            elif hasattr(result, 'errors') and hasattr(result, 'failures'):
+                errors = [e for e in result.errors if e[0] is self]
+                failures = [f for f in result.failures if f[0] is self]
+                
+                if errors:
+                    status = "❌ ERREUR"
+                elif failures:
+                    status = "❌ ÉCHEC"
+                else:
+                    status = "✅ OK"
+            else:
+                # pytest doesn't use the same result structure
+                status = "✅ OK"
+        except (AttributeError, TypeError):
+            status = "✅ OK"
         
         print(f"📊 Statut: {status}")
         print("=" * 70)
