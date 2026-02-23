@@ -1,8 +1,37 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import FloatingShapes from '../components/FloatingShapes';
-import Model3D from '../components/Model3D';
+import ProductCard from '../components/ProductCard';
 import './Home.css';
+
+const products = [
+  {
+    title: 'Modélisation de produits',
+    description: 'Créez des modèles 3D détaillés de vos produits pour le prototypage et la présentation.',
+    model3DProps: {
+      type: 'cube',
+      color: '#0d6efd',
+      modelPath: '/models/gun_epee_plasma.3mf',
+      rotation: [-Math.PI / 2, 0, 0],
+    },
+  },
+  {
+    title: 'Concepts créatifs',
+    description: 'Transformez vos idées créatives en modèles 3D réalistes et professionnels.',
+    model3DProps: {
+      type: 'torus',
+      color: '#ffc107',
+    },
+  },
+  {
+    title: 'Prototypage rapide',
+    description: 'Accélérez votre processus de développement avec nos solutions de prototypage 3D.',
+    model3DProps: {
+      type: 'sphere',
+      color: '#198754',
+    },
+  },
+];
 
 const Home = () => {
   return (
@@ -37,54 +66,25 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Section Services */}
+      {/* Section Produits */}
       <section className="py-5">
         <div className="container">
           <div className="row text-center mb-5">
             <div className="col-12">
-              <h2>Nos Services</h2>
+              <h2>Nos Produits</h2>
               <p className="lead">Découvrez comment nous pouvons vous aider</p>
             </div>
           </div>
           <div className="row">
-            <div className="col-md-4 mb-4">
-              <div className="card h-100 project-card">
-                <div className="card-body text-center">
-                  <Model3D
-                    type="cube"
-                    color="#0d6efd"
-                    modelPath="/models/gun_epee_plasma.3mf"
-                    rotation={[-Math.PI / 2, 0, 0]} // Rotation de -90° sur l'axe X
-                  />
-                  <h5 className="card-title">Modélisation de produits</h5>
-                  <p className="card-text">
-                    Créez des modèles 3D détaillés de vos produits pour le prototypage et la présentation.
-                  </p>
-                </div>
+            {products.map((product, index) => (
+              <div key={index} className="col-md-4 mb-4">
+                <ProductCard
+                  title={product.title}
+                  description={product.description}
+                  model3DProps={product.model3DProps}
+                />
               </div>
-            </div>
-            <div className="col-md-4 mb-4">
-              <div className="card h-100 project-card">
-                <div className="card-body text-center">
-                  <Model3D type="torus" color="#ffc107" />
-                  <h5 className="card-title">Concepts créatifs</h5>
-                  <p className="card-text">
-                    Transformez vos idées créatives en modèles 3D réalistes et professionnels.
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-4 mb-4">
-              <div className="card h-100 project-card">
-                <div className="card-body text-center">
-                  <Model3D type="sphere" color="#198754" />
-                  <h5 className="card-title">Prototypage rapide</h5>
-                  <p className="card-text">
-                    Accélérez votre processus de développement avec nos solutions de prototypage 3D.
-                  </p>
-                </div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
