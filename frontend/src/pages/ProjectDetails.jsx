@@ -4,8 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import FloatingShapes from '../components/FloatingShapes';
 import './ProjectDetails.css';
 
-const ProjectDetails = () => {
-  const { projectId } = useParams();
+const ProjectDetails = ({ projectId, onBack }) => {
   const { user, session } = useAuth();
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -142,27 +141,21 @@ const ProjectDetails = () => {
   };
 
   if (loading) return (
-    <div className="project-details-section">
-      <div className="container project-details-container">
-        <div className="text-center text-white">
-          <div className="spinner-border" role="status">
-            <span className="visually-hidden">Chargement...</span>
-          </div>
-          <p className="mt-3">Chargement du projet...</p>
-        </div>
+    <div className="card shadow-sm border-0 rounded-3 p-5 text-center my-4">
+      <div className="spinner-border text-primary" role="status">
+        <span className="visually-hidden">Chargement...</span>
       </div>
+      <p className="mt-3 text-muted">Chargement du projet...</p>
     </div>
   );
 
   if (error) return (
-    <div className="project-details-section">
-      <div className="container project-details-container">
-        <div className="alert alert-danger shadow-lg border-0" role="alert">
-          <h4 className="alert-heading">Erreur</h4>
-          <p>{error}</p>
-          <hr />
-          <Link to="/status-commandes" className="btn btn-outline-danger">Retour au tableau de bord</Link>
-        </div>
+    <div className="card shadow-sm border-0 rounded-3 p-5 my-4">
+      <div className="alert alert-danger shadow-sm border-0 mb-0" role="alert">
+        <h4 className="alert-heading">Erreur</h4>
+        <p>{error}</p>
+        <hr />
+        <button onClick={() => window.history.back()} className="btn btn-outline-danger">Retour au tableau de bord</button>
       </div>
     </div>
   );
@@ -170,10 +163,10 @@ const ProjectDetails = () => {
   if (!project) return null;
 
   return (
-    <div className="project-details-section">      
-      <div className="container project-details-container">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1 className="text-white fw-bold mb-0">Détails du projet</h1>
+    <div className="project-details-wrapper w-100">
+      <div className="w-100 p-0">
+        <div className="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded-3 shadow-sm border">
+          <h3 className="fw-bold mb-0 text-dark">D�tails du projet</h3>
           <div>
             {user?.user_metadata?.role === 'admin' && (
               <>
@@ -210,13 +203,16 @@ const ProjectDetails = () => {
               </>
             )}
             {project.status === 'en attente' && user && project.userId === user.id && (
-              <Link to={`/projects/${projectId}/edit`} className="btn btn-warning me-2 text-white">
+              <button 
+                onClick={() => window.location.href = `/app?view=project-edit&id=${projectId}`} 
+                className="btn btn-warning me-2 text-white"
+              >
                 <i className="bi bi-pencil me-2"></i> Modifier
-              </Link>
+              </button>
             )}
-            <Link to="/status-commandes" className="btn back-btn">
+            <button onClick={onBack || (() => window.history.back())} className="btn btn-secondary text-white">
               <i className="bi bi-arrow-left me-2"></i> Retour
-            </Link>
+            </button>
           </div>
         </div>
 

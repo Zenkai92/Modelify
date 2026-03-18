@@ -201,7 +201,7 @@ const ProjectForm = ({ initialData = null }) => {
 
   const closeModal = () => {
     if (modalState.status === 'success') {
-      navigate('/');
+      navigate('/app?view=status-commandes');
     }
     setModalState({ ...modalState, show: false });
   };

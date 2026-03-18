@@ -99,7 +99,7 @@ const OrderStatusCard = ({ allowedStatuses, title = "Status des commandes" }) =>
             <i className="bi bi-inbox display-4 d-block mb-3"></i>
             <p className="mb-3">Aucune commande pour le moment.</p>
             {!allowedStatuses && (
-              <Link to="/demande-projet" className="btn text-white order-status-btn">
+              <Link to="/app?view=demande-projet" className="btn text-white order-status-btn">
                 <i className="bi bi-plus-lg me-2"></i>
                 Créer une nouvelle demande
               </Link>
@@ -117,13 +117,13 @@ const OrderStatusCard = ({ allowedStatuses, title = "Status des commandes" }) =>
               </thead>
               <tbody>
                 {displayProjects.map((project) => (
-                  <tr 
-                    key={project.id} 
-                    onClick={() => navigate(`/projects/${project.id}`)}
+                  <tr
+                    key={project.id}
+                    onClick={() => navigate(`/app?view=project-details&id=${project.id}`)}
                     className="order-status-row"
                   >
                     <td className="ps-4">
-                      <span className="fw-bold text-dark">
+                      <span className="text-dark">
                         {project.title}
                       </span>
                     </td>

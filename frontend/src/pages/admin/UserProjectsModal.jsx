@@ -51,7 +51,7 @@ const UserProjectsModal = ({ show, onClose, user }) => {
 
   const handleProjectClick = (projectId) => {
     onClose(); // Fermer la modale avant la navigation
-    navigate(`/projects/${projectId}`);
+    navigate(`/app?view=project-details&id=${projectId}`);
   };
 
   if (!show) return null;

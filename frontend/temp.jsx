@@ -43,19 +43,22 @@ const Home = () => {
           <div className="row">
             <div className="col-lg-8 mx-auto">
               <h1 className="display-4 fw-bold mb-4">
-                Bienvenue sur Modelify
+                Votre Portail Modelify
               </h1>
               <p className="lead mb-4">
-                Découvrez nos réalisations ou accédez à votre portail pour gérer et suivre l'ensemble de vos projets en temps réel.
+                AccÃ©dez Ã  votre espace unique. Pilotez vos projets de modÃ©lisation, suivez l'avancement de vos demandes, gÃ©rez vos devis et consultez votre historique en un seul endroit.
               </p>
+              <Link to="/app" className="btn btn-light btn-lg fw-bold shadow-sm d-inline-flex align-items-center gap-2">
+                <i className="bi bi-grid-fill"></i> AccÃ©der au Portail
+              </Link>
             </div>
           </div>
         </div>
 
-        {/* Formes flottantes décoratives extraites dans un composant */}      
+        {/* Formes flottantes dÃ©coratives extraites dans un composant */}
         <FloatingShapes />
 
-        {/* Séparateur Vague */}
+        {/* SÃ©parateur Vague */}
         <div className="custom-shape-divider-bottom">
           <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
             <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="shape-fill"></path>
@@ -64,7 +67,7 @@ const Home = () => {
       </section>
 
       {/* Section Produits */}
-      <section id="catalogue" className="py-5">
+      <section className="py-5">
         <div className="container">
           <div className="row text-center mb-5">
             <div className="col-12">
@@ -91,4 +94,3 @@ const Home = () => {
 };
 
 export default Home;
-
