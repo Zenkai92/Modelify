@@ -50,6 +50,11 @@ const Navbar = () => {
           <ul className="navbar-nav ms-auto">
             {user ? (
               <li className="nav-item d-flex align-items-center">
+                <span className="text-white me-3 d-none d-lg-block fw-medium">
+                  Bonjour, {user?.user_metadata?.role === 'professionnel' 
+                    ? user?.user_metadata?.companyName 
+                    : `${user?.user_metadata?.firstName || ''} ${user?.user_metadata?.lastName || ''}`.trim() || user?.email?.split('@')[0]}
+                </span>
                 <Link className="btn btn-light btn-sm fw-bold d-flex align-items-center gap-2" to="/app">
                   <i className="bi bi-grid-fill"></i> Mon Portail
                 </Link>
