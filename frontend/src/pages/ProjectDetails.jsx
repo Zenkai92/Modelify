@@ -27,6 +27,7 @@ const ProjectDetails = ({ projectId, onBack }) => {
           throw new Error('Erreur lors de la récupération du projet');
         }
         const data = await response.json();
+        console.log('[ProjectDetails] images reçues:', data.images);
         setProject(data);
       } catch (err) {
         setError(err.message);

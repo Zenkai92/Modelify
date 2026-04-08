@@ -3,6 +3,13 @@
   z-index: 1050;
 }
 
+@media (min-width: 992px) {
+  .modal-overlay .modal-dialog {
+    margin-left: 28%;
+    margin-right: auto;
+  }
+}
+
 .modal-content-custom {
   border-radius: 15px;
   overflow: hidden;

@@ -131,6 +131,9 @@ const ProjectForm = ({ initialData = null }) => {
         formData.files.forEach((file) => {
           formDataToSend.append('files', file);
         });
+        console.log('[ProjectForm] fichiers envoyés:', formData.files.map(f => `${f.name} (${f.type}, ${f.size}b)`));
+      } else {
+        console.log('[ProjectForm] aucun fichier dans formData.files');
       }
 
       const url = initialData 
