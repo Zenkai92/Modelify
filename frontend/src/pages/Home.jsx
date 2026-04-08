@@ -6,8 +6,8 @@ import './Home.css';
 
 const products = [
   {
-    title: 'ModÃ©lisation de produits',
-    description: 'CrÃ©ez des modÃ¨les 3D dÃ©taillÃ©s de vos produits pour le prototypage et la prÃ©sentation.',
+    title: 'Modélisation de produits',
+    description: 'Créez des modèles 3D détaillés de vos produits pour le prototypage et la présentation.',
     model3DProps: {
       type: 'cube',
       color: '#0d6efd',
@@ -16,8 +16,8 @@ const products = [
     },
   },
   {
-    title: 'Concepts crÃ©atifs',
-    description: 'Transformez vos idÃ©es crÃ©atives en modÃ¨les 3D rÃ©alistes et professionnels.',
+    title: 'Concepts créatifs',
+    description: 'Transformez vos idées créatives en modèles 3D réalistes et professionnels.',
     model3DProps: {
       type: 'torus',
       color: '#ffc107',
@@ -25,7 +25,7 @@ const products = [
   },
   {
     title: 'Prototypage rapide',
-    description: 'AccÃ©lÃ©rez votre processus de dÃ©veloppement avec nos solutions de prototypage 3D.',
+    description: 'Accélérez votre processus de développement avec nos solutions de prototypage 3D.',
     model3DProps: {
       type: 'sphere',
       color: '#198754',
@@ -69,7 +69,7 @@ const Home = () => {
           <div className="row text-center mb-5">
             <div className="col-12">
               <h2>Nos Produits</h2>
-              <p className="lead">DÃ©couvrez comment nous pouvons vous aider</p>
+              <p className="lead">Découvrez comment nous pouvons vous aider</p>
             </div>
           </div>
           <div className="row">
