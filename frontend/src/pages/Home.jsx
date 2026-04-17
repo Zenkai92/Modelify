@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import FloatingShapes from '../components/FloatingShapes';
 import ProductCard from '../components/ProductCard';
@@ -31,6 +31,14 @@ const products = [
       color: '#198754',
     },
   },
+  {
+    title: 'Impression 3D',
+    description: "Donnez vie à vos modèles en les transformant en objets physiques grâce à l'impression 3D.",
+    model3DProps: {
+      type: 'cone',
+      color: '#dc3545',
+    },
+  },
 ];
 
 const Home = () => {
@@ -43,19 +51,16 @@ const Home = () => {
           <div className="row">
             <div className="col-lg-8 mx-auto">
               <h1 className="display-4 fw-bold mb-4">
-                Donnez vie à vos idées avec Modelify
+                Bienvenue sur Modelify
               </h1>
               <p className="lead mb-4">
-                Plateforme de demandes de modélisation 3D pour vos produits et concepts innovants
+                Découvrez nos réalisations ou accédez à votre portail pour gérer et suivre l'ensemble de vos projets en temps réel.
               </p>
-              <Link to="/demande-projet" className="btn btn-light btn-lg">
-                Commencer un projet
-              </Link>
             </div>
           </div>
         </div>
 
-        {/* Formes flottantes décoratives extraites dans un composant */}
+        {/* Formes flottantes décoratives extraites dans un composant */}      
         <FloatingShapes />
 
         {/* Séparateur Vague */}
@@ -67,7 +72,7 @@ const Home = () => {
       </section>
 
       {/* Section Produits */}
-      <section className="py-5">
+      <section id="catalogue" className="py-5">
         <div className="container">
           <div className="row text-center mb-5">
             <div className="col-12">
@@ -77,7 +82,7 @@ const Home = () => {
           </div>
           <div className="row">
             {products.map((product, index) => (
-              <div key={index} className="col-md-4 mb-4">
+              <div key={index} className="col-md-3 mb-4">
                 <ProductCard
                   title={product.title}
                   description={product.description}
@@ -94,3 +99,4 @@ const Home = () => {
 };
 
 export default Home;
+

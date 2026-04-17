@@ -138,6 +138,7 @@ async def create_project_request(
             rejected_files = []
 
             if files:
+                logger.info(f"Fichiers reçus : {[f.filename for f in files]}")
                 # Vérification du nombre maximum de fichiers
                 if len(files) > MAX_FILES_PER_PROJECT:
                     logger.warning(f"Trop de fichiers ({len(files)}), limite: {MAX_FILES_PER_PROJECT}")
@@ -168,31 +169,28 @@ async def create_project_request(
 
                         file_path = f"{projectId}/{datetime.now(timezone.utc).timestamp()}_{clean_filename}"
 
-                        upload_response = supabase.storage.from_(
+                        supabase.storage.from_(
                             "project-images"
                         ).upload(file_path, file_content, {"content-type": mime_type})
-
-                        public_url = supabase.storage.from_(
-                            "project-images"
-                        ).get_public_url(file_path)
 
                         file_type = (
                             "image" if mime_type.startswith("image/") else "document"
                         )
 
+                        # On stocke le chemin relatif (pas l'URL publique) pour
+                        # générer des URLs signées fiables à la lecture
                         supabase.table("ProjectsImages").insert(
                             {
                                 "projectId": projectId,
-                                "fileUrl": public_url,
+                                "fileUrl": file_path,
                                 "file_type": file_type,
                             }
                         ).execute()
 
                     except Exception as upload_error:
-                        logger.error(
-                            f"ERROR processing file {file.filename}: {str(upload_error)}"
-                        )
-                        rejected_files.append({"filename": file.filename, "reason": "Erreur lors de l'upload"})
+                        error_detail = str(upload_error)
+                        logger.error(f"ERROR processing file {file.filename}: {error_detail}")
+                        rejected_files.append({"filename": file.filename, "reason": error_detail})
 
             response_data = {
                 "message": "Demande de projet créée avec succès",
@@ -277,6 +275,36 @@ async def get_all_projects(
     }
 
 
+def _make_signed_urls(images: list) -> list:
+    """
+    Génère des URLs signées (1h) pour chaque image.
+    'fileUrl' contient le chemin relatif dans le bucket (ex: projectId/ts_file.jpg).
+    Les anciens enregistrements peuvent contenir une URL complète : on extrait
+    le chemin dans ce cas.
+    """
+    supabase_url = os.getenv("SUPABASE_URL", "").rstrip("/")
+    old_prefix = f"{supabase_url}/storage/v1/object/public/project-images/"
+    result = []
+    for img in images:
+        img = dict(img)
+        raw = img.get("fileUrl", "")
+        # Compat anciens enregistrements : URL complète avec éventuel "?" final
+        if raw.startswith("http"):
+            file_path = raw[len(old_prefix):].split("?")[0] if raw.startswith(old_prefix) else None
+        else:
+            file_path = raw  # nouveau format : chemin relatif direct
+        if file_path:
+            try:
+                signed = supabase.storage.from_("project-images").create_signed_url(
+                    file_path, 3600
+                )
+                img["fileUrl"] = signed.get("signedURL", raw)
+            except Exception as e:
+                logger.warning(f"URL signée impossible pour {file_path}: {e}")
+        result.append(img)
+    return result
+
+
 @router.get("/projects/{projectId}")
 async def get_project(projectId: str, current_user=Depends(get_current_user)):
     """
@@ -305,14 +333,15 @@ async def get_project(projectId: str, current_user=Depends(get_current_user)):
                 status_code=403, detail="Accès non autorisé à ce projet"
             )
 
-    # 3. Récupérer les images
+    # 3. Récupérer les images et générer des URLs signées via la service key
     images_result = (
         supabase.table("ProjectsImages")
         .select("*")
         .eq("projectId", projectId)
         .execute()
     )
-    project["images"] = images_result.data if images_result.data else []
+    raw_images = images_result.data if images_result.data else []
+    project["images"] = _make_signed_urls(raw_images)
 
     return project
 

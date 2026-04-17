@@ -8,13 +8,9 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 
-// Lazy loading des pages lourdes ou moins prioritaires
-const ProjectRequest = lazy(() => import('./pages/ProjectRequest'));
-const UserDashboard = lazy(() => import('./pages/UserDashboard'));
+// Lazy loading
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
-const ProjectDetails = lazy(() => import('./pages/ProjectDetails'));
-const ProjectEdit = lazy(() => import('./pages/ProjectEdit'));
-const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
+const AppPortal = lazy(() => import('./pages/AppPortal'));
 
 // Composant de chargement simple
 const PageLoader = () => (
@@ -34,71 +30,19 @@ function App() {
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/auth/callback" element={<AuthCallback />} />
-            <Route
-              path="/demande-projet" element={
-                <ProtectedRoute>
-                  <ProjectRequest />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/profile" element={
-                <ProtectedRoute>
-                  <UserDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/status-commandes" element={
-                <ProtectedRoute>
-                  <UserDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/completed-projects" element={
-                <ProtectedRoute>
-                  <UserDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/projects/:projectId" element={
-                <ProtectedRoute>
-                  <ProjectDetails />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/projects/:projectId/edit" element={
-                <ProtectedRoute>
-                  <ProjectEdit />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/admin/users" element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/admin/projects/pending" element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/admin/projects/in-progress" element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/admin/projects/completed" element={
-                <ProtectedRoute>
-                  <AdminDashboard />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route
+                path="/app" element={
+                  <ProtectedRoute>
+                    <AppPortal />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Fallback to catch all other paths and redirect to /app if authenticated, or / if not */}
+              <Route path="*" element={<Home />} />
+            </Routes>
           </Suspense>
         </main>
         <Footer />

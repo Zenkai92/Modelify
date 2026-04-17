@@ -83,6 +83,7 @@ function RotatingMesh({ type, color }) {
         {type === 'cube' && <boxGeometry args={[2.2, 2.2, 2.2]} />}
         {type === 'torus' && <torusKnotGeometry args={[0.8, 0.3, 100, 16]} />}
         {type === 'sphere' && <icosahedronGeometry args={[1.5, 0]} />}
+        {type === 'cone' && <coneGeometry args={[1.4, 2.8, 6]} />}
         
         <meshStandardMaterial 
             color={color} 

@@ -53,7 +53,7 @@ const AdminProjectList = ({ statusFilter, title }) => {
   }, [session, statusFilter]);
 
   const handleProjectClick = (projectId) => {
-    navigate(`/projects/${projectId}`);
+    navigate(`/app?view=project-details&id=${projectId}`);
   };
 
   const formatBudget = (budget) => {
