@@ -203,9 +203,7 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
                       onChange={handleFileChange(setOverviewFile, OVERVIEW_EXTENSIONS)}
                       required
                     />
-                    <div className="form-text text-muted">
-                      Formats acceptés : {OVERVIEW_EXTENSIONS.join(', ')} — max 50 Mo
-                    </div>
+                    <div className="form-text text-muted">max 50 Mo</div>
                     <FileInfo file={overviewFile} />
                   </div>
 
@@ -225,9 +223,7 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
                       onChange={handleFileChange(setDownloadFile, DOWNLOAD_EXTENSIONS)}
                       required
                     />
-                    <div className="form-text text-muted">
-                      Formats acceptés : {DOWNLOAD_EXTENSIONS.join(', ')} — max 50 Mo
-                    </div>
+                    <div className="form-text text-muted">max 50 Mo</div>
                     <FileInfo file={downloadFile} />
                   </div>
                 </div>
