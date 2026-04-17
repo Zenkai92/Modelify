@@ -31,6 +31,14 @@ const products = [
       color: '#198754',
     },
   },
+  {
+    title: 'Impression 3D',
+    description: "Donnez vie à vos modèles en les transformant en objets physiques grâce à l'impression 3D.",
+    model3DProps: {
+      type: 'cone',
+      color: '#dc3545',
+    },
+  },
 ];
 
 const Home = () => {
@@ -74,7 +82,7 @@ const Home = () => {
           </div>
           <div className="row">
             {products.map((product, index) => (
-              <div key={index} className="col-md-4 mb-4">
+              <div key={index} className="col-md-3 mb-4">
                 <ProductCard
                   title={product.title}
                   description={product.description}
