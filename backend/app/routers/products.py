@@ -149,6 +149,38 @@ async def create_product(
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
+@router.delete("/products/{product_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_product(product_id: str, current_user=Depends(get_current_user)):
+    """
+    Supprimer un produit (Admin uniquement).
+    """
+    try:
+        admin_check = (
+            supabase.table("Users")
+            .select("role")
+            .eq("id", current_user.id)
+            .single()
+            .execute()
+        )
+        if not admin_check.data or admin_check.data.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Accès administrateur requis")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur vérification rôle admin: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+    try:
+        result = supabase.table("Products").delete().eq("id", product_id).execute()
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Produit introuvable")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur suppression produit: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+
 @router.put("/products/{product_id}", status_code=status.HTTP_200_OK)
 async def update_product(
     product_id: str,

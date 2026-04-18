@@ -24,6 +24,8 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
   const [overviewFile, setOverviewFile] = useState(null);
   const [downloadFile, setDownloadFile] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -40,6 +42,7 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
       });
       setOverviewFile(null);
       setDownloadFile(null);
+      setConfirmDelete(false);
       setError('');
       setSuccess('');
     }
@@ -103,6 +106,28 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    setError('');
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${product.id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${session?.access_token}` },
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || 'Erreur lors de la suppression');
+      }
+      if (onProductUpdated) onProductUpdated();
+      onClose();
+    } catch (err) {
+      setError(err.message);
+      setConfirmDelete(false);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -214,22 +239,57 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
             </div>
           </div>
 
-          <div className="d-flex justify-content-end gap-2 mt-4">
-            <button type="button" className="btn btn-light" onClick={onClose} disabled={loading}>
-              Annuler
-            </button>
-            <button
-              type="submit"
-              className="btn text-white fw-semibold"
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)', border: 'none' }}
-              disabled={loading}
-            >
-              {loading ? (
-                <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Mise à jour...</>
-              ) : (
-                <><i className="bi bi-check-lg me-1"></i>Enregistrer</>
-              )}
-            </button>
+          <div className="d-flex justify-content-between align-items-center gap-2 mt-4">
+            {/* Suppression */}
+            {!confirmDelete ? (
+              <button
+                type="button"
+                className="btn btn-outline-danger btn-sm"
+                onClick={() => setConfirmDelete(true)}
+                disabled={loading || deleting}
+              >
+                <i className="bi bi-trash me-1"></i>Supprimer
+              </button>
+            ) : (
+              <div className="d-flex align-items-center gap-2">
+                <span className="small text-danger fw-semibold">Confirmer ?</span>
+                <button
+                  type="button"
+                  className="btn btn-danger btn-sm"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                >
+                  {deleting ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> : 'Oui'}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-light btn-sm"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={deleting}
+                >
+                  Non
+                </button>
+              </div>
+            )}
+
+            {/* Sauvegarde */}
+            <div className="d-flex gap-2">
+              <button type="button" className="btn btn-light" onClick={onClose} disabled={loading || deleting}>
+                Annuler
+              </button>
+              <button
+                type="submit"
+                className="btn text-white fw-semibold"
+                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)', border: 'none' }}
+                disabled={loading || deleting}
+              >
+                {loading ? (
+                  <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Mise à jour...</>
+                ) : (
+                  <><i className="bi bi-check-lg me-1"></i>Enregistrer</>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>
