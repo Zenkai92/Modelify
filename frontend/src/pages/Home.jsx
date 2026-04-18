@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import FloatingShapes from '../components/FloatingShapes';
 import ProductCard from '../components/ProductCard';
 import AddProductModal from '../components/AddProductModal';
+import EditProductModal from '../components/EditProductModal';
 import { useAuth } from '../contexts/AuthContext';
 import './Home.css';
 
@@ -12,6 +13,7 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
 
   const fetchProducts = useCallback(async () => {
     setLoadingProducts(true);
@@ -116,7 +118,11 @@ const Home = () => {
                   <ProductCard
                     title={product.title}
                     description={product.description}
+                    price={product.price}
+                    fileFormats={product.file_formats}
                     model3DProps={{ modelPath: product.overview_model_file, color: '#0d6efd' }}
+                    isAdmin={isAdmin}
+                    onEdit={() => setEditProduct(product)}
                   />
                 </div>
               ))}
@@ -131,6 +137,15 @@ const Home = () => {
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           onProductAdded={fetchProducts}
+        />
+      )}
+
+      {/* Modal d'édition (admin uniquement) */}
+      {isAdmin && editProduct && (
+        <EditProductModal
+          product={editProduct}
+          onClose={() => setEditProduct(null)}
+          onProductUpdated={fetchProducts}
         />
       )}
     </div>

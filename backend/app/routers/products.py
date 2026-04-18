@@ -147,3 +147,95 @@ async def create_product(
     except Exception as e:
         logger.error(f"Erreur lors de la création du produit: {e}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+
+@router.put("/products/{product_id}", status_code=status.HTTP_200_OK)
+async def update_product(
+    product_id: str,
+    title: str = Form(...),
+    description: Optional[str] = Form(""),
+    price: float = Form(...),
+    category: str = Form(...),
+    file_formats: str = Form(...),
+    overview_model_file: Optional[UploadFile] = File(None),
+    download_model_file: Optional[UploadFile] = File(None),
+    current_user=Depends(get_current_user),
+):
+    """
+    Modifier un produit existant (Admin uniquement).
+    Les fichiers sont optionnels : si non fournis, les URLs existantes sont conservées.
+    """
+    # Vérification du rôle Admin
+    try:
+        admin_check = (
+            supabase.table("Users")
+            .select("role")
+            .eq("id", current_user.id)
+            .single()
+            .execute()
+        )
+        if not admin_check.data or admin_check.data.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Accès administrateur requis")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur vérification rôle admin: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+    # Récupération du produit existant
+    try:
+        existing = supabase.table("Products").select("*").eq("id", product_id).single().execute()
+        if not existing.data:
+            raise HTTPException(status_code=404, detail="Produit introuvable")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur récupération produit: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+    update_data = {
+        "title": title,
+        "description": description,
+        "price": price,
+        "category": category,
+        "file_formats": [f.strip() for f in file_formats.split(",") if f.strip()],
+    }
+
+    # Fichier aperçu (optionnel)
+    if overview_model_file and overview_model_file.filename:
+        ext = "." + overview_model_file.filename.rsplit(".", 1)[-1].lower()
+        if ext not in OVERVIEW_EXTENSIONS:
+            raise HTTPException(status_code=400, detail=f"Fichier aperçu : extension non autorisée")
+        content = await overview_model_file.read()
+        if len(content) > MAX_MODEL_SIZE:
+            raise HTTPException(status_code=400, detail="Fichier aperçu trop volumineux (max 50 Mo)")
+        try:
+            update_data["overview_model_file"] = upload_to_bucket("overview-model-file", overview_model_file, content)
+        except Exception as e:
+            logger.error(f"Erreur upload aperçu: {e}")
+            raise HTTPException(status_code=500, detail="Erreur lors de l'upload du fichier aperçu")
+
+    # Fichier téléchargement (optionnel)
+    if download_model_file and download_model_file.filename:
+        ext = "." + download_model_file.filename.rsplit(".", 1)[-1].lower()
+        if ext not in DOWNLOAD_EXTENSIONS:
+            raise HTTPException(status_code=400, detail=f"Fichier téléchargement : extension non autorisée")
+        content = await download_model_file.read()
+        if len(content) > MAX_MODEL_SIZE:
+            raise HTTPException(status_code=400, detail="Fichier téléchargement trop volumineux (max 50 Mo)")
+        try:
+            update_data["download_model_file"] = upload_to_bucket("download-model-file", download_model_file, content)
+        except Exception as e:
+            logger.error(f"Erreur upload téléchargement: {e}")
+            raise HTTPException(status_code=500, detail="Erreur lors de l'upload du fichier de téléchargement")
+
+    try:
+        response = supabase.table("Products").update(update_data).eq("id", product_id).execute()
+        if not response.data:
+            raise HTTPException(status_code=500, detail="Erreur lors de la mise à jour du produit")
+        return response.data[0]
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur mise à jour produit: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
