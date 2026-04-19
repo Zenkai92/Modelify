@@ -1,6 +1,6 @@
 import Model3D from './Model3D';
 
-const ProductCard = ({ title, description, price, fileFormats, model3DProps, isAdmin, onEdit }) => {
+const ProductCard = ({ title, description, price, fileFormats, model3DProps, isAdmin, onEdit, onView }) => {
   const formats = Array.isArray(fileFormats)
     ? fileFormats
     : typeof fileFormats === 'string' && fileFormats
@@ -8,10 +8,14 @@ const ProductCard = ({ title, description, price, fileFormats, model3DProps, isA
       : [];
 
   return (
-    <div className="card h-100 project-card" style={{ position: 'relative' }}>
+    <div
+      className="card h-100 project-card"
+      style={{ position: 'relative', cursor: 'pointer' }}
+      onClick={onView}
+    >
       {isAdmin && (
         <button
-          onClick={onEdit}
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
           title="Modifier le produit"
           style={{
             position: 'absolute',
