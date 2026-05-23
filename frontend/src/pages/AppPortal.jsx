@@ -6,6 +6,7 @@ import PersonalInfoCard from '../components/dashboard/PersonalInfoCard';
 import OrderStatusCard from '../components/dashboard/OrderStatusCard';
 import AdminUserList from './admin/AdminUserList';
 import AdminProjectList from './admin/AdminProjectList';
+import AdminLegalDocuments from './admin/AdminLegalDocuments';
 
 import ProjectRequest from './ProjectRequest';
 import ProjectDetails from './ProjectDetails';
@@ -37,6 +38,7 @@ const AppPortal = () => {
       case 'admin-pending': return isAdmin ? <AdminProjectList statusFilter={['en attente', 'devis_envoyé', 'paiement_attente', 'payé']} title="Projets à gérer / en attente" /> : <PersonalInfoCard />;
       case 'admin-progress': return isAdmin ? <AdminProjectList statusFilter="en cours" title="Projets en cours de modélisation" /> : <PersonalInfoCard />;
       case 'admin-completed': return isAdmin ? <AdminProjectList statusFilter="terminé" title="Projets terminés" /> : <PersonalInfoCard />;
+      case 'admin-legal': return isAdmin ? <AdminLegalDocuments /> : <PersonalInfoCard />;
       default: return <PersonalInfoCard />;
     }
   };
@@ -88,6 +90,9 @@ const AppPortal = () => {
                     </button>
                     <button onClick={() => setView('admin-completed')} className={`list-group-item list-group-item-action py-3 text-start border-0 ${view === 'admin-completed' ? 'active' : ''}`}>
                       <i className="bi bi-check-all me-2"></i>Terminés
+                    </button>
+                    <button onClick={() => setView('admin-legal')} className={`list-group-item list-group-item-action py-3 text-start border-0 ${view === 'admin-legal' ? 'active' : ''}`}>
+                      <i className="bi bi-file-earmark-text me-2"></i>Documents légaux
                     </button>
                   </>
                 )}

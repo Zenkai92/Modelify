@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -21,9 +22,12 @@ const UserProjectsModal = ({ show, onClose, user }) => {
   useEffect(() => {
     if (show && user) {
       fetchProjects();
+      document.body.style.overflow = 'hidden';
     } else {
-        setProjects([]); // Reset projects when modal closes or user changes
+      setProjects([]);
+      document.body.style.overflow = '';
     }
+    return () => { document.body.style.overflow = ''; };
   }, [show, user]);
 
   const fetchProjects = async () => {
@@ -56,8 +60,8 @@ const UserProjectsModal = ({ show, onClose, user }) => {
 
   if (!show) return null;
 
-  return (
-    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+  return createPortal(
+    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 1055 }} tabIndex="-1">
       <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div className="modal-content">
           <div className="modal-header">
@@ -90,8 +94,8 @@ const UserProjectsModal = ({ show, onClose, user }) => {
                   </thead>
                   <tbody>
                     {projects.map((project) => (
-                      <tr 
-                        key={project.id} 
+                      <tr
+                        key={project.id}
                         onClick={() => handleProjectClick(project.id)}
                         style={{ cursor: 'pointer' }}
                       >
@@ -119,7 +123,8 @@ const UserProjectsModal = ({ show, onClose, user }) => {
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 
