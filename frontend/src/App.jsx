@@ -11,6 +11,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 // Lazy loading
 const AuthCallback = lazy(() => import('./pages/auth/AuthCallback'));
 const AppPortal = lazy(() => import('./pages/AppPortal'));
+const LegalDocuments = lazy(() => import('./pages/LegalDocuments'));
 
 // Composant de chargement simple
 const PageLoader = () => (
@@ -40,6 +41,7 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              <Route path="/legal" element={<LegalDocuments />} />
               {/* Fallback to catch all other paths and redirect to /app if authenticated, or / if not */}
               <Route path="*" element={<Home />} />
             </Routes>
