@@ -2,14 +2,10 @@ import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import './LegalDocuments.css';
 
-/* ─────────────────────────────────────────────
-   Composants individuels – un par formalité
-───────────────────────────────────────────── */
-
 export const MentionsLegales = () => (
   <section id="mentions-legales" className="legal-section">
     <h2 className="legal-section-title">
-      <span className="legal-icon">⚖️</span> Mentions légales
+      Mentions légales
     </h2>
 
     <h3>Éditeur du site</h3>
@@ -58,7 +54,7 @@ export const MentionsLegales = () => (
 export const PolitiqueConfidentialite = () => (
   <section id="politique-confidentialite" className="legal-section">
     <h2 className="legal-section-title">
-      <span className="legal-icon">🔒</span> Politique de confidentialité
+      Politique de confidentialité
     </h2>
 
     <p>
@@ -130,7 +126,7 @@ export const PolitiqueConfidentialite = () => (
 export const ConditionsGeneralesUtilisation = () => (
   <section id="cgu" className="legal-section">
     <h2 className="legal-section-title">
-      <span className="legal-icon">📋</span> Conditions générales d'utilisation (CGU)
+      Conditions générales d'utilisation (CGU)
     </h2>
     <p className="legal-update">Dernière mise à jour : 1er janvier 2025</p>
 
@@ -194,7 +190,7 @@ export const ConditionsGeneralesUtilisation = () => (
 export const ConditionsGeneralesVente = () => (
   <section id="cgv" className="legal-section">
     <h2 className="legal-section-title">
-      <span className="legal-icon">🛒</span> Conditions générales de vente (CGV)
+      Conditions générales de vente (CGV)
     </h2>
     <p className="legal-update">Dernière mise à jour : 1er janvier 2025</p>
 
@@ -254,7 +250,7 @@ export const ConditionsGeneralesVente = () => (
 export const ModalitesPaiementRemboursement = () => (
   <section id="paiement-remboursement" className="legal-section">
     <h2 className="legal-section-title">
-      <span className="legal-icon">💳</span> Modalités de paiement et remboursement
+      Modalités de paiement et remboursement
     </h2>
 
     <h3>Moyens de paiement acceptés</h3>
@@ -314,7 +310,7 @@ export const ModalitesPaiementRemboursement = () => (
 export const ServiceApresVente = () => (
   <section id="sav" className="legal-section">
     <h2 className="legal-section-title">
-      <span className="legal-icon">🛠️</span> Service après-vente (SAV)
+      Service après-vente (SAV)
     </h2>
 
     <h3>Notre engagement</h3>
@@ -374,12 +370,12 @@ export const ServiceApresVente = () => (
 ──────────────────────────────────────────────────────────────────── */
 
 const SECTIONS = [
-  { id: 'mentions-legales',         label: 'Mentions légales',                       icon: '⚖️'  },
-  { id: 'politique-confidentialite', label: 'Politique de confidentialité',           icon: '🔒'  },
-  { id: 'cgu',                       label: "Conditions générales d'utilisation",     icon: '📋'  },
-  { id: 'cgv',                       label: 'Conditions générales de vente',          icon: '🛒'  },
-  { id: 'paiement-remboursement',    label: 'Paiement & remboursement',               icon: '💳'  },
-  { id: 'sav',                       label: 'Service après-vente',                    icon: '🛠️' },
+  { id: 'mentions-legales', label: 'Mentions légales'},
+  { id: 'politique-confidentialite', label: 'Politique de confidentialité'},
+  { id: 'cgu', label: "Conditions générales d'utilisation" },
+  { id: 'cgv', label: 'Conditions générales de vente' },
+  { id: 'paiement-remboursement', label: 'Paiement & remboursement' },
+  { id: 'sav', label: 'Service après-vente' },
 ];
 
 const LegalDocuments = () => {
