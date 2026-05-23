@@ -2,6 +2,8 @@ import { useEffect, useState, useCallback } from 'react';
 import FloatingShapes from '../components/FloatingShapes';
 import ProductCard from '../components/ProductCard';
 import AddProductModal from '../components/AddProductModal';
+import EditProductModal from '../components/EditProductModal';
+import ProductDetailModal from '../components/ProductDetailModal';
 import { useAuth } from '../contexts/AuthContext';
 import './Home.css';
 
@@ -12,6 +14,14 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [editProduct, setEditProduct] = useState(null);
+  const [viewProduct, setViewProduct] = useState(null);
+  const [cardKey, setCardKey] = useState(0);
+
+  const handleCloseDetail = () => {
+    setViewProduct(null);
+    setCardKey(k => k + 1);
+  };
 
   const fetchProducts = useCallback(async () => {
     setLoadingProducts(true);
@@ -112,11 +122,16 @@ const Home = () => {
           ) : (
             <div className="row">
               {products.map((product) => (
-                <div key={product.id} className="col-md-3 mb-4">
+                <div key={`${product.id}-${cardKey}`} className="col-md-3 mb-4">
                   <ProductCard
                     title={product.title}
                     description={product.description}
+                    price={product.price}
+                    fileFormats={product.file_formats}
                     model3DProps={{ modelPath: product.overview_model_file, color: '#0d6efd' }}
+                    isAdmin={isAdmin}
+                    onEdit={() => setEditProduct(product)}
+                    onView={() => setViewProduct(product)}
                   />
                 </div>
               ))}
@@ -133,6 +148,22 @@ const Home = () => {
           onProductAdded={fetchProducts}
         />
       )}
+
+      {/* Modal d'édition (admin uniquement) */}
+      {isAdmin && editProduct && (
+        <EditProductModal
+          product={editProduct}
+          onClose={() => setEditProduct(null)}
+          onProductUpdated={fetchProducts}
+        />
+      )}
+
+      {/* Modal de détail — toujours montée, fermeture force le remontage des canvases */}
+      <ProductDetailModal
+        product={viewProduct}
+        open={!!viewProduct}
+        onClose={handleCloseDetail}
+      />
     </div>
   );
 };

@@ -1,0 +1,140 @@
+/* ═══════════════════════════════════════════
+   LegalDocuments – styles
+═══════════════════════════════════════════ */
+
+/* ── En-tête ── */
+.legal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  padding: 64px 0 48px;
+  text-align: center;
+}
+
+.legal-header h1 {
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.legal-header-subtitle {
+  font-size: 1.05rem;
+  opacity: 0.85;
+  margin: 0;
+}
+
+/* ── Conteneur principal ── */
+.legal-container {
+  padding-top: 48px;
+  padding-bottom: 72px;
+}
+
+/* ── Sommaire latéral ── */
+.legal-toc {
+  position: sticky;
+  top: 80px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 24px 20px;
+  border-left: 4px solid #764ba2;
+}
+
+.legal-toc-title {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+
+.legal-toc-link {
+  display: block;
+  padding: 6px 8px;
+  border-radius: 6px;
+  color: #343a40;
+  text-decoration: none;
+  font-size: 0.88rem;
+  transition: background 0.15s, color 0.15s;
+  margin-bottom: 2px;
+}
+
+.legal-toc-link:hover {
+  background: #e9d8fd;
+  color: #764ba2;
+  text-decoration: none;
+}
+
+/* ── Sections ── */
+.legal-section {
+  scroll-margin-top: 80px; /* compense la navbar fixe */
+  padding-bottom: 48px;
+  margin-bottom: 48px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.legal-section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.legal-section-title {
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: #764ba2;
+  margin-bottom: 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legal-icon {
+  font-size: 1.4rem;
+}
+
+.legal-section h3 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #343a40;
+  margin-top: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.legal-section p,
+.legal-section li {
+  color: #495057;
+  line-height: 1.7;
+  font-size: 0.95rem;
+}
+
+.legal-section ul,
+.legal-section ol {
+  padding-left: 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.legal-section a {
+  color: #764ba2;
+  text-decoration: underline;
+}
+
+.legal-section a:hover {
+  color: #667eea;
+}
+
+address {
+  font-style: normal;
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 12px 0 1rem;
+  line-height: 1.8;
+  font-size: 0.95rem;
+  color: #495057;
+}
+
+.legal-update {
+  font-size: 0.82rem;
+  color: #6c757d;
+  margin-bottom: 1.4rem;
+  font-style: italic;
+}
