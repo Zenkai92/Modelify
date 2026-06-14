@@ -56,6 +56,10 @@ const Register = () => {
         setError('Le mot de passe doit contenir au moins un chiffre')
         return false
       }
+      if (!/[^A-Za-z0-9]/.test(formData.password)) {
+        setError('Le mot de passe doit contenir au moins un caractère spécial')
+        return false
+      }
     }
     return true
   }
@@ -157,6 +161,19 @@ const Register = () => {
             onChange={handleChange}
             required
           />
+          <ul className="list-unstyled mt-2 mb-0" style={{ fontSize: '0.78rem' }}>
+            {[
+              { label: '12 caractères minimum', ok: formData.password.length >= 12 },
+              { label: 'Une lettre majuscule', ok: /[A-Z]/.test(formData.password) },
+              { label: 'Un chiffre', ok: /[0-9]/.test(formData.password) },
+              { label: 'Un caractère spécial (!@#$…)', ok: /[^A-Za-z0-9]/.test(formData.password) },
+            ].map(({ label, ok }) => (
+              <li key={label} className={ok ? 'text-success' : 'text-danger'}>
+                <i className={`bi ${ok ? 'bi-check-circle-fill' : 'bi-x-circle-fill'} me-1`}></i>
+                {label}
+              </li>
+            ))}
+          </ul>
         </div>
         <div className="col-md-6 mb-3">
           <label htmlFor="confirmPassword" className="form-label">Confirmer le mot de passe *</label>
