@@ -7,12 +7,14 @@ const OVERVIEW_EXTENSIONS = ['.stl', '.obj', '.3mf', '.gltf', '.glb'];
 // Formats acceptés pour le téléchargement (tout format 3D)
 const DOWNLOAD_EXTENSIONS = ['.stl', '.obj', '.f3d', '.3mf', '.gltf', '.glb', '.ply', '.zip'];
 
+const FILE_FORMAT_OPTIONS = ['STL', 'OBJ', 'F3D'];
+
 const initialForm = {
   title: '',
   description: '',
   price: '',
   category: '',
-  file_formats: '',
+  file_formats: [],
 };
 
 const FileInfo = ({ file }) => file ? (
@@ -36,6 +38,15 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFormatToggle = (format) => {
+    setForm((prev) => ({
+      ...prev,
+      file_formats: prev.file_formats.includes(format)
+        ? prev.file_formats.filter((f) => f !== format)
+        : [...prev.file_formats, format],
+    }));
+  };
+
   const handleFileChange = (setter, allowedExts) => (e) => {
     const file = e.target.files[0] || null;
     if (!file) { setter(null); return; }
@@ -56,7 +67,7 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
     setError('');
     setSuccess('');
 
-    if (!form.title.trim() || !form.price || !form.category.trim() || !form.file_formats.trim()) {
+    if (!form.title.trim() || !form.price || !form.category.trim() || form.file_formats.length === 0) {
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
@@ -76,7 +87,7 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
       formData.append('description', form.description);
       formData.append('price', form.price);
       formData.append('category', form.category);
-      formData.append('file_formats', form.file_formats);
+      formData.append('file_formats', form.file_formats.join(', '));
       formData.append('overview_model_file', overviewFile);
       formData.append('download_model_file', downloadFile);
 
@@ -208,8 +219,21 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
                   </div>
 
                   <div className="col-12">
-                    <label className="form-label fw-semibold">Formats de fichier <span className="text-danger">*</span></label>
-                    <input type="text" name="file_formats" className="form-control" value={form.file_formats} onChange={handleChange} placeholder="ex: STL, OBJ, F3D" required />
+                    <label className="form-label fw-semibold d-block">Formats de fichier <span className="text-danger">*</span></label>
+                    <div className="d-flex gap-3">
+                      {FILE_FORMAT_OPTIONS.map((fmt) => (
+                        <div key={fmt} className="form-check">
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id={`fmt-${fmt}`}
+                            checked={form.file_formats.includes(fmt)}
+                            onChange={() => handleFormatToggle(fmt)}
+                          />
+                          <label className="form-check-label fw-semibold" htmlFor={`fmt-${fmt}`}>{fmt}</label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
 
                   <div className="col-12">
