@@ -3,7 +3,12 @@ import { createPortal } from 'react-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const OVERVIEW_EXTENSIONS = ['.stl', '.obj', '.3mf', '.gltf', '.glb'];
-const DOWNLOAD_EXTENSIONS = ['.stl', '.obj', '.f3d', '.3mf', '.gltf', '.glb', '.ply', '.zip'];
+
+const FORMAT_OPTIONS = [
+  { fmt: 'STL', ext: '.stl' },
+  { fmt: 'OBJ', ext: '.obj' },
+  { fmt: 'F3D', ext: '.f3d' },
+];
 
 const FileInfo = ({ file }) => file ? (
   <div className="mt-1 small text-success">
@@ -14,15 +19,10 @@ const FileInfo = ({ file }) => file ? (
 
 const EditProductModal = ({ product, onClose, onProductUpdated }) => {
   const { session } = useAuth();
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    price: '',
-    category: '',
-    file_formats: '',
-  });
+  const [form, setForm] = useState({ title: '', description: '', price: '', category: '' });
   const [overviewFile, setOverviewFile] = useState(null);
-  const [downloadFile, setDownloadFile] = useState(null);
+  const [downloadFiles, setDownloadFiles] = useState({ STL: null, OBJ: null, F3D: null });
+  const [selectedFormats, setSelectedFormats] = useState([]);
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
@@ -36,12 +36,14 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
         description: product.description || '',
         price: product.price != null ? String(product.price) : '',
         category: product.category || '',
-        file_formats: Array.isArray(product.file_formats)
-          ? product.file_formats.join(', ')
-          : product.file_formats || '',
       });
+      // Restaurer les formats à partir des fichiers existants en DB
+      const existingFormats = Array.isArray(product.file_formats)
+        ? product.file_formats.map((f) => f.toUpperCase())
+        : [];
+      setSelectedFormats(existingFormats);
+      setDownloadFiles({ STL: null, OBJ: null, F3D: null });
       setOverviewFile(null);
-      setDownloadFile(null);
       setConfirmDelete(false);
       setError('');
       setSuccess('');
@@ -53,27 +55,58 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleFileChange = (setter, allowedExts) => (e) => {
+  const handleFormatToggle = (fmt) => {
+    setSelectedFormats((prev) => {
+      if (prev.includes(fmt)) {
+        setDownloadFiles((df) => ({ ...df, [fmt]: null }));
+        return prev.filter((f) => f !== fmt);
+      }
+      return [...prev, fmt];
+    });
+  };
+
+  const handleOverviewChange = (e) => {
     const file = e.target.files[0] || null;
-    if (!file) { setter(null); return; }
+    if (!file) { setOverviewFile(null); return; }
     const ext = '.' + file.name.split('.').pop().toLowerCase();
-    if (!allowedExts.includes(ext)) {
-      setError(`Extension non autorisée. Extensions acceptées : ${allowedExts.join(', ')}`);
+    if (!OVERVIEW_EXTENSIONS.includes(ext)) {
+      setError(`Extension aperçu non autorisée. Acceptées : ${OVERVIEW_EXTENSIONS.join(', ')}`);
       e.target.value = '';
-      setter(null);
+      setOverviewFile(null);
       return;
     }
     setError('');
-    setter(file);
+    setOverviewFile(file);
   };
+
+  const handleDownloadFileChange = (fmt, ext) => (e) => {
+    const file = e.target.files[0] || null;
+    if (!file) { setDownloadFiles((prev) => ({ ...prev, [fmt]: null })); return; }
+    const fileExt = '.' + file.name.split('.').pop().toLowerCase();
+    if (fileExt !== ext) {
+      setError(`Le fichier ${fmt} doit avoir l'extension ${ext}`);
+      e.target.value = '';
+      setDownloadFiles((prev) => ({ ...prev, [fmt]: null }));
+      return;
+    }
+    setError('');
+    setDownloadFiles((prev) => ({ ...prev, [fmt]: file }));
+  };
+
+  // Fichiers existants en base pour affichage
+  const existingDownloadFiles = Array.isArray(product?.download_files) ? product.download_files : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
 
-    if (!form.title.trim() || !form.price || !form.category.trim() || !form.file_formats.trim()) {
+    if (!form.title.trim() || !form.price || !form.category.trim()) {
       setError('Veuillez remplir tous les champs obligatoires.');
+      return;
+    }
+    if (selectedFormats.length === 0) {
+      setError('Veuillez sélectionner au moins un format.');
       return;
     }
 
@@ -84,9 +117,13 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
       formData.append('description', form.description);
       formData.append('price', form.price);
       formData.append('category', form.category);
-      formData.append('file_formats', form.file_formats);
+      formData.append('file_formats', selectedFormats.join(', '));
       if (overviewFile) formData.append('overview_model_file', overviewFile);
-      if (downloadFile) formData.append('download_model_file', downloadFile);
+
+      const newFiles = selectedFormats.filter((fmt) => downloadFiles[fmt]);
+      newFiles.forEach((fmt) => {
+        formData.append('download_files', downloadFiles[fmt]);
+      });
 
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${product.id}`, {
         method: 'PUT',
@@ -205,37 +242,70 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
               <input type="text" name="category" className="form-control" value={form.category} onChange={handleChange} required />
             </div>
 
-            <div className="col-12">
-              <label className="form-label fw-semibold">Formats de fichier <span className="text-danger">*</span></label>
-              <input type="text" name="file_formats" className="form-control" value={form.file_formats} onChange={handleChange} placeholder="ex: STL, OBJ" required />
-            </div>
-
+            {/* Aperçu 3D */}
             <div className="col-12">
               <label className="form-label fw-semibold">Fichier Aperçu 3D</label>
               <input
                 type="file"
                 className="form-control"
                 accept={OVERVIEW_EXTENSIONS.join(',')}
-                onChange={handleFileChange(setOverviewFile, OVERVIEW_EXTENSIONS)}
+                onChange={handleOverviewChange}
               />
-              <div className="form-text text-muted">
-                Laisser vide pour conserver le fichier actuel — max 50 Mo
-              </div>
+              <div className="form-text text-muted">Laisser vide pour conserver le fichier actuel — max 50 Mo</div>
               <FileInfo file={overviewFile} />
             </div>
 
+            {/* Fichiers de téléchargement par format */}
             <div className="col-12">
-              <label className="form-label fw-semibold">Fichier de téléchargement</label>
-              <input
-                type="file"
-                className="form-control"
-                accept={DOWNLOAD_EXTENSIONS.join(',')}
-                onChange={handleFileChange(setDownloadFile, DOWNLOAD_EXTENSIONS)}
-              />
-              <div className="form-text text-muted">
-                Laisser vide pour conserver le fichier actuel — max 50 Mo
-              </div>
-              <FileInfo file={downloadFile} />
+              <label className="form-label fw-semibold d-block">Fichiers de téléchargement</label>
+
+              {/* Fichiers actuels en base */}
+              {existingDownloadFiles.length > 0 && (
+                <div className="mb-2 p-2 bg-light rounded small">
+                  <span className="text-muted fw-semibold">Fichiers actuels : </span>
+                  {existingDownloadFiles.map((f) => (
+                    <span key={f.extension} className="badge bg-secondary me-1">{f.extension.toUpperCase()}</span>
+                  ))}
+                  <div className="text-muted mt-1" style={{ fontSize: '0.75rem' }}>
+                    Uploader de nouveaux fichiers remplacera tous les fichiers existants.
+                  </div>
+                </div>
+              )}
+
+              <p className="text-muted small mb-2">Cochez les formats à proposer et uploadez les fichiers souhaités.</p>
+              {FORMAT_OPTIONS.map(({ fmt, ext }) => (
+                <div
+                  key={fmt}
+                  className={`border rounded p-3 mb-2 ${selectedFormats.includes(fmt) ? 'border-primary bg-light' : ''}`}
+                >
+                  <div className="form-check mb-0">
+                    <input
+                      className="form-check-input"
+                      type="checkbox"
+                      id={`edit-fmt-${fmt}`}
+                      checked={selectedFormats.includes(fmt)}
+                      onChange={() => handleFormatToggle(fmt)}
+                    />
+                    <label className="form-check-label fw-semibold" htmlFor={`edit-fmt-${fmt}`}>
+                      {fmt} <span className="text-muted fw-normal small">({ext})</span>
+                    </label>
+                  </div>
+                  {selectedFormats.includes(fmt) && (
+                    <div className="mt-2">
+                      <input
+                        type="file"
+                        className="form-control form-control-sm"
+                        accept={ext}
+                        onChange={handleDownloadFileChange(fmt, ext)}
+                      />
+                      <div className="form-text text-muted" style={{ fontSize: '0.75rem' }}>
+                        Laisser vide pour conserver le fichier existant
+                      </div>
+                      <FileInfo file={downloadFiles[fmt]} />
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -253,20 +323,10 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
             ) : (
               <div className="d-flex align-items-center gap-2">
                 <span className="small text-danger fw-semibold">Confirmer ?</span>
-                <button
-                  type="button"
-                  className="btn btn-danger btn-sm"
-                  onClick={handleDelete}
-                  disabled={deleting}
-                >
+                <button type="button" className="btn btn-danger btn-sm" onClick={handleDelete} disabled={deleting}>
                   {deleting ? <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> : 'Oui'}
                 </button>
-                <button
-                  type="button"
-                  className="btn btn-light btn-sm"
-                  onClick={() => setConfirmDelete(false)}
-                  disabled={deleting}
-                >
+                <button type="button" className="btn btn-light btn-sm" onClick={() => setConfirmDelete(false)} disabled={deleting}>
                   Non
                 </button>
               </div>

@@ -681,25 +681,44 @@ async def stripe_webhook(request: Request):
     # Gestion de l'événement 'checkout.session.completed'
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
+        metadata = session.get("metadata", {})
+        event_type = metadata.get("type")
 
-        # Récupérer l'ID du projet stocké dans les métadonnées lors de la création de la session
-        project_id = session.get("metadata", {}).get("project_id")
+        if event_type == "project_payment":
+            project_id = metadata.get("project_id")
+            if project_id:
+                logger.info(f"WEBHOOK: Paiement projet confirmé pour {project_id}")
+                try:
+                    supabase.table("Projects").update(
+                        {
+                            "status": "payé",
+                            "stripe_invoice_id": session.get("payment_intent"),
+                            "updatedAt": datetime.now(timezone.utc).date().isoformat(),
+                        }
+                    ).eq("id", project_id).execute()
+                    logger.info("Statut projet mis à jour -> payé")
+                except Exception as db_error:
+                    logger.error(f"Erreur DB update projet {project_id}: {db_error}")
 
-        if project_id:
-            logger.info(f"WEBHOOK: Paiement confirmé pour le projet {project_id}")
-
-            # Mise à jour du statut en 'payé'
-            try:
-                supabase.table("Projects").update(
-                    {
-                        "status": "payé",
-                        "stripe_invoice_id": session.get("payment_intent"),
-                        "updatedAt": datetime.now(timezone.utc).date().isoformat(),
-                    }
-                ).eq("id", project_id).execute()
-                logger.info("Statut projet mis à jour -> payé")
-            except Exception as db_error:
-                logger.error(f"Erreur DB update projet {project_id}: {db_error}")
+        elif event_type == "product_purchase":
+            product_id = metadata.get("product_id")
+            user_id = metadata.get("user_id")
+            if product_id and user_id:
+                logger.info(f"WEBHOOK: Achat produit confirmé — produit {product_id} par user {user_id}")
+                try:
+                    supabase.table("Orders").insert(
+                        {
+                            "product_id": product_id,
+                            "client_id": user_id,
+                            "stripe_session_id": session.get("id"),
+                            "stripe_payment_intent_id": session.get("payment_intent"),
+                            "amount_paid": session.get("amount_total", 0) / 100,
+                            "status": "completed",
+                        }
+                    ).execute()
+                    logger.info("Achat produit enregistré dans Orders")
+                except Exception as db_error:
+                    logger.error(f"Erreur DB insert Orders: {db_error}")
 
     # On renvoie toujours 200 OK pour dire à Stripe "Bien reçu", même si l'event ne nous intéresse pas
     return {"status": "success"}
