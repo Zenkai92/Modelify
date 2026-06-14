@@ -90,8 +90,9 @@ const Home = () => {
                       background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)',
                       border: 'none',
                       color: '#fff',
-                      fontSize: '1.4rem',
+                      fontSize: '1.2rem',
                       lineHeight: 1,
+                      padding: 0,
                       boxShadow: '0 3px 10px rgba(124,58,237,0.4)',
                       cursor: 'pointer',
                       display: 'inline-flex',
@@ -100,7 +101,7 @@ const Home = () => {
                       flexShrink: 0,
                     }}
                   >
-                    +
+                    <i className="bi bi-plus" style={{ lineHeight: 1 }}></i>
                   </button>
                 )}
               </h2>
@@ -147,7 +148,7 @@ const Home = () => {
           onClose={() => setModalOpen(false)}
           onProductAdded={fetchProducts}
         />
-      )}
+      )}  
 
       {/* Modal d'édition (admin uniquement) */}
       {isAdmin && editProduct && (
