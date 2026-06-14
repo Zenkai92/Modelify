@@ -49,7 +49,7 @@ const AppPortal = () => {
       <section className="hero-section text-center py-5 position-relative overflow-hidden" style={isAdmin ? {background: 'linear-gradient(135deg, #1a237e 0%, #283593 100%)'} : {backgroundColor: '#212529'}}>
         <FloatingShapes />
         <div className="container position-relative z-1 pt-4 pb-2">
-          <h1 className="display-5 fw-bold text-white mb-2">{isAdmin ? 'Administration' : 'Mon Portail'}</h1>
+          <h1 className="display-5 fw-bold text-white mb-2">Mon Portail</h1>
           <p className="lead text-white-50">Gérez vos informations, demandes et projets depuis cette interface</p>
         </div>
       </section>
