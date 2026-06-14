@@ -24,25 +24,16 @@ const PersonalInfoCard = () => {
       </div>
       <div className="card-body p-4">
         <form>
-          {user?.user_metadata?.role !== 'professionnel' && (
-            <div className="row">
-              <div className="col-md-6 mb-3">
-                <label className="form-label text-muted small fw-bold">Prénom</label>
-                <input type="text" className="form-control bg-light" value={user?.user_metadata?.firstName || ''} disabled />
-              </div>
-              <div className="col-md-6 mb-3">
-                <label className="form-label text-muted small fw-bold">Nom</label>
-                <input type="text" className="form-control bg-light" value={user?.user_metadata?.lastName || ''} disabled />
-              </div>
+          <div className="row">
+            <div className="col-md-6 mb-3">
+              <label className="form-label text-muted small fw-bold">Prénom</label>
+              <input type="text" className="form-control bg-light" value={user?.user_metadata?.firstName || ''} disabled />
             </div>
-          )}
-
-          {user?.user_metadata?.role === 'professionnel' && (
-            <div className="mb-3">
-              <label className="form-label text-muted small fw-bold">Nom de l'entreprise</label>
-              <input type="text" className="form-control bg-light" value={user?.user_metadata?.companyName || ''} disabled />
+            <div className="col-md-6 mb-3">
+              <label className="form-label text-muted small fw-bold">Nom</label>
+              <input type="text" className="form-control bg-light" value={user?.user_metadata?.lastName || ''} disabled />
             </div>
-          )}
+          </div>
 
           <div className="mb-3">
             <label className="form-label text-muted small fw-bold">Email</label>

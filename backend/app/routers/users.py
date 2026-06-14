@@ -32,7 +32,7 @@ async def get_current_user_profile(current_user=Depends(get_current_user)):
             return {
                 "id": current_user.id,
                 "email": current_user.email,
-                "role": "particulier",  # Default
+                "role": "user",  # Default
                 "firstName": "",
                 "lastName": "",
             }
@@ -83,10 +83,10 @@ async def get_users(current_user=Depends(get_current_user)):
 async def create_user(user: UserCreate):
     user_data = user.model_dump(exclude_unset=True)
 
-    # Sécurité : Force le rôle à 'particulier' ou 'professionnel' uniquement
+    # Sécurité : Force le rôle à 'user' uniquement
     # Empêche la création de comptes 'admin' via l'API publique
-    if user_data.get("role") not in ["particulier", "professionnel"]:
-        user_data["role"] = "particulier"
+    if user_data.get("role") != "user":
+        user_data["role"] = "user"
 
     # Ensure dates are set if not provided
     if not user_data.get("createdAt"):

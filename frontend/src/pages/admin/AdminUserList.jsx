@@ -99,9 +99,7 @@ const AdminUserList = () => {
                     <td>{u.email}</td>
                     <td>
                       <span className={`badge rounded-pill ${
-                        u.role === 'admin' ? 'bg-danger' : 
-                        u.role === 'professionnel' ? 'bg-info text-dark' : 
-                        'bg-secondary'
+                        u.role === 'admin' ? 'bg-danger' : 'bg-secondary'
                       }`}>
                         {u.role}
                       </span>

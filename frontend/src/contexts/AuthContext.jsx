@@ -152,7 +152,7 @@ export const AuthProvider = ({ children }) => {
           email: email,
           firstName: userData.firstName || '',
           lastName: userData.lastName || '',
-          role: userData.role || 'particulier',
+          role: userData.role || 'user',
           companyName: userData.companyName || '',
           streetAddress: userData.streetAddress || '',
           city: userData.city || '',

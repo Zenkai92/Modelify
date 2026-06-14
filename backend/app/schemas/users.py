@@ -7,7 +7,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     firstName: Optional[str] = ""
     lastName: Optional[str] = ""
-    role: Optional[str] = "particulier"
+    role: Optional[str] = "user"
     companyName: Optional[str] = ""
     streetAddress: Optional[str] = ""
     city: Optional[str] = ""

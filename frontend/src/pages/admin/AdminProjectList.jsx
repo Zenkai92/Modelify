@@ -118,9 +118,7 @@ const AdminProjectList = ({ statusFilter, title }) => {
 
 
                   <td><span className={`badge ${
-                        project.Users.role === 'admin' ? 'bg-danger' : 
-                        project.Users.role === 'professionnel' ? 'bg-info text-dark' : 
-                        'bg-secondary'
+                        project.Users.role === 'admin' ? 'bg-danger' : 'bg-secondary'
                       }`}>
                         {project.Users.role}
                       </span>

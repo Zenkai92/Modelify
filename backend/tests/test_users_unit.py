@@ -20,7 +20,7 @@ class TestUsersUnit(BaseAsyncTestCase):
 
     @patch("app.routers.users.supabase")
     async def test_create_user_security_role_enforcement(self, mock_supabase):
-        """Rôle 'admin' injecté → forcé à 'particulier'"""
+        """Rôle 'admin' injecté → forcé à 'user'"""
         user_input = UserCreate(
             id="user_123",
             email="hacker@example.com",
@@ -32,7 +32,7 @@ class TestUsersUnit(BaseAsyncTestCase):
 
         mock_response = MagicMock()
         mock_response.data = [
-            {"id": "123", "email": "hacker@example.com", "role": "particulier"}
+            {"id": "123", "email": "hacker@example.com", "role": "user"}
         ]
         mock_supabase.table.return_value.insert.return_value.execute.return_value = (
             mock_response
@@ -42,8 +42,8 @@ class TestUsersUnit(BaseAsyncTestCase):
 
         args, _ = mock_supabase.table.return_value.insert.call_args
         inserted_data = args[0]
-        self.assertEqual(inserted_data["role"], "particulier")
-        self.assertEqual(response["user"]["role"], "particulier")
+        self.assertEqual(inserted_data["role"], "user")
+        self.assertEqual(response["user"]["role"], "user")
 
     @patch("app.routers.users.supabase")
     async def test_get_users_access_control_admin(self, mock_supabase):
@@ -92,7 +92,7 @@ class TestUsersUnit(BaseAsyncTestCase):
         mock_single_builder = MagicMock()
         mock_eq_builder.single.return_value = mock_single_builder
 
-        mock_single_builder.execute.return_value.data = {"role": "particulier"}
+        mock_single_builder.execute.return_value.data = {"role": "user"}
 
         with self.assertRaises(HTTPException) as cm:
             await get_users(current_user=mock_user)

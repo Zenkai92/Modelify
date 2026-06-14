@@ -135,7 +135,7 @@ class TestIntegration(BaseTestCase):
         # Mock user role check (standard user)
         mock_user_query = MagicMock()
         mock_user_query.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {
-            "role": "particulier"
+            "role": "user"
         }
 
         # Mock count query for pagination
@@ -232,7 +232,7 @@ class TestIntegration(BaseTestCase):
             "email": "new@test.com",
             "firstName": "New",
             "lastName": "User",
-            "role": "particulier",
+            "role": "user",
         }
         response = self.client.post("/api/users", json=user_data)
         self.assertEqual(response.status_code, 201)
@@ -240,9 +240,9 @@ class TestIntegration(BaseTestCase):
     @patch("app.routers.users.supabase")
     def test_get_users_forbidden(self, mock_supabase):
         """GET /api/users non-admin → HTTP 403"""
-        # Mock user role check returning 'particulier'
+        # Mock user role check returning 'user'
         mock_supabase.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {
-            "role": "particulier"
+            "role": "user"
         }
 
         response = self.client.get("/api/users")

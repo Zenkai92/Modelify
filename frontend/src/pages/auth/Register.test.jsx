@@ -27,10 +27,7 @@ describe('Page Register', () => {
       </BrowserRouter>
     )
 
-    // Step 1: Role selection (default is Particulier) -> Next
-    fireEvent.click(screen.getByText(/Suivant/i))
-
-    // Step 2: Personal Info
+    // Step 1: Personal Info
     fireEvent.change(screen.getByLabelText(/Prénom \*/i), { target: { value: 'John' } })
     fireEvent.change(screen.getByLabelText(/^Nom \*/i), { target: { value: 'Doe' } })
     fireEvent.change(screen.getByLabelText(/Email \*/i), { target: { value: 'john@example.com' } })
@@ -53,10 +50,7 @@ describe('Page Register', () => {
       </BrowserRouter>
     )
 
-    // Step 1: Role selection -> Next
-    fireEvent.click(screen.getByText(/Suivant/i))
-
-    // Step 2: Personal Info
+    // Step 1: Personal Info
     fireEvent.change(screen.getByLabelText(/Prénom \*/i), { target: { value: 'Jane' } })
     fireEvent.change(screen.getByLabelText(/^Nom \*/i), { target: { value: 'Doe' } })
     fireEvent.change(screen.getByLabelText(/Email \*/i), { target: { value: 'jane@example.com' } })
@@ -66,12 +60,11 @@ describe('Page Register', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /Suivant/i }))
 
-    // Step 3: Address (Optional but step exists) -> Submit
-    // Wait for step 3 to appear
+    // Step 2: Address (Optional) -> Submit
     await waitFor(() => {
         expect(screen.getByText(/Adresse/i)).toBeInTheDocument()
     })
-    
+
     fireEvent.click(screen.getByRole('button', { name: /S'inscrire/i }))
 
     await waitFor(() => {
@@ -82,7 +75,7 @@ describe('Page Register', () => {
         expect.objectContaining({
           firstName: 'Jane',
           lastName: 'Doe',
-          role: 'particulier'
+          role: 'user'
         })
       )
     })
