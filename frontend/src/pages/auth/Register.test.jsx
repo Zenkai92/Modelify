@@ -55,8 +55,8 @@ describe('Page Register', () => {
     fireEvent.change(screen.getByLabelText(/^Nom \*/i), { target: { value: 'Doe' } })
     fireEvent.change(screen.getByLabelText(/Email \*/i), { target: { value: 'jane@example.com' } })
 
-    fireEvent.change(screen.getByLabelText(/^Mot de passe \*/i), { target: { value: 'Password1234' } })
-    fireEvent.change(screen.getByLabelText(/Confirmer le mot de passe/i), { target: { value: 'Password1234' } })
+    fireEvent.change(screen.getByLabelText(/^Mot de passe \*/i), { target: { value: 'Password1234!' } })
+    fireEvent.change(screen.getByLabelText(/Confirmer le mot de passe/i), { target: { value: 'Password1234!' } })
 
     fireEvent.click(screen.getByRole('button', { name: /Suivant/i }))
 
@@ -71,7 +71,7 @@ describe('Page Register', () => {
       expect(mockSignUp).toHaveBeenCalledTimes(1)
       expect(mockSignUp).toHaveBeenCalledWith(
         'jane@example.com',
-        'Password1234',
+        'Password1234!',
         expect.objectContaining({
           firstName: 'Jane',
           lastName: 'Doe',
