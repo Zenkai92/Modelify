@@ -1,3 +1,106 @@
 .home-hero-content {
   z-index: 2;
 }
+
+.hero-eyebrow {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 0.4rem 1rem;
+  border-radius: 50px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero-highlight {
+  text-decoration: underline;
+  text-decoration-color: rgba(255, 255, 255, 0.5);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+}
+
+.hero-format-badge {
+  background: linear-gradient(135deg, #764ba2 0%, #db2777 100%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+  padding: 0.35rem 0.9rem;
+  border-radius: 50px;
+}
+
+.section-eyebrow {
+  display: inline-block;
+  color: #7c3aed;
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.step-icon-circle,
+.feature-icon-circle {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #fff;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #312e81 100%);
+  margin: 0 auto 1rem;
+}
+
+.feature-icon-circle {
+  width: 56px;
+  height: 56px;
+  font-size: 1.35rem;
+}
+
+.step-number {
+  color: #7c3aed;
+}
+
+.why-section {
+  background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 100%);
+}
+
+.section-divider {
+  width: 140px;
+  height: 1px;
+  margin: 0 auto;
+  background-color: #dee2e6;
+}
+
+.cta-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #312e81 100%);
+  position: relative;
+  padding-top: 90px;
+}
+
+.custom-shape-divider-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.custom-shape-divider-top svg {
+  position: relative;
+  display: block;
+  width: calc(100% + 1.3px);
+  height: 120px;
+}
+
+.custom-shape-divider-top .shape-fill {
+  fill: #FFFFFF;
+}
+
+.cta-banner .custom-shape-divider-bottom .shape-fill {
+  fill: #212529;
+}

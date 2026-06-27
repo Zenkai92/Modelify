@@ -48,7 +48,7 @@ const ProductCard = ({ title, description, price, fileFormats, model3DProps, isA
               <span
                 key={fmt}
                 className="badge"
-                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)' }}
+                style={{ background: 'linear-gradient(135deg, #764ba2 0%, #db2777 100%)' }}
               >
                 {fmt}
               </span>

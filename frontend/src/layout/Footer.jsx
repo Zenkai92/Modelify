@@ -11,7 +11,7 @@ const LEGAL_LINKS = [
 
 const Footer = () => {
   return (
-    <footer className="footer mt-auto">
+    <footer className="footer bg-dark mt-auto py-5">
       <div className="container">
         <div className="row">
 

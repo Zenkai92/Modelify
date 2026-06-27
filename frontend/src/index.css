@@ -17,7 +17,7 @@ code {
 }
 
 .hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #312e81 100%);
   color: white;
   padding: 100px 0 150px 0; /* Augmenter le padding-bottom pour la vague */
   position: relative;
@@ -26,7 +26,7 @@ code {
 
 /* Nouvelle classe pour les pages d'authentification */
 .auth-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #312e81 100%);
   min-height: calc(100vh - 56px); /* Hauteur totale moins la navbar approx */
   position: relative;
   overflow: hidden;
@@ -114,7 +114,6 @@ code {
 }
 
 .footer {
-  background-color: #343a40;
   color: white;
   padding: 30px 0;
 }

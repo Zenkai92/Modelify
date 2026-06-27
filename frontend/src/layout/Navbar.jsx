@@ -31,29 +31,30 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav className="navbar navbar-expand-lg navbar-dark bg-dark navbar-modelify">
       <div className="container">
-        <Link className="navbar-brand fw-bold d-flex align-items-center" to="/">
+        <Link className="navbar-brand fw-bold d-flex align-items-center gap-2" to="/">
+          <img src="/logo_modelify.png" alt="" height="32" width="32" />
           Modelify
         </Link>
-        
-        <button 
-          className="navbar-toggler" 
-          type="button" 
-          data-bs-toggle="collapse" 
+
+        <button
+          className="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
           data-bs-target="#navbarNav"
         >
           <span className="navbar-toggler-icon"></span>
         </button>
-        
+
         <div className="collapse navbar-collapse" id="navbarNav">
-          <ul className="navbar-nav ms-auto">
+          <ul className="navbar-nav ms-auto align-items-lg-center">
             {user ? (
               <li className="nav-item d-flex align-items-center">
                 <span className="text-white me-3 d-none d-lg-block fw-medium">
                   Bonjour, {`${user?.user_metadata?.firstName || ''} ${user?.user_metadata?.lastName || ''}`.trim() || user?.email?.split('@')[0]}
                 </span>
-                <Link className="btn btn-light btn-sm fw-bold d-flex align-items-center gap-2" to="/app">
+                <Link className="btn btn-sm fw-bold d-flex align-items-center gap-2 btn-gradient-pill" to="/app">
                   <i className="bi bi-grid-fill"></i> Mon Portail
                 </Link>
               </li>
@@ -63,7 +64,7 @@ const Navbar = () => {
                   <Link className="nav-link" to="/login">Connexion</Link>
                 </li>
                 <li className="nav-item">
-                  <Link className="nav-link" to="/register">Inscription</Link>
+                  <Link className="btn btn-sm fw-bold ms-lg-2 btn-gradient-pill" to="/register">Inscription</Link>
                 </li>
               </>
             )}

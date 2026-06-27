@@ -8,7 +8,8 @@ const FloatingShapes = () => {
       <svg className="floating-shapes-defs" aria-hidden="true" focusable="false">
         <linearGradient id="gradient-fill" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%" stopColor="#667eea" />
-          <stop offset="100%" stopColor="#764ba2" />
+          <stop offset="50%" stopColor="#764ba2" />
+          <stop offset="100%" stopColor="#312e81" />
         </linearGradient>
       </svg>
 
