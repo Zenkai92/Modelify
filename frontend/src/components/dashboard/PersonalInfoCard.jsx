@@ -41,22 +41,6 @@ const PersonalInfoCard = () => {
           </div>
 
           <div className="mb-3">
-            <label className="form-label text-muted small fw-bold">Adresse</label>
-            <input type="text" className="form-control bg-light" value={user?.user_metadata?.address || ''} disabled />
-          </div>
-
-          <div className="row">
-            <div className="col-md-6 mb-3">
-              <label className="form-label text-muted small fw-bold">Ville</label>
-              <input type="text" className="form-control bg-light" value={user?.user_metadata?.city || ''} disabled />
-            </div>
-            <div className="col-md-6 mb-3">
-              <label className="form-label text-muted small fw-bold">Code postal</label>
-              <input type="text" className="form-control bg-light" value={user?.user_metadata?.postalCode || ''} disabled />
-            </div>
-          </div>
-
-          <div className="mb-3">
             <label className="form-label text-muted small fw-bold">Compte créé le</label>
             <input type="text" className="form-control bg-light" value={formatDate(user?.created_at)} disabled />
           </div>

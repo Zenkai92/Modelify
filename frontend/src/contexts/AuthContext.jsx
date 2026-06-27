@@ -154,9 +154,6 @@ export const AuthProvider = ({ children }) => {
           lastName: userData.lastName || '',
           role: userData.role || 'user',
           companyName: userData.companyName || '',
-          streetAddress: userData.streetAddress || '',
-          city: userData.city || '',
-          postalCode: userData.postalCode || '',
           createdAt: new Date().toISOString(), // createdAt pas createAt
           updateAt: new Date().toISOString()
         }

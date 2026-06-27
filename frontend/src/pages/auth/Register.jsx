@@ -10,12 +10,8 @@ const Register = () => {
     lastName: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    streetAddress: '',
-    city: '',
-    postalCode: ''
+    confirmPassword: ''
   })
-  const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [confirmTouched, setConfirmTouched] = useState(false)
@@ -33,71 +29,53 @@ const Register = () => {
     })
   }
 
-  const validateStep = () => {
+  const validateForm = () => {
     setError('')
-    if (step === 1) {
-      if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
-        setError('Veuillez remplir tous les champs obligatoires')
-        return false
-      }
-      if (formData.password !== formData.confirmPassword) {
-        setError('Les mots de passe ne correspondent pas')
-        return false
-      }
-      if (formData.password.length < 12) {
-        setError('Le mot de passe doit contenir au moins 12 caractères')
-        return false
-      }
-      if (!/[A-Z]/.test(formData.password)) {
-        setError('Le mot de passe doit contenir au moins une majuscule')
-        return false
-      }
-      if (!/[0-9]/.test(formData.password)) {
-        setError('Le mot de passe doit contenir au moins un chiffre')
-        return false
-      }
-      if (!/[^A-Za-z0-9]/.test(formData.password)) {
-        setError('Le mot de passe doit contenir au moins un caractère spécial')
-        return false
-      }
+    if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.confirmPassword) {
+      setError('Veuillez remplir tous les champs obligatoires')
+      return false
+    }
+    if (formData.password !== formData.confirmPassword) {
+      setError('Les mots de passe ne correspondent pas')
+      return false
+    }
+    if (formData.password.length < 12) {
+      setError('Le mot de passe doit contenir au moins 12 caractères')
+      return false
+    }
+    if (!/[A-Z]/.test(formData.password)) {
+      setError('Le mot de passe doit contenir au moins une majuscule')
+      return false
+    }
+    if (!/[0-9]/.test(formData.password)) {
+      setError('Le mot de passe doit contenir au moins un chiffre')
+      return false
+    }
+    if (!/[^A-Za-z0-9]/.test(formData.password)) {
+      setError('Le mot de passe doit contenir au moins un caractère spécial')
+      return false
     }
     return true
-  }
-
-  const handleNext = (e) => {
-    e.preventDefault()
-    if (validateStep()) {
-      setStep(prev => prev + 1)
-    }
-  }
-
-  const handlePrev = () => {
-    setStep(prev => prev - 1)
-    setError('')
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
 
-    if (!validateStep()) return
+    if (!validateForm()) return
 
     setLoading(true)
 
     const userData = {
       firstName: formData.firstName,
       lastName: formData.lastName,
-      role: 'user',
-      streetAddress: formData.streetAddress,
-      city: formData.city,
-      postalCode: formData.postalCode
+      role: 'user'
     }
 
     const { error } = await signUp(formData.email, formData.password, userData)
 
     if (error) {
       setError(error.message)
-      setStep(1)
     } else {
       navigate('/login', {
         state: { message: 'Inscription réussie ! Vérifiez votre email pour confirmer votre compte.' }
@@ -106,138 +84,6 @@ const Register = () => {
 
     setLoading(false)
   }
-
-  const renderStep1 = () => (
-    <>
-      <div className="row">
-        <div className="col-md-6 mb-3">
-          <label htmlFor="firstName" className="form-label">Prénom *</label>
-          <input
-            type="text"
-            className="form-control"
-            id="firstName"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="col-md-6 mb-3">
-          <label htmlFor="lastName" className="form-label">Nom *</label>
-          <input
-            type="text"
-            className="form-control"
-            id="lastName"
-            name="lastName"
-            value={formData.lastName}
-            onChange={handleChange}
-            required
-          />
-        </div>
-      </div>
-
-      <div className="mb-3">
-        <label htmlFor="email" className="form-label">Email *</label>
-        <input
-          type="email"
-          className="form-control"
-          id="email"
-          name="email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-      </div>
-
-      <div className="row">
-        <div className="col-md-6 mb-3">
-          <label htmlFor="password" className="form-label">Mot de passe *</label>
-          <input
-            type="password"
-            className="form-control"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-          />
-          <ul className="list-unstyled mt-2 mb-0" style={{ fontSize: '0.78rem' }}>
-            {[
-              { label: '12 caractères minimum', ok: formData.password.length >= 12 },
-              { label: 'Une lettre majuscule', ok: /[A-Z]/.test(formData.password) },
-              { label: 'Un chiffre', ok: /[0-9]/.test(formData.password) },
-              { label: 'Un caractère spécial (!@#$…)', ok: /[^A-Za-z0-9]/.test(formData.password) },
-            ].map(({ label, ok }) => (
-              <li key={label} className={ok ? 'text-success' : 'text-danger'}>
-                <i className={`bi ${ok ? 'bi-check-circle-fill' : 'bi-x-circle-fill'} me-1`}></i>
-                {label}
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div className="col-md-6 mb-3">
-          <label htmlFor="confirmPassword" className="form-label">Confirmer le mot de passe *</label>
-          <input
-            type="password"
-            className="form-control"
-            id="confirmPassword"
-            name="confirmPassword"
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            onBlur={() => setConfirmTouched(true)}
-            onFocus={() => setConfirmTouched(false)}
-            required
-          />
-          {confirmTouched && formData.confirmPassword && formData.password !== formData.confirmPassword && (
-            <div className="text-danger small mt-1">
-              Les mots de passe ne correspondent pas
-            </div>
-          )}
-        </div>
-      </div>
-    </>
-  )
-
-  const renderStep2 = () => (
-    <>
-      <div className="mb-3">
-        <label htmlFor="streetAddress" className="form-label">Adresse</label>
-        <input
-          type="text"
-          className="form-control"
-          id="streetAddress"
-          name="streetAddress"
-          value={formData.streetAddress}
-          onChange={handleChange}
-        />
-      </div>
-
-      <div className="row">
-        <div className="col-md-8 mb-3">
-          <label htmlFor="city" className="form-label">Ville</label>
-          <input
-            type="text"
-            className="form-control"
-            id="city"
-            name="city"
-            value={formData.city}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="col-md-4 mb-3">
-          <label htmlFor="postalCode" className="form-label">Code postal</label>
-          <input
-            type="text"
-            className="form-control"
-            id="postalCode"
-            name="postalCode"
-            value={formData.postalCode}
-            onChange={handleChange}
-          />
-        </div>
-      </div>
-    </>
-  )
 
   return (
     <div className="auth-section">
@@ -250,18 +96,6 @@ const Register = () => {
               <div className="card-body p-5">
                 <h2 className="card-title text-center mb-4 fw-bold register-title">Inscription</h2>
 
-                {/* Progress Bar */}
-                <div className="progress mb-4 register-progress">
-                  <div
-                    className="progress-bar register-progress-bar"
-                    role="progressbar"
-                    style={{ width: `${(step / 2) * 100}%` }}
-                    aria-valuenow={(step / 2) * 100}
-                    aria-valuemin="0"
-                    aria-valuemax="100"
-                  ></div>
-                </div>
-
                 {error && (
                   <div className="alert alert-danger" role="alert">
                     {error}
@@ -269,37 +103,101 @@ const Register = () => {
                 )}
 
                 <form onSubmit={handleSubmit}>
-                  {step === 1 && renderStep1()}
-                  {step === 2 && renderStep2()}
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="firstName" className="form-label">Prénom *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="firstName"
+                        name="firstName"
+                        value={formData.firstName}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="lastName" className="form-label">Nom *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        id="lastName"
+                        name="lastName"
+                        value={formData.lastName}
+                        onChange={handleChange}
+                        required
+                      />
+                    </div>
+                  </div>
 
-                  <div className="d-flex justify-content-between mt-4">
-                    {step > 1 && (
-                      <button
-                        type="button"
-                        className="btn btn-outline-secondary"
-                        onClick={handlePrev}
-                      >
-                        Précédent
-                      </button>
-                    )}
+                  <div className="mb-3">
+                    <label htmlFor="email" className="form-label">Email *</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                    />
+                  </div>
 
-                    {step < 2 ? (
-                      <button
-                        type="button"
-                        className="btn btn-primary ms-auto register-btn"
-                        onClick={handleNext}
-                      >
-                        Suivant
-                      </button>
-                    ) : (
-                      <button
-                        type="submit"
-                        className="btn btn-primary ms-auto register-btn"
-                        disabled={loading}
-                      >
-                        {loading ? 'Inscription...' : 'S\'inscrire'}
-                      </button>
-                    )}
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="password" className="form-label">Mot de passe *</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        id="password"
+                        name="password"
+                        value={formData.password}
+                        onChange={handleChange}
+                        required
+                      />
+                      <ul className="list-unstyled mt-2 mb-0" style={{ fontSize: '0.78rem' }}>
+                        {[
+                          { label: '12 caractères minimum', ok: formData.password.length >= 12 },
+                          { label: 'Une lettre majuscule', ok: /[A-Z]/.test(formData.password) },
+                          { label: 'Un chiffre', ok: /[0-9]/.test(formData.password) },
+                          { label: 'Un caractère spécial (!@#$…)', ok: /[^A-Za-z0-9]/.test(formData.password) },
+                        ].map(({ label, ok }) => (
+                          <li key={label} className={ok ? 'text-success' : 'text-danger'}>
+                            <i className={`bi ${ok ? 'bi-check-circle-fill' : 'bi-x-circle-fill'} me-1`}></i>
+                            {label}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label htmlFor="confirmPassword" className="form-label">Confirmer le mot de passe *</label>
+                      <input
+                        type="password"
+                        className="form-control"
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        onBlur={() => setConfirmTouched(true)}
+                        onFocus={() => setConfirmTouched(false)}
+                        required
+                      />
+                      {confirmTouched && formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                        <div className="text-danger small mt-1">
+                          Les mots de passe ne correspondent pas
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="d-flex justify-content-end mt-4">
+                    <button
+                      type="submit"
+                      className="btn btn-primary register-btn"
+                      disabled={loading}
+                    >
+                      {loading ? 'Inscription...' : 'S\'inscrire'}
+                    </button>
                   </div>
                 </form>
 

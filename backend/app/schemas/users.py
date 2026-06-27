@@ -9,8 +9,5 @@ class UserCreate(BaseModel):
     lastName: Optional[str] = ""
     role: Optional[str] = "user"
     companyName: Optional[str] = ""
-    streetAddress: Optional[str] = ""
-    city: Optional[str] = ""
-    postalCode: Optional[str] = ""
     createdAt: Optional[str] = None
     updateAt: Optional[str] = None
