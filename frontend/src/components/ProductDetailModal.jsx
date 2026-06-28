@@ -2,11 +2,15 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useCartStore } from '../store/cartStore';
 import Model3D from './Model3D';
 
 const ProductDetailModal = ({ product, open, onClose }) => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
+  const addItem = useCartStore((state) => state.addItem);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const inCart = useCartStore((state) => (product ? state.isInCart(product.id) : false));
   const [purchased, setPurchased] = useState(false);
   const [checkingPurchase, setCheckingPurchase] = useState(false);
   const [buyLoading, setBuyLoading] = useState(false);
@@ -209,19 +213,46 @@ const ProductDetailModal = ({ product, open, onClose }) => {
               </div>
             </div>
           ) : (
-            /* Bouton Acheter */
-            <button
-              onClick={handleBuy}
-              disabled={buyLoading}
-              className="btn w-100 fw-semibold py-2"
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)', color: '#fff', border: 'none', borderRadius: '8px' }}
-            >
-              {buyLoading ? (
-                <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Redirection vers le paiement…</>
-              ) : (
-                <><i className="bi bi-cart-check me-2"></i>Acheter — {Number(product?.price || 0).toFixed(2)} €</>
+            /* Boutons Acheter / Ajouter au panier */
+            <div className="d-flex flex-column gap-2">
+              <button
+                onClick={handleBuy}
+                disabled={buyLoading}
+                className="btn w-100 fw-semibold py-2"
+                style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%)', color: '#fff', border: 'none', borderRadius: '8px' }}
+              >
+                {buyLoading ? (
+                  <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Redirection vers le paiement…</>
+                ) : (
+                  <><i className="bi bi-cart-check me-2"></i>Acheter maintenant — {Number(product?.price || 0).toFixed(2)} €</>
+                )}
+              </button>
+              <button
+                onClick={() => (inCart ? removeItem(product.id) : addItem(product))}
+                disabled={!user}
+                className="btn w-100 fw-semibold py-2"
+                style={{
+                  background: inCart ? '#ecfdf5' : 'transparent',
+                  color: inCart ? '#16a34a' : '#3b82f6',
+                  border: `1px solid ${inCart ? '#16a34a' : '#3b82f6'}`,
+                  borderRadius: '8px',
+                }}
+              >
+                {inCart ? (
+                  <><i className="bi bi-check-circle-fill me-2"></i>Dans le panier — Retirer</>
+                ) : (
+                  <><i className="bi bi-cart-plus me-2"></i>Ajouter au panier</>
+                )}
+              </button>
+              {inCart && (
+                <button
+                  onClick={() => { onClose(); navigate('/cart'); }}
+                  className="btn btn-link btn-sm fw-semibold p-0 w-100 text-center"
+                >
+                  Voir le panier <i className="bi bi-arrow-right ms-1"></i>
+                </button>
               )}
-            </button>
+            </div>
           )}
 
           {!user && !purchased && (

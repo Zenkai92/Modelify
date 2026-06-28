@@ -22,7 +22,7 @@ const HOW_IT_WORKS = [
   {
     icon: 'bi-file-earmark-arrow-down',
     title: 'Téléchargez votre modèle 3D',
-    text: "Vous recevez uniquement le fichier — STL, OBJ et/ou F3D — prêt à imprimer ou à exploiter.",
+    text: "Vous recevez uniquement le fichier STL, OBJ et/ou F3D prêt à imprimer ou à exploiter.",
   },
 ];
 

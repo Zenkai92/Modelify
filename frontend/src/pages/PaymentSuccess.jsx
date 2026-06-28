@@ -1,34 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useCartStore } from '../store/cartStore';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const productId = searchParams.get('product_id');
+  const cartSessionId = searchParams.get('session_id');
   const { session } = useAuth();
+  const clearCart = useCartStore((state) => state.clear);
   const [confirmed, setConfirmed] = useState(false);
   const [attempts, setAttempts] = useState(0);
 
   // Polling pendant 15s max pour attendre la confirmation du webhook Stripe
   useEffect(() => {
-    if (!productId || !session || confirmed || attempts >= 15) return;
+    if (confirmed || attempts >= 15) return;
+    if (!session || (!productId && !cartSessionId)) return;
 
     const timer = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/products/${productId}/purchased`,
-          { headers: { Authorization: `Bearer ${session.access_token}` } }
-        );
+        const url = cartSessionId
+          ? `${import.meta.env.VITE_API_URL}/api/cart/order-status?session_id=${encodeURIComponent(cartSessionId)}`
+          : `${import.meta.env.VITE_API_URL}/api/products/${productId}/purchased`;
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${session.access_token}` } });
         if (res.ok) {
           const data = await res.json();
-          if (data.purchased) setConfirmed(true);
+          if (cartSessionId ? data.completed : data.purchased) {
+            setConfirmed(true);
+            if (cartSessionId) clearCart();
+          }
         }
       } catch {}
       setAttempts((a) => a + 1);
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [attempts, productId, session, confirmed]);
+  }, [attempts, productId, cartSessionId, session, confirmed, clearCart]);
 
   return (
     <div className="container py-5">
@@ -47,7 +54,7 @@ const PaymentSuccess = () => {
               Votre achat est confirmé. Retournez sur la boutique pour télécharger vos fichiers.
             </p>
 
-            {productId && !confirmed && attempts < 15 && (
+            {(productId || cartSessionId) && !confirmed && attempts < 15 && (
               <div className="alert alert-info py-2 small mb-4">
                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 Confirmation en cours…

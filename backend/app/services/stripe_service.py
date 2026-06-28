@@ -147,6 +147,41 @@ def create_product_checkout_session(
         raise e
 
 
+def create_cart_checkout_session(
+    customer_id: str,
+    items: list,
+    user_id: str,
+    success_url: str,
+    cancel_url: str,
+) -> str:
+    """
+    Crée une session Stripe Checkout pour l'achat de plusieurs produits (panier)
+    en une seule transaction. `items` est une liste de {"price_id", "product_id"}.
+    Retourne l'URL de redirection.
+    """
+    try:
+        line_items = [{"price": item["price_id"], "quantity": 1} for item in items]
+        product_ids = ",".join(item["product_id"] for item in items)
+
+        session = stripe.checkout.Session.create(
+            customer=customer_id,
+            payment_method_types=["card"],
+            line_items=line_items,
+            mode="payment",
+            success_url=success_url,
+            cancel_url=cancel_url,
+            metadata={
+                "type": "cart_purchase",
+                "product_ids": product_ids,
+                "user_id": user_id,
+            },
+        )
+        return session.url
+    except Exception as e:
+        logger.error(f"Erreur Stripe (Cart Checkout): {str(e)}")
+        raise e
+
+
 def create_checkout_session(
     customer_id: str,
     amount_eur: float,

@@ -720,5 +720,32 @@ async def stripe_webhook(request: Request):
                 except Exception as db_error:
                     logger.error(f"Erreur DB insert Orders: {db_error}")
 
+        elif event_type == "cart_purchase":
+            product_ids = [p for p in metadata.get("product_ids", "").split(",") if p]
+            user_id = metadata.get("user_id")
+            if product_ids and user_id:
+                logger.info(f"WEBHOOK: Achat panier confirmé — {len(product_ids)} produit(s) par user {user_id}")
+                try:
+                    prices = (
+                        supabase.table("Products").select("id,price").in_("id", product_ids).execute()
+                    )
+                    price_map = {p["id"]: p["price"] for p in (prices.data or [])}
+
+                    orders_rows = [
+                        {
+                            "product_id": product_id,
+                            "client_id": user_id,
+                            "stripe_session_id": session.get("id"),
+                            "stripe_payment_intent_id": session.get("payment_intent"),
+                            "amount_paid": price_map.get(product_id, 0),
+                            "status": "completed",
+                        }
+                        for product_id in product_ids
+                    ]
+                    supabase.table("Orders").insert(orders_rows).execute()
+                    logger.info(f"Achat panier enregistré dans Orders ({len(orders_rows)} ligne(s))")
+                except Exception as db_error:
+                    logger.error(f"Erreur DB insert Orders (panier): {db_error}")
+
     # On renvoie toujours 200 OK pour dire à Stripe "Bien reçu", même si l'event ne nous intéresse pas
     return {"status": "success"}
