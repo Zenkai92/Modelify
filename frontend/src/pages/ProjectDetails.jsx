@@ -166,36 +166,41 @@ const ProjectDetails = ({ projectId, onBack }) => {
   return (
     <div className="project-details-wrapper w-100">
       <div className="w-100 p-0">
-        <div className="d-flex justify-content-between align-items-center mb-4 bg-white p-4 rounded-3 shadow-sm border">
-          <h3 className="fw-bold mb-0 text-dark">D�tails du projet</h3>
-          <div>
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4 bg-white p-4 rounded-3 shadow-sm border">
+          <div className="d-flex align-items-center gap-3">
+            <div className="detail-header-icon">
+              <i className="bi bi-folder2-open"></i>
+            </div>
+            <h3 className="fw-bold mb-0 text-dark">Détails du projet</h3>
+          </div>
+          <div className="d-flex align-items-center flex-wrap gap-2">
             {user?.user_metadata?.role === 'admin' && (
               <>
                 {project.status === 'en attente' && (
-                  <button 
-                    className="btn btn-light text-primary fw-bold px-4 shadow-sm me-3"
+                  <button
+                    className="btn btn-gradient-primary fw-bold px-4 shadow-sm"
                     onClick={() => setShowQuoteModal(true)}
                   >
                     <i className="bi bi-file-earmark-text me-2"></i> Faire un devis
                   </button>
                 )}
                  {project.status === 'devis_envoyé' && (
-                  <span className="badge bg-info me-3 py-2 px-3 text-dark">
+                  <span className="badge bg-info py-2 px-3 text-dark">
                     <i className="bi bi-envelope-paper me-2"></i> Devis envoyé : {project.price} €
                   </span>
                 )}
                 {/* Le projet doit être payé pour être traité */}
                 {project.status === 'payé' && (
-                  <button 
-                    className="btn btn-light text-primary fw-bold px-4 shadow-sm me-3"
+                  <button
+                    className="btn btn-gradient-primary fw-bold px-4 shadow-sm"
                     onClick={() => handleStatusChange('en cours')}
                   >
                     <i className="bi bi-play-fill me-2"></i> Traiter le projet
                   </button>
                 )}
                 {project.status === 'en cours' && (
-                  <button 
-                    className="btn btn-success fw-bold px-4 shadow-sm me-3"
+                  <button
+                    className="btn btn-gradient-success fw-bold px-4 shadow-sm"
                     onClick={() => handleStatusChange('terminé')}
                   >
                     <i className="bi bi-check-lg me-2"></i> Terminer le projet
@@ -204,9 +209,9 @@ const ProjectDetails = ({ projectId, onBack }) => {
               </>
             )}
             {project.status === 'en attente' && user && project.userId === user.id && (
-              <button 
-                onClick={() => window.location.href = `/app?view=project-edit&id=${projectId}`} 
-                className="btn btn-warning me-2 text-white"
+              <button
+                onClick={() => window.location.href = `/app?view=project-edit&id=${projectId}`}
+                className="btn btn-gradient-warning"
               >
                 <i className="bi bi-pencil me-2"></i> Modifier
               </button>
@@ -224,14 +229,19 @@ const ProjectDetails = ({ projectId, onBack }) => {
             {!loading && project && (project.status === 'devis_envoyé' || project.status === 'paiement_attente') && user && project.userId === user.id && (
               <div className="card border-0 shadow-sm mb-4 bg-white">
                 <div className="card-body p-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
-                  <div>
-                    <h4 className="text-primary mb-1"><i className="bi bi-receipt me-2"></i>Devis reçu</h4>
-                    <p className="mb-0 text-muted">Un devis de <strong>{project.price} €</strong> a été établi pour ce projet.</p>
-                    {project.status === 'paiement_attente' && (
-                        <small className="text-warning"><i className="bi bi-hourglass-split me-1"></i>Paiement initié mais non finalisé.</small>
-                    )}
+                  <div className="d-flex align-items-center gap-3">
+                    <div className="section-icon-badge section-icon-badge-lg">
+                      <i className="bi bi-receipt"></i>
+                    </div>
+                    <div>
+                      <h4 className="mb-1 fw-bold text-dark">Devis reçu</h4>
+                      <p className="mb-0 text-muted">Un devis de <strong>{project.price} €</strong> a été établi pour ce projet.</p>
+                      {project.status === 'paiement_attente' && (
+                          <small className="text-warning"><i className="bi bi-hourglass-split me-1"></i>Paiement initié mais non finalisé.</small>
+                      )}
+                    </div>
                   </div>
-                  <button onClick={handlePayment} className="btn btn-success btn-lg fw-bold px-4 shadow-sm">
+                  <button onClick={handlePayment} className="btn btn-gradient-success btn-lg fw-bold px-4 shadow-sm">
                     <i className="bi bi-credit-card-2-front me-2"></i> Payer {project.price} €
                   </button>
                 </div>
@@ -243,30 +253,36 @@ const ProjectDetails = ({ projectId, onBack }) => {
                 <h2 className="project-title mb-4">{project.title}</h2>
                 
                 <div className="mb-5">
-                  <h5 className="section-title"><i className="bi bi-file-text"></i> Description</h5>
+                  <h5 className="section-title">
+                    <span className="section-icon-badge"><i className="bi bi-file-text"></i></span>
+                    Description
+                  </h5>
                   <p className="card-text text-muted">{project.descriptionClient}</p>
                 </div>
 
                 <div className="mb-5">
-                  <h5 className="section-title"><i className="bi bi-bullseye"></i> Usage</h5>
+                  <h5 className="section-title">
+                    <span className="section-icon-badge"><i className="bi bi-bullseye"></i></span>
+                    Usage
+                  </h5>
                   <p className="card-text text-muted">{project.use}</p>
                 </div>
 
-                <div className="row g-4">
+                <div className="row g-3">
                   <div className="col-md-6">
-                    <div className="mb-3">
+                    <div className="detail-box h-100">
                       <div className="detail-label">Niveau de détail</div>
                       <div className="detail-value">{project.detailLevel}</div>
                     </div>
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3">
+                    <div className="detail-box h-100">
                       <div className="detail-label">Nombre d'éléments</div>
                       <div className="detail-value">{project.nbElements}</div>
                     </div>
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3">
+                    <div className="detail-box h-100">
                       <div className="detail-label">Dimensions</div>
                       <div className="detail-value">
                         {project.dimensionNoConstraint ? (
@@ -291,12 +307,12 @@ const ProjectDetails = ({ projectId, onBack }) => {
                     </div>
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3">
+                    <div className="detail-box h-100">
                       <div className="detail-label">Formats de fichiers</div>
                       <div className="detail-value">
                         {project.format ? (
                           project.format.split(',').map((fmt, index) => (
-                            <span key={index} className="badge bg-secondary me-1">{fmt}</span>
+                            <span key={index} className="badge format-badge-gradient me-1">{fmt}</span>
                           ))
                         ) : (
                           <span className="badge bg-light text-dark border">Aucune contrainte</span>
@@ -305,7 +321,7 @@ const ProjectDetails = ({ projectId, onBack }) => {
                     </div>
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3">
+                    <div className="detail-box h-100">
                       <div className="detail-label">Budget indicatif</div>
                       <div className="detail-value">
                         {(() => {
@@ -323,7 +339,7 @@ const ProjectDetails = ({ projectId, onBack }) => {
                     </div>
                   </div>
                   <div className="col-md-6">
-                    <div className="mb-3">
+                    <div className="detail-box h-100">
                       <div className="detail-label">Délai souhaité</div>
                       <div className="detail-value">
                         {(() => {
@@ -344,15 +360,24 @@ const ProjectDetails = ({ projectId, onBack }) => {
           <div className="col-lg-4 mb-4">
             <div className="card project-card mb-4">
               <div className="card-body p-4">
-                <h5 className="section-title mb-4"><i className="bi bi-info-circle"></i> Statut du projet</h5>
-                
+                <h5 className="section-title mb-4">
+                  <span className="section-icon-badge"><i className="bi bi-info-circle"></i></span>
+                  Statut du projet
+                </h5>
+
                 <div className="status-card-content">
-                  <i className={`bi ${
-                    project.status === 'terminé' ? 'bi-check-circle-fill status-terminé' : 
-                    project.status === 'en cours' ? 'bi-gear-fill status-en-cours' : 
-                    'bi-hourglass-split status-attente'
-                  } status-icon-large`}></i>
-                  
+                  <div className={`status-icon-circle ${
+                    project.status === 'terminé' ? 'status-icon-terminé' :
+                    project.status === 'en cours' ? 'status-icon-en-cours' :
+                    'status-icon-attente'
+                  }`}>
+                    <i className={`bi ${
+                      project.status === 'terminé' ? 'bi-check-lg' :
+                      project.status === 'en cours' ? 'bi-gear-fill' :
+                      'bi-hourglass-split'
+                    }`}></i>
+                  </div>
+
                   <div className={`status-label ${
                     project.status === 'terminé' ? 'status-terminé' : 
                     project.status === 'en cours' ? 'status-en-cours' : 
@@ -388,7 +413,10 @@ const ProjectDetails = ({ projectId, onBack }) => {
             {project.images && project.images.length > 0 ? (
               <div className="card project-card mb-4">
                 <div className="card-body p-4">
-                  <h5 className="section-title mb-4"><i className="bi bi-paperclip"></i> Fichiers joints</h5>
+                  <h5 className="section-title mb-4">
+                    <span className="section-icon-badge"><i className="bi bi-paperclip"></i></span>
+                    Fichiers joints
+                  </h5>
                   <div className="row g-3">
                     {project.images.map((file, index) => {
                       const isImage = file.file_type === 'image' || file.fileUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
@@ -424,7 +452,7 @@ const ProjectDetails = ({ projectId, onBack }) => {
               </div>
             ) : (
               <div className="card project-card bg-transparent border-0 shadow-none">
-                 <div className="card-body p-0 text-white opacity-75">
+                 <div className="card-body p-0 text-muted">
                     <small><i className="bi bi-info-circle me-2"></i>D'autres fonctionnalités seront bientôt disponibles pour ce projet.</small>
                  </div>
               </div>
@@ -438,8 +466,8 @@ const ProjectDetails = ({ projectId, onBack }) => {
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title text-dark">Établir un devis</h5>
+              <div className="modal-header modal-header-gradient">
+                <h5 className="modal-title"><i className="bi bi-file-earmark-text me-2"></i>Établir un devis</h5>
                 <button type="button" className="btn-close" onClick={() => setShowQuoteModal(false)}></button>
               </div>
               <div className="modal-body text-dark">
@@ -460,7 +488,7 @@ const ProjectDetails = ({ projectId, onBack }) => {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowQuoteModal(false)}>Annuler</button>
-                <button type="button" className="btn btn-primary" onClick={handleSendQuote}>Envoyer le devis</button>
+                <button type="button" className="btn btn-gradient-primary" onClick={handleSendQuote}>Envoyer le devis</button>
               </div>
             </div>
           </div>
@@ -472,8 +500,8 @@ const ProjectDetails = ({ projectId, onBack }) => {
         <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title text-dark">Confirmation</h5>
+              <div className="modal-header modal-header-gradient">
+                <h5 className="modal-title"><i className="bi bi-question-circle me-2"></i>Confirmation</h5>
                 <button type="button" className="btn-close" onClick={() => setShowConfirmModal(false)}></button>
               </div>
               <div className="modal-body text-dark">
@@ -485,7 +513,7 @@ const ProjectDetails = ({ projectId, onBack }) => {
               </div>
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowConfirmModal(false)}>Annuler</button>
-                <button type="button" className="btn btn-primary" onClick={confirmStatusChange}>Confirmer</button>
+                <button type="button" className="btn btn-gradient-primary" onClick={confirmStatusChange}>Confirmer</button>
               </div>
             </div>
           </div>

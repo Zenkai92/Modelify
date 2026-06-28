@@ -139,6 +139,12 @@ export const AuthProvider = ({ children }) => {
 
     console.log('✅ Auth signup result:', { data, error })
 
+    // Supabase renvoie un succès "vide" (identities: []) quand l'email existe déjà,
+    // pour éviter l'énumération de comptes — on le détecte explicitement ici.
+    if (!error && data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+      return { data, error: { message: 'Cette adresse email est déjà utilisée.' } }
+    }
+
     // Si l'inscription auth réussit, créer le profil avec le même UUID
     if (data.user && !error) {
       console.log('👤 Création du profil pour user ID:', data.user.id)

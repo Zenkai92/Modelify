@@ -39,7 +39,7 @@ const ProductCard = ({ title, description, price, fileFormats, model3DProps, isA
         </button>
       )}
       <div className="card-body d-flex flex-column">
-        <Model3D {...model3DProps} />
+        <Model3D {...model3DProps} interactive={false} />
         <h5 className="card-title text-center">{title}</h5>
         {description && <p className="card-text text-muted small text-center">{description}</p>}
         <div className="mt-auto pt-2 d-flex align-items-center justify-content-between gap-2">

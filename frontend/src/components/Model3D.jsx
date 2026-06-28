@@ -109,16 +109,16 @@ function Model({ url, rotation = [0, 0, 0], color }) {
   return <group rotation={rotation}>{ModelComponent}</group>;
 }
 
-function RotatingMesh({ type, color }) {
+function RotatingMesh({ type, color, spin = true }) {
   const meshRef = useRef();
   useFrame((_, delta) => {
-    if (meshRef.current) {
+    if (meshRef.current && spin) {
       meshRef.current.rotation.y += delta * 0.5;
       meshRef.current.rotation.x += delta * 0.2;
     }
   });
   return (
-    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+    <Float speed={spin ? 2 : 0} rotationIntensity={spin ? 0.5 : 0} floatIntensity={spin ? 0.5 : 0}>
       <mesh ref={meshRef}>
         {type === 'cube'   && <boxGeometry args={[2.2, 2.2, 2.2]} />}
         {type === 'torus'  && <torusKnotGeometry args={[0.8, 0.3, 100, 16]} />}
@@ -130,34 +130,34 @@ function RotatingMesh({ type, color }) {
   );
 }
 
-function GenericScene({ type, color }) {
+function GenericScene({ type, color, spin = true }) {
   return (
     <>
       <PerspectiveCamera makeDefault position={[0, 0, 6]} />
       <ambientLight intensity={1.5} />
       <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={1} />
       <pointLight position={[-10, -10, -10]} intensity={1} />
-      <RotatingMesh type={type} color={color} />
+      <RotatingMesh type={type} color={color} spin={spin} />
     </>
   );
 }
 
-export default function Model3D({ type = 'cube', color = '#4338ca', modelPath, rotation = [0, 0, 0] }) {
+export default function Model3D({ type = 'cube', color = '#4338ca', modelPath, rotation = [0, 0, 0], interactive = true }) {
   return (
     <div style={{ height: '300px', width: '100%', marginBottom: '1rem' }}>
       <Canvas shadows dpr={[1, 2]}>
         {modelPath ? (
-          <ModelErrorBoundary fallback={<GenericScene type="cube" color={color} />}>
-            <Suspense fallback={<RotatingMesh type="sphere" color="#cccccc" />}>
+          <ModelErrorBoundary fallback={<GenericScene type="cube" color={color} spin={interactive} />}>
+            <Suspense fallback={<RotatingMesh type="sphere" color="#cccccc" spin={interactive} />}>
               <Stage environment="city" intensity={1.8} adjustCamera shadows={false}>
                 <Model url={modelPath} rotation={rotation} color={color} />
               </Stage>
             </Suspense>
           </ModelErrorBoundary>
         ) : (
-          <GenericScene type={type} color={color} />
+          <GenericScene type={type} color={color} spin={interactive} />
         )}
-        <OrbitControls autoRotate autoRotateSpeed={4} enableZoom={false} enablePan={false} />
+        <OrbitControls enabled={interactive} autoRotate={interactive} autoRotateSpeed={4} enableZoom={false} enablePan={false} />
       </Canvas>
     </div>
   );
