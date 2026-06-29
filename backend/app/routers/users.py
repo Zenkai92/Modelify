@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from app.schemas.users import UserCreate
+from app.schemas.users import UserCreate, UserUpdate
 from app.database import supabase
 from app.dependencies import get_current_user
 from datetime import datetime, timezone
@@ -37,9 +37,82 @@ async def get_current_user_profile(current_user=Depends(get_current_user)):
                 "lastName": "",
             }
 
-        return response.data
+        profile = response.data
+
+        # Synchronisation de l'email : si l'utilisateur a changé son adresse via
+        # Supabase Auth (et l'a confirmée par email), le JWT vérifié porte la
+        # nouvelle adresse. On réaligne alors la table Users en conséquence.
+        if current_user.email and profile.get("email") != current_user.email:
+            try:
+                synced = (
+                    supabase.table("Users")
+                    .update(
+                        {
+                            "email": current_user.email,
+                            "updateAt": datetime.now(timezone.utc).isoformat(),
+                        }
+                    )
+                    .eq("id", current_user.id)
+                    .execute()
+                )
+                if synced.data:
+                    profile = synced.data[0]
+            except Exception as sync_error:
+                logger.warning(
+                    f"Échec de la synchronisation de l'email pour {current_user.id}: {sync_error}"
+                )
+
+        return profile
     except Exception as e:
         logger.error(f"Erreur lors de la récupération du profil utilisateur /me: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+
+@router.put("/users/me", status_code=status.HTTP_200_OK)
+async def update_current_user_profile(
+    payload: UserUpdate, current_user=Depends(get_current_user)
+):
+    """
+    Mettre à jour le profil de l'utilisateur connecté (prénom, nom, société).
+    L'email et le rôle ne peuvent pas être modifiés par ce endpoint :
+    l'email passe par Supabase Auth avec confirmation par email.
+    """
+    update_data = payload.model_dump(exclude_unset=True, exclude_none=True)
+
+    # Défense en profondeur : on n'accepte jamais ces champs sensibles ici
+    for forbidden in ("role", "email", "id"):
+        update_data.pop(forbidden, None)
+
+    if not update_data:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Aucune donnée à mettre à jour",
+        )
+
+    update_data["updateAt"] = datetime.now(timezone.utc).isoformat()
+
+    try:
+        response = (
+            supabase.table("Users")
+            .update(update_data)
+            .eq("id", current_user.id)
+            .execute()
+        )
+
+        if not response.data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Profil introuvable",
+            )
+
+        return {
+            "message": "Profil mis à jour avec succès",
+            "user": response.data[0],
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur lors de la mise à jour du profil {current_user.id}: {e}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 

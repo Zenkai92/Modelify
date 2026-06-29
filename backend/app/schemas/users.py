@@ -11,3 +11,15 @@ class UserCreate(BaseModel):
     companyName: Optional[str] = ""
     createdAt: Optional[str] = None
     updateAt: Optional[str] = None
+
+
+class UserUpdate(BaseModel):
+    """
+    Champs modifiables par l'utilisateur sur son propre profil.
+    L'email n'y figure pas : il est modifié via Supabase Auth avec
+    confirmation par email, puis synchronisé dans la table Users.
+    """
+
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    companyName: Optional[str] = None

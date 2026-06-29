@@ -7,8 +7,12 @@ import os
 # Add backend to path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.routers.users import create_user, get_users
-from app.schemas.users import UserCreate
+from app.routers.users import (
+    create_user,
+    get_users,
+    update_current_user_profile,
+)
+from app.schemas.users import UserCreate, UserUpdate
 from tests.base_test import BaseAsyncTestCase
 
 
@@ -98,3 +102,61 @@ class TestUsersUnit(BaseAsyncTestCase):
             await get_users(current_user=mock_user)
 
         self.assertEqual(cm.exception.status_code, status.HTTP_403_FORBIDDEN)
+
+    @patch("app.routers.users.supabase")
+    async def test_update_profile_success(self, mock_supabase):
+        """Mise à jour profil → champs persistés + updateAt ajouté"""
+        mock_user = MagicMock()
+        mock_user.id = "user_123"
+
+        mock_response = MagicMock()
+        mock_response.data = [
+            {"id": "user_123", "firstName": "Jean", "lastName": "Dupont"}
+        ]
+        mock_supabase.table.return_value.update.return_value.eq.return_value.execute.return_value = (
+            mock_response
+        )
+
+        payload = UserUpdate(firstName="Jean", lastName="Dupont", companyName="ACME")
+        result = await update_current_user_profile(payload, current_user=mock_user)
+
+        args, _ = mock_supabase.table.return_value.update.call_args
+        updated_data = args[0]
+        self.assertEqual(updated_data["firstName"], "Jean")
+        self.assertEqual(updated_data["companyName"], "ACME")
+        self.assertIn("updateAt", updated_data)
+        self.assertEqual(result["user"]["id"], "user_123")
+
+    @patch("app.routers.users.supabase")
+    async def test_update_profile_ignores_sensitive_fields(self, mock_supabase):
+        """Champs sensibles (role/email/id) jamais écrits via /users/me"""
+        mock_user = MagicMock()
+        mock_user.id = "user_123"
+
+        mock_response = MagicMock()
+        mock_response.data = [{"id": "user_123", "firstName": "Jean"}]
+        mock_supabase.table.return_value.update.return_value.eq.return_value.execute.return_value = (
+            mock_response
+        )
+
+        # UserUpdate ignore déjà role/email/id (champs absents du schéma),
+        # mais on vérifie qu'ils ne fuient pas dans la requête de mise à jour.
+        payload = UserUpdate(firstName="Jean")
+        await update_current_user_profile(payload, current_user=mock_user)
+
+        args, _ = mock_supabase.table.return_value.update.call_args
+        updated_data = args[0]
+        self.assertNotIn("role", updated_data)
+        self.assertNotIn("email", updated_data)
+        self.assertNotIn("id", updated_data)
+
+    async def test_update_profile_empty_payload_rejected(self):
+        """Payload vide → HTTP 400 (rien à mettre à jour)"""
+        mock_user = MagicMock()
+        mock_user.id = "user_123"
+
+        payload = UserUpdate()
+        with self.assertRaises(HTTPException) as cm:
+            await update_current_user_profile(payload, current_user=mock_user)
+
+        self.assertEqual(cm.exception.status_code, status.HTTP_400_BAD_REQUEST)

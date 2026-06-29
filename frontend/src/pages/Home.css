@@ -2,6 +2,36 @@
   z-index: 2;
 }
 
+/* En-tête compact du catalogue : touche de couleur sans section entière */
+.catalogue-header {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #312e81 100%);
+  border-radius: 18px;
+  padding: 2rem 1.5rem 3rem; /* padding-bottom pour laisser place à la vague */
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.25);
+}
+
+/* Petite vague en bas du bandeau catalogue */
+.catalogue-header-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  line-height: 0;
+}
+
+.catalogue-header-wave svg {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 32px; /* vague volontairement petite */
+}
+
+.catalogue-header-wave .shape-fill {
+  fill: #fff;
+}
+
 .hero-eyebrow {
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.35);
