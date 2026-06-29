@@ -101,10 +101,7 @@ const Home = () => {
                 Explorez notre catalogue de modèles 3D, ou décrivez votre projet pour une création sur-mesure.
               </p>
               <div className="d-flex flex-wrap justify-content-center gap-3 mb-4">
-                <a href="#catalogue" className="btn btn-light btn-lg fw-bold px-4">
-                  <i className="bi bi-grid-3x3-gap-fill me-2"></i>Explorer le catalogue
-                </a>
-                <Link to="/app?view=demande-projet" className="btn btn-outline-light btn-lg fw-bold px-4">
+                <Link to="/app?view=demande-projet" className="btn btn-light btn-lg fw-bold px-4">
                   <i className="bi bi-magic me-2"></i>Demander un projet sur-mesure
                 </Link>
               </div>
@@ -125,56 +122,6 @@ const Home = () => {
           <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
             <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="shape-fill"></path>
           </svg>
-        </div>
-      </section>
-
-      {/* Section Comment ça marche */}
-      <section className="py-5 bg-white">
-        <div className="container">
-          <div className="row text-center mb-5">
-            <div className="col-lg-7 mx-auto">
-              <span className="section-eyebrow">Comment ça marche</span>
-              <h2 className="fw-bold mt-2">De l'idée au fichier 3D, en 3 étapes</h2>
-            </div>
-          </div>
-          <div className="row g-4">
-            {HOW_IT_WORKS.map((step, index) => (
-              <div key={step.title} className="col-md-4 text-center">
-                <div className="step-icon-circle">
-                  <i className={`bi ${step.icon}`}></i>
-                </div>
-                <h3 className="h5 fw-bold mb-2">
-                  <span className="step-number">{index + 1}.</span> {step.title}
-                </h3>
-                <p className="text-muted">{step.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <div className="section-divider"></div>
-
-      {/* Section Pourquoi Modelify */}
-      <section className="py-5 why-section">
-        <div className="container">
-          <div className="row text-center mb-5">
-            <div className="col-lg-7 mx-auto">
-              <span className="section-eyebrow">Pourquoi Modelify</span>
-              <h2 className="fw-bold mt-2">Conçu pour aller du concept au fichier, vite et bien</h2>
-            </div>
-          </div>
-          <div className="row g-4">
-            {FEATURES.map((feature) => (
-              <div key={feature.title} className="col-md-6 col-lg-3 text-center">
-                <div className="feature-icon-circle">
-                  <i className={`bi ${feature.icon}`}></i>
-                </div>
-                <h3 className="h6 fw-bold mb-2">{feature.title}</h3>
-                <p className="text-muted small">{feature.text}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
@@ -248,6 +195,56 @@ const Home = () => {
         </div>
       </section>
 
+      {/* Section Comment ça marche */}
+      <section className="py-5 bg-white">
+        <div className="container">
+          <div className="row text-center mb-5">
+            <div className="col-lg-7 mx-auto">
+              <span className="section-eyebrow">Comment ça marche</span>
+              <h2 className="fw-bold mt-2">De l'idée au fichier 3D, en 3 étapes</h2>
+            </div>
+          </div>
+          <div className="row g-4">
+            {HOW_IT_WORKS.map((step, index) => (
+              <div key={step.title} className="col-md-4 text-center">
+                <div className="step-icon-circle">
+                  <i className={`bi ${step.icon}`}></i>
+                </div>
+                <h3 className="h5 fw-bold mb-2">
+                  <span className="step-number">{index + 1}.</span> {step.title}
+                </h3>
+                <p className="text-muted">{step.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <div className="section-divider"></div>
+
+      {/* Section Pourquoi Modelify */}
+      <section className="py-5 why-section">
+        <div className="container">
+          <div className="row text-center mb-5">
+            <div className="col-lg-7 mx-auto">
+              <span className="section-eyebrow">Pourquoi Modelify</span>
+              <h2 className="fw-bold mt-2">Conçu pour aller du concept au fichier, vite et bien</h2>
+            </div>
+          </div>
+          <div className="row g-4">
+            {FEATURES.map((feature) => (
+              <div key={feature.title} className="col-md-6 col-lg-3 text-center">
+                <div className="feature-icon-circle">
+                  <i className={`bi ${feature.icon}`}></i>
+                </div>
+                <h3 className="h6 fw-bold mb-2">{feature.title}</h3>
+                <p className="text-muted small">{feature.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Bandeau CTA demande sur-mesure */}
       <section className="cta-banner text-center text-white mb-0 py-5">
         {/* Séparateur Vague */}
@@ -256,7 +253,6 @@ const Home = () => {
             <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="shape-fill"></path>
           </svg>
         </div>
-        <FloatingShapes />
 
         <div className="container py-4 position-relative z-2">
           <div className="row">
@@ -270,13 +266,6 @@ const Home = () => {
               </Link>
             </div>
           </div>
-        </div>
-
-        {/* Séparateur Vague */}
-        <div className="custom-shape-divider-bottom">
-          <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V27.35A600.21,600.21,0,0,0,321.39,56.44Z" className="shape-fill"></path>
-          </svg>
         </div>
       </section>
 
