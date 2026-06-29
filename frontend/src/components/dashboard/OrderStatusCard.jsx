@@ -23,7 +23,7 @@ const OrderStatusCard = ({ allowedStatuses, title = "Status des commandes" }) =>
           throw new Error('Erreur lors de la récupération des commandes');
         }
         const data = await response.json();
-        setProjects(data.projects);
+        setProjects(data.projects ?? []);
       } catch (err) {
         setError(err.message);
       } finally {

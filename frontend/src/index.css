@@ -19,7 +19,7 @@ code {
 .hero-section {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #312e81 100%);
   color: white;
-  padding: 100px 0 150px 0; /* Augmenter le padding-bottom pour la vague */
+  padding: 60px 0 120px 0;
   position: relative;
   /* overflow: hidden; Removed to allow shapes to float over the next section */
 }

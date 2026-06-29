@@ -233,14 +233,17 @@ async def get_all_projects(
     
     offset = (page - 1) * limit
     
-    user_role_data = (
-        supabase.table("Users")
-        .select("role")
-        .eq("id", current_user.id)
-        .single()
-        .execute()
-    )
-    is_admin = user_role_data.data and user_role_data.data.get("role") == "admin"
+    try:
+        user_role_data = (
+            supabase.table("Users")
+            .select("role")
+            .eq("id", current_user.id)
+            .single()
+            .execute()
+        )
+        is_admin = user_role_data.data and user_role_data.data.get("role") == "admin"
+    except Exception:
+        is_admin = False
 
     # Requête pour le count total
     if is_admin:
@@ -267,7 +270,7 @@ async def get_all_projects(
     result = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
     
     return {
-        "projects": result.data,
+        "projects": result.data or [],
         "total": total_count,
         "page": page,
         "limit": limit,

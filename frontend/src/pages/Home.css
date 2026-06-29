@@ -128,9 +128,5 @@
 }
 
 .custom-shape-divider-top .shape-fill {
-  fill: #FFFFFF;
-}
-
-.cta-banner .custom-shape-divider-bottom .shape-fill {
-  fill: #212529;
+  fill: #f5f3ff;
 }
