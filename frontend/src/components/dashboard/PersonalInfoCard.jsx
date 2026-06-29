@@ -4,7 +4,7 @@ import { supabase } from '../../lib/supabase';
 import Toast from '../Toast';
 import './PersonalInfoCard.css';
 
-const EMPTY_FORM = { firstName: '', lastName: '', companyName: '', email: '' };
+const EMPTY_FORM = { firstName: '', lastName: '', email: '', password: '' };
 
 const PersonalInfoCard = () => {
   const { user, session } = useAuth();
@@ -19,8 +19,8 @@ const PersonalInfoCard = () => {
     setForm({
       firstName: user?.user_metadata?.firstName || '',
       lastName: user?.user_metadata?.lastName || '',
-      companyName: user?.user_metadata?.companyName || '',
       email: user?.email || '',
+      password: '',
     });
   };
 
@@ -58,7 +58,6 @@ const PersonalInfoCard = () => {
 
     const firstName = form.firstName.trim();
     const lastName = form.lastName.trim();
-    const companyName = form.companyName.trim();
     const email = form.email.trim();
 
     if (!firstName || !lastName) {
@@ -66,18 +65,54 @@ const PersonalInfoCard = () => {
       return;
     }
 
+    const nameChanged =
+      firstName !== (user?.user_metadata?.firstName || '') ||
+      lastName !== (user?.user_metadata?.lastName || '');
     const emailChanged = email && email !== user?.email;
+
+    if (!nameChanged && !emailChanged) {
+      setToast({ message: 'Aucune modification à enregistrer.', type: 'error' });
+      return;
+    }
 
     setSaving(true);
     try {
+      // Confirmation par mot de passe obligatoire pour modifier le nom/prénom
+      let accessToken = session?.access_token;
+      if (nameChanged) {
+        if (!form.password) {
+          setToast({
+            message: 'Veuillez saisir votre mot de passe pour confirmer la modification.',
+            type: 'error',
+          });
+          setSaving(false);
+          return;
+        }
+
+        const { data: signInData, error: signInError } =
+          await supabase.auth.signInWithPassword({
+            email: user.email,
+            password: form.password,
+          });
+
+        if (signInError) {
+          setToast({ message: 'Mot de passe incorrect.', type: 'error' });
+          setSaving(false);
+          return;
+        }
+
+        // On utilise le token rafraîchi par la ré-authentification
+        accessToken = signInData?.session?.access_token || accessToken;
+      }
+
       // 1. Mise à jour des informations de profil dans la table Users
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.access_token}`,
+          Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ firstName, lastName, companyName }),
+        body: JSON.stringify({ firstName, lastName }),
       });
 
       if (!response.ok) {
@@ -86,9 +121,9 @@ const PersonalInfoCard = () => {
       }
 
       // 2. Synchronisation côté Supabase Auth :
-      //    - les métadonnées (prénom/nom/société) utilisées dans toute l'app
+      //    - les métadonnées (prénom/nom) utilisées dans toute l'app
       //    - l'email, qui déclenche une confirmation par email s'il change
-      const attributes = { data: { firstName, lastName, companyName } };
+      const attributes = { data: { firstName, lastName } };
       if (emailChanged) attributes.email = email;
 
       const { error: authError } = await supabase.auth.updateUser(attributes, {
@@ -169,19 +204,6 @@ const PersonalInfoCard = () => {
             </div>
 
             <div className="mb-3">
-              <label className="form-label text-muted small fw-bold">Société</label>
-              <input
-                type="text"
-                name="companyName"
-                className={inputClass}
-                value={form.companyName}
-                onChange={handleChange}
-                disabled={!editing || saving}
-                placeholder={editing ? 'Optionnel' : ''}
-              />
-            </div>
-
-            <div className="mb-3">
               <label className="form-label text-muted small fw-bold">Email</label>
               <input
                 type="email"
@@ -209,6 +231,28 @@ const PersonalInfoCard = () => {
                 disabled
               />
             </div>
+
+            {editing && (
+              <div className="mb-3">
+                <label className="form-label text-muted small fw-bold">
+                  Mot de passe <span className="text-danger">*</span>
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  className="form-control"
+                  value={form.password}
+                  onChange={handleChange}
+                  disabled={saving}
+                  autoComplete="current-password"
+                  placeholder="Confirmez avec votre mot de passe"
+                />
+                <div className="form-text">
+                  <i className="bi bi-shield-lock me-1"></i>
+                  Requis pour confirmer la modification de votre nom ou prénom.
+                </div>
+              </div>
+            )}
 
             {editing && (
               <div className="d-flex justify-content-end gap-2">
