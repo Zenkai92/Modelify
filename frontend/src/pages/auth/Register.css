@@ -27,3 +27,47 @@
 .register-link {
   color: #764ba2;
 }
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  color: #adb5bd;
+  font-size: 0.85rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: '';
+  flex: 1;
+  border-top: 1px solid #dee2e6;
+}
+
+.auth-divider span {
+  padding: 0 0.75rem;
+}
+
+.btn-google {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #fff;
+  border: 1px solid #dee2e6;
+  color: #3c4043;
+  font-weight: 500;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.btn-google:hover {
+  background-color: #f8f9fa;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  color: #3c4043;
+}
+
+.btn-google:disabled {
+  opacity: 0.6;
+}
+
+.google-icon {
+  flex-shrink: 0;
+}
