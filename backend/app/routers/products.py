@@ -245,6 +245,14 @@ async def update_product(
                 update_data["stripe_price_id"] = new_price_id
         except Exception as e:
             logger.warning(f"Erreur mise à jour Stripe (non bloquante): {e}")
+    else:
+        # Produit sans Stripe Product/Price (ex: créé avant l'intégration Stripe) : on le crée.
+        try:
+            stripe_ids = create_stripe_product_and_price(title, description or "", price)
+            update_data["stripe_product_id"] = stripe_ids["stripe_product_id"]
+            update_data["stripe_price_id"] = stripe_ids["stripe_price_id"]
+        except Exception as e:
+            logger.warning(f"Erreur création Stripe (non bloquante): {e}")
 
     # Fichier aperçu (optionnel)
     if overview_model_file and overview_model_file.filename:
@@ -352,14 +360,14 @@ async def buy_product(product_id: str, current_user=Depends(get_current_user)):
             stripe_customer_id = get_or_create_customer(user["email"], client_name, current_user.id)
             supabase.table("Users").update({"stripe_customer_id": stripe_customer_id}).eq("id", current_user.id).execute()
 
-        base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        base_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
         checkout_url = create_product_checkout_session(
             customer_id=stripe_customer_id,
             price_id=product["stripe_price_id"],
             product_id=product_id,
             user_id=current_user.id,
-            success_url=f"{base_url}/payment/success?product_id={product_id}",
+            success_url=f"{base_url}/payment/success?product_id={product_id}&session_id={{CHECKOUT_SESSION_ID}}",
             cancel_url=f"{base_url}/payment/cancel",
         )
 

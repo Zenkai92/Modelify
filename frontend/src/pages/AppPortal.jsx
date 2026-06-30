@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 
 import PersonalInfoCard from '../components/dashboard/PersonalInfoCard';
 import OrderStatusCard from '../components/dashboard/OrderStatusCard';
+import ProductOrdersCard from '../components/dashboard/ProductOrdersCard';
 import AdminUserList from './admin/AdminUserList';
 import AdminProjectList from './admin/AdminProjectList';
 import AdminLegalDocuments from './admin/AdminLegalDocuments';
@@ -32,8 +33,8 @@ const AppPortal = () => {
 
     switch(view) {
       case 'profile': return <PersonalInfoCard />;
-      case 'status-commandes': return <OrderStatusCard title="Statut des commandes" allowedStatuses={['en cours', 'en attente', 'devis_envoyé', 'paiement_attente', 'payé']} />;
-      case 'completed-projects': return <OrderStatusCard title="Projets terminés" allowedStatuses={['terminé']} />;
+      case 'status-commandes': return <OrderStatusCard title="Mes projets personnalisés" allowedStatuses={null} />;
+      case 'completed-projects': return <ProductOrdersCard />;
       case 'admin-users': return isAdmin ? <AdminUserList /> : <PersonalInfoCard />;
       case 'admin-pending': return isAdmin ? <AdminProjectList statusFilter={['en attente', 'devis_envoyé', 'paiement_attente', 'payé']} title="Projets à gérer / en attente" /> : <PersonalInfoCard />;
       case 'admin-progress': return isAdmin ? <AdminProjectList statusFilter="en cours" title="Projets en cours de modélisation" /> : <PersonalInfoCard />;
@@ -67,10 +68,10 @@ const AppPortal = () => {
                   <i className="bi bi-person me-2"></i>Mon Profil
                 </button>
                 <button onClick={() => setView('status-commandes')} className={`list-group-item list-group-item-action py-3 text-start border-0 ${view === 'status-commandes' || view === 'project-details' ? 'active' : ''}`}>
-                  <i className="bi bi-activity me-2"></i>Mes Commandes
+                  <i className="bi bi-activity me-2"></i>Mes projets personnalisés
                 </button>
                 <button onClick={() => setView('completed-projects')} className={`list-group-item list-group-item-action py-3 text-start border-0 ${view === 'completed-projects' ? 'active' : ''}`}>
-                  <i className="bi bi-check-circle me-2"></i>Historique
+                  <i className="bi bi-bag-check me-2"></i>Mes Commandes
                 </button>
                 <button onClick={() => signOut()} className="list-group-item list-group-item-action py-3 text-start border-0 fw-bold text-danger border-bottom">
                   <i className="bi bi-box-arrow-right me-2"></i>Déconnexion

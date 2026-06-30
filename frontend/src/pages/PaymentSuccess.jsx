@@ -6,28 +6,25 @@ import { useCartStore } from '../store/cartStore';
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const productId = searchParams.get('product_id');
-  const cartSessionId = searchParams.get('session_id');
+  const sessionId = searchParams.get('session_id');
   const { session } = useAuth();
   const clearCart = useCartStore((state) => state.clear);
   const [confirmed, setConfirmed] = useState(false);
   const [attempts, setAttempts] = useState(0);
 
-  // Polling pendant 15s max pour attendre la confirmation du webhook Stripe
   useEffect(() => {
     if (confirmed || attempts >= 15) return;
-    if (!session || (!productId && !cartSessionId)) return;
+    if (!session || !sessionId) return;
 
     const timer = setTimeout(async () => {
       try {
-        const url = cartSessionId
-          ? `${import.meta.env.VITE_API_URL}/api/cart/order-status?session_id=${encodeURIComponent(cartSessionId)}`
-          : `${import.meta.env.VITE_API_URL}/api/products/${productId}/purchased`;
+        const url = `${import.meta.env.VITE_API_URL}/api/cart/order-status?session_id=${encodeURIComponent(sessionId)}`;
         const res = await fetch(url, { headers: { Authorization: `Bearer ${session.access_token}` } });
         if (res.ok) {
           const data = await res.json();
-          if (cartSessionId ? data.completed : data.purchased) {
+          if (data.completed) {
             setConfirmed(true);
-            if (cartSessionId) clearCart();
+            if (!productId) clearCart();
           }
         }
       } catch {}
@@ -35,7 +32,7 @@ const PaymentSuccess = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [attempts, productId, cartSessionId, session, confirmed, clearCart]);
+  }, [attempts, productId, sessionId, session, confirmed, clearCart]);
 
   return (
     <div className="container py-5">
@@ -54,7 +51,7 @@ const PaymentSuccess = () => {
               Votre achat est confirmé. Retournez sur la boutique pour télécharger vos fichiers.
             </p>
 
-            {(productId || cartSessionId) && !confirmed && attempts < 15 && (
+            {sessionId && !confirmed && attempts < 15 && (
               <div className="alert alert-info py-2 small mb-4">
                 <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                 Confirmation en cours…

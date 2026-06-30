@@ -5,6 +5,9 @@ from app.dependencies import get_current_user
 from app.services.stripe_service import get_or_create_customer, create_cart_checkout_session
 import logging
 import os
+import stripe
+
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -67,7 +70,7 @@ async def checkout_cart(payload: CartCheckoutRequest, current_user=Depends(get_c
             stripe_customer_id = get_or_create_customer(user["email"], client_name, current_user.id)
             supabase.table("Users").update({"stripe_customer_id": stripe_customer_id}).eq("id", current_user.id).execute()
 
-        base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        base_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
         items = [{"price_id": p["stripe_price_id"], "product_id": p["id"]} for p in products]
 
@@ -105,11 +108,57 @@ async def get_purchased_ids(current_user=Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
-@router.get("/cart/order-status", status_code=status.HTTP_200_OK)
-async def get_order_status(session_id: str, current_user=Depends(get_current_user)):
-    """Vérifie si une session de paiement panier a bien été enregistrée dans Orders."""
+@router.get("/orders/mine", status_code=status.HTTP_200_OK)
+async def get_my_product_orders(current_user=Depends(get_current_user)):
+    """Retourne toutes les commandes de produits (achat depuis la boutique) de l'utilisateur."""
     try:
         result = (
+            supabase.table("Orders")
+            .select("id, product_id, status, created_at, stripe_session_id")
+            .eq("client_id", current_user.id)
+            .order("created_at", desc=True)
+            .execute()
+        )
+        orders = result.data or []
+
+        if not orders:
+            return []
+
+        product_ids = list({o["product_id"] for o in orders if o.get("product_id")})
+        products_result = (
+            supabase.table("Products")
+            .select("*")
+            .in_("id", product_ids)
+            .execute()
+        )
+        products_by_id = {p["id"]: p for p in (products_result.data or [])}
+
+        return [
+            {
+                "id": o["id"],
+                "product_id": o["product_id"],
+                "status": o["status"],
+                "created_at": o["created_at"],
+                "stripe_session_id": o["stripe_session_id"],
+                "product": products_by_id.get(o["product_id"]),
+            }
+            for o in orders
+        ]
+    except Exception as e:
+        logger.error(f"Erreur récupération commandes produits: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+
+@router.get("/cart/order-status", status_code=status.HTTP_200_OK)
+async def get_order_status(session_id: str, current_user=Depends(get_current_user)):
+    """
+    Vérifie si une session de paiement a été enregistrée dans Orders.
+    Si non, interroge Stripe directement et crée les commandes si le paiement est confirmé.
+    Fonctionne pour les achats produit et panier.
+    """
+    try:
+        # 1. Déjà en base ?
+        existing = (
             supabase.table("Orders")
             .select("id")
             .eq("client_id", current_user.id)
@@ -117,8 +166,66 @@ async def get_order_status(session_id: str, current_user=Depends(get_current_use
             .eq("status", "completed")
             .execute()
         )
-        rows = result.data or []
-        return {"completed": bool(rows), "count": len(rows)}
+        if existing.data:
+            return {"completed": True, "count": len(existing.data)}
+
+        # 2. Interroger Stripe directement
+        try:
+            stripe_session = stripe.checkout.Session.retrieve(session_id)
+        except stripe.error.StripeError as e:
+            logger.error(f"Erreur récupération session Stripe: {e}")
+            return {"completed": False, "count": 0}
+
+        if stripe_session.payment_status != "paid":
+            return {"completed": False, "count": 0}
+
+        # 3. Vérifier que la session appartient bien à cet utilisateur
+        metadata = stripe_session.metadata or {}
+        user_id = metadata.get("user_id")
+        if not user_id or user_id != current_user.id:
+            return {"completed": False, "count": 0}
+
+        event_type = metadata.get("type")
+        payment_intent = stripe_session.payment_intent
+        amount_total = (stripe_session.amount_total or 0) / 100
+        inserted = 0
+
+        if event_type == "product_purchase":
+            product_id = metadata.get("product_id")
+            if product_id:
+                supabase.table("Orders").insert({
+                    "product_id": product_id,
+                    "client_id": user_id,
+                    "stripe_session_id": session_id,
+                    "stripe_payment_intent_id": payment_intent,
+                    "amount_paid": amount_total,
+                    "status": "completed",
+                }).execute()
+                inserted = 1
+                logger.info(f"Commande produit créée via vérification directe: user={user_id}, product={product_id}")
+
+        elif event_type == "cart_purchase":
+            product_ids = [p.strip() for p in metadata.get("product_ids", "").split(",") if p.strip()]
+            if product_ids:
+                prices_res = supabase.table("Products").select("id,price").in_("id", product_ids).execute()
+                price_map = {p["id"]: p["price"] for p in (prices_res.data or [])}
+                rows = [
+                    {
+                        "product_id": pid,
+                        "client_id": user_id,
+                        "stripe_session_id": session_id,
+                        "stripe_payment_intent_id": payment_intent,
+                        "amount_paid": price_map.get(pid, 0),
+                        "status": "completed",
+                    }
+                    for pid in product_ids
+                ]
+                supabase.table("Orders").insert(rows).execute()
+                inserted = len(rows)
+                logger.info(f"Commandes panier créées via vérification directe: user={user_id}, {inserted} produit(s)")
+
+        return {"completed": inserted > 0, "count": inserted}
+
     except Exception as e:
         logger.error(f"Erreur vérification statut commande: {e}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
