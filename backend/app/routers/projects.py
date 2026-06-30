@@ -235,7 +235,7 @@ async def get_all_projects(
     
     try:
         user_role_data = (
-            supabase.table("Users")
+            supabase_admin.table("Users")
             .select("role")
             .eq("id", current_user.id)
             .single()
@@ -325,7 +325,7 @@ async def get_project(projectId: str, current_user=Depends(get_current_user)):
     if project["userId"] != current_user.id:
         # Check if admin
         user_role_data = (
-            supabase.table("Users")
+            supabase_admin.table("Users")
             .select("role")
             .eq("id", current_user.id)
             .single()
@@ -359,7 +359,7 @@ async def update_project_status(
     # 1. Vérification Admin
     try:
         user_role_data = (
-            supabase.table("Users")
+            supabase_admin.table("Users")
             .select("role")
             .eq("id", current_user.id)
             .single()
@@ -408,7 +408,7 @@ async def create_project_quote(
     try:
         # 1. Vérification Admin
         user_role_data = (
-            supabase.table("Users")
+            supabase_admin.table("Users")
             .select("role")
             .eq("id", current_user.id)
             .single()
@@ -433,7 +433,7 @@ async def create_project_quote(
 
         client_id = project["userId"]
         client_data = (
-            supabase.table("Users").select("*").eq("id", client_id).single().execute()
+            supabase_admin.table("Users").select("*").eq("id", client_id).single().execute()
         )
         if not client_data.data:
             raise HTTPException(status_code=404, detail="Client introuvable")
@@ -454,7 +454,7 @@ async def create_project_quote(
                 client["email"], client_name, client["id"]
             )
             # On sauvegarde le nouvel ID pour la prochaine fois
-            supabase.table("Users").update(
+            supabase_admin.table("Users").update(
                 {"stripe_customer_id": stripe_customer_id}
             ).eq("id", client_id).execute()
 
@@ -516,7 +516,7 @@ async def pay_project(projectId: str, current_user=Depends(get_current_user)):
 
         # 4. Récupérer les infos client (Stripe ID)
         user_data = (
-            supabase.table("Users")
+            supabase_admin.table("Users")
             .select("*")
             .eq("id", current_user.id)
             .single()
@@ -532,7 +532,7 @@ async def pay_project(projectId: str, current_user=Depends(get_current_user)):
             stripe_customer_id = get_or_create_customer(
                 user_data.data["email"], client_name, current_user.id
             )
-            supabase.table("Users").update(
+            supabase_admin.table("Users").update(
                 {"stripe_customer_id": stripe_customer_id}
             ).eq("id", current_user.id).execute()
 
@@ -709,7 +709,7 @@ async def stripe_webhook(request: Request):
             if product_id and user_id:
                 logger.info(f"WEBHOOK: Achat produit confirmé — produit {product_id} par user {user_id}")
                 try:
-                    supabase.table("Orders").insert(
+                    supabase_admin.table("Orders").insert(
                         {
                             "product_id": product_id,
                             "client_id": user_id,
@@ -745,7 +745,7 @@ async def stripe_webhook(request: Request):
                         }
                         for product_id in product_ids
                     ]
-                    supabase.table("Orders").insert(orders_rows).execute()
+                    supabase_admin.table("Orders").insert(orders_rows).execute()
                     logger.info(f"Achat panier enregistré dans Orders ({len(orders_rows)} ligne(s))")
                 except Exception as db_error:
                     logger.error(f"Erreur DB insert Orders (panier): {db_error}")

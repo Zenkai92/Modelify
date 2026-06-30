@@ -1,10 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
-from app.database import supabase
+from app.database import supabase, supabase_admin
 from app.dependencies import get_current_user
 from app.services.stripe_service import get_or_create_customer, create_cart_checkout_session
 import logging
 import os
+import traceback
 import stripe
 
 stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
@@ -44,7 +45,7 @@ async def checkout_cart(payload: CartCheckoutRequest, current_user=Depends(get_c
             )
 
         already = (
-            supabase.table("Orders")
+            supabase_admin.table("Orders")
             .select("product_id")
             .eq("client_id", current_user.id)
             .in_("product_id", product_ids)
@@ -58,7 +59,7 @@ async def checkout_cart(payload: CartCheckoutRequest, current_user=Depends(get_c
                 detail=f"Vous avez déjà acheté ce(s) produit(s) : {', '.join(already_ids)}",
             )
 
-        user_data = supabase.table("Users").select("*").eq("id", current_user.id).single().execute()
+        user_data = supabase_admin.table("Users").select("*").eq("id", current_user.id).single().execute()
         if not user_data.data:
             raise HTTPException(status_code=404, detail="Utilisateur introuvable")
 
@@ -68,7 +69,7 @@ async def checkout_cart(payload: CartCheckoutRequest, current_user=Depends(get_c
         if not stripe_customer_id:
             client_name = f"{user.get('firstName', '')} {user.get('lastName', '')}".strip() or user.get("email")
             stripe_customer_id = get_or_create_customer(user["email"], client_name, current_user.id)
-            supabase.table("Users").update({"stripe_customer_id": stripe_customer_id}).eq("id", current_user.id).execute()
+            supabase_admin.table("Users").update({"stripe_customer_id": stripe_customer_id}).eq("id", current_user.id).execute()
 
         base_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
@@ -96,7 +97,7 @@ async def get_purchased_ids(current_user=Depends(get_current_user)):
     """Retourne les ids des produits déjà achetés par l'utilisateur courant."""
     try:
         result = (
-            supabase.table("Orders")
+            supabase_admin.table("Orders")
             .select("product_id")
             .eq("client_id", current_user.id)
             .eq("status", "completed")
@@ -113,7 +114,7 @@ async def get_my_product_orders(current_user=Depends(get_current_user)):
     """Retourne toutes les commandes de produits (achat depuis la boutique) de l'utilisateur."""
     try:
         result = (
-            supabase.table("Orders")
+            supabase_admin.table("Orders")
             .select("id, product_id, status, created_at, stripe_session_id")
             .eq("client_id", current_user.id)
             .order("created_at", desc=True)
@@ -159,7 +160,7 @@ async def get_order_status(session_id: str, current_user=Depends(get_current_use
     try:
         # 1. Déjà en base ?
         existing = (
-            supabase.table("Orders")
+            supabase_admin.table("Orders")
             .select("id")
             .eq("client_id", current_user.id)
             .eq("stripe_session_id", session_id)
@@ -172,15 +173,15 @@ async def get_order_status(session_id: str, current_user=Depends(get_current_use
         # 2. Interroger Stripe directement
         try:
             stripe_session = stripe.checkout.Session.retrieve(session_id)
-        except stripe.error.StripeError as e:
-            logger.error(f"Erreur récupération session Stripe: {e}")
+        except Exception as e:
+            logger.error(f"Erreur récupération session Stripe: {e}\n{traceback.format_exc()}")
             return {"completed": False, "count": 0}
 
         if stripe_session.payment_status != "paid":
             return {"completed": False, "count": 0}
 
         # 3. Vérifier que la session appartient bien à cet utilisateur
-        metadata = stripe_session.metadata or {}
+        metadata = stripe_session.metadata._data if stripe_session.metadata else {}
         user_id = metadata.get("user_id")
         if not user_id or user_id != current_user.id:
             return {"completed": False, "count": 0}
@@ -193,7 +194,7 @@ async def get_order_status(session_id: str, current_user=Depends(get_current_use
         if event_type == "product_purchase":
             product_id = metadata.get("product_id")
             if product_id:
-                supabase.table("Orders").insert({
+                supabase_admin.table("Orders").insert({
                     "product_id": product_id,
                     "client_id": user_id,
                     "stripe_session_id": session_id,
@@ -207,7 +208,7 @@ async def get_order_status(session_id: str, current_user=Depends(get_current_use
         elif event_type == "cart_purchase":
             product_ids = [p.strip() for p in metadata.get("product_ids", "").split(",") if p.strip()]
             if product_ids:
-                prices_res = supabase.table("Products").select("id,price").in_("id", product_ids).execute()
+                prices_res = supabase_admin.table("Products").select("id,price").in_("id", product_ids).execute()
                 price_map = {p["id"]: p["price"] for p in (prices_res.data or [])}
                 rows = [
                     {
@@ -220,12 +221,12 @@ async def get_order_status(session_id: str, current_user=Depends(get_current_use
                     }
                     for pid in product_ids
                 ]
-                supabase.table("Orders").insert(rows).execute()
+                supabase_admin.table("Orders").insert(rows).execute()
                 inserted = len(rows)
                 logger.info(f"Commandes panier créées via vérification directe: user={user_id}, {inserted} produit(s)")
 
         return {"completed": inserted > 0, "count": inserted}
 
     except Exception as e:
-        logger.error(f"Erreur vérification statut commande: {e}")
+        logger.error(f"Erreur vérification statut commande: {e}\n{traceback.format_exc()}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")

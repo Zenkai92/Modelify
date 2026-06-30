@@ -37,7 +37,7 @@ async def update_legal_document(
 ):
     try:
         admin_check = (
-            supabase.table("Users")
+            supabase_admin.table("Users")
             .select("role")
             .eq("id", current_user.id)
             .single()

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas.users import UserCreate, UserUpdate
-from app.database import supabase
+from app.database import supabase, supabase_admin
 from app.dependencies import get_current_user
 from datetime import datetime, timezone
 import logging
@@ -17,7 +17,7 @@ async def get_current_user_profile(current_user=Depends(get_current_user)):
     """
     try:
         response = (
-            supabase.table("Users")
+            supabase_admin.table("Users")
             .select("*")
             .eq("id", current_user.id)
             .single()
@@ -45,7 +45,7 @@ async def get_current_user_profile(current_user=Depends(get_current_user)):
         if current_user.email and profile.get("email") != current_user.email:
             try:
                 synced = (
-                    supabase.table("Users")
+                    supabase_admin.table("Users")
                     .update(
                         {
                             "email": current_user.email,
@@ -93,7 +93,7 @@ async def update_current_user_profile(
 
     try:
         response = (
-            supabase.table("Users")
+            supabase_admin.table("Users")
             .update(update_data)
             .eq("id", current_user.id)
             .execute()
@@ -124,7 +124,7 @@ async def get_users(current_user=Depends(get_current_user)):
     # 1. Vérification du rôle Admin en base de données (Guidelines de sécurité)
     try:
         admin_check = (
-            supabase.table("Users")
+            supabase_admin.table("Users")
             .select("role")
             .eq("id", current_user.id)
             .single()
@@ -141,7 +141,7 @@ async def get_users(current_user=Depends(get_current_user)):
             )
 
         # 2. Récupération de tous les utilisateurs
-        response = supabase.table("Users").select("*").execute()
+        response = supabase_admin.table("Users").select("*").execute()
         return response.data
 
     except Exception as e:
@@ -168,7 +168,7 @@ async def create_user(user: UserCreate):
         user_data["updateAt"] = datetime.now(timezone.utc).isoformat()
 
     try:
-        response = supabase.table("Users").insert(user_data).execute()
+        response = supabase_admin.table("Users").insert(user_data).execute()
 
         # Check for error in response if any (supabase-py usually raises exception on error, but let's be safe)
         # In v2, if there is an error it might raise postgrest.exceptions.APIError

@@ -45,7 +45,7 @@ def check_admin(current_user) -> None:
     """Vérifie que l'utilisateur courant est admin. Lève une 403 sinon."""
     try:
         admin_check = (
-            supabase.table("Users")
+            supabase_admin.table("Users")
             .select("role")
             .eq("id", current_user.id)
             .single()
@@ -304,7 +304,7 @@ async def check_purchased(product_id: str, current_user=Depends(get_current_user
     """Vérifie si l'utilisateur courant a acheté ce produit (via la table Orders)."""
     try:
         result = (
-            supabase.table("Orders")
+            supabase_admin.table("Orders")
             .select("id")
             .eq("client_id", current_user.id)
             .eq("product_id", product_id)
@@ -335,7 +335,7 @@ async def buy_product(product_id: str, current_user=Depends(get_current_user)):
 
         # Vérifier si déjà acheté
         already = (
-            supabase.table("Orders")
+            supabase_admin.table("Orders")
             .select("id")
             .eq("client_id", current_user.id)
             .eq("product_id", product_id)
@@ -347,7 +347,7 @@ async def buy_product(product_id: str, current_user=Depends(get_current_user)):
 
         # Récupérer les infos utilisateur
         user_data = (
-            supabase.table("Users").select("*").eq("id", current_user.id).single().execute()
+            supabase_admin.table("Users").select("*").eq("id", current_user.id).single().execute()
         )
         if not user_data.data:
             raise HTTPException(status_code=404, detail="Utilisateur introuvable")
@@ -358,7 +358,7 @@ async def buy_product(product_id: str, current_user=Depends(get_current_user)):
         if not stripe_customer_id:
             client_name = f"{user.get('firstName', '')} {user.get('lastName', '')}".strip() or user.get("email")
             stripe_customer_id = get_or_create_customer(user["email"], client_name, current_user.id)
-            supabase.table("Users").update({"stripe_customer_id": stripe_customer_id}).eq("id", current_user.id).execute()
+            supabase_admin.table("Users").update({"stripe_customer_id": stripe_customer_id}).eq("id", current_user.id).execute()
 
         base_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
