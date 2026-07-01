@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends, Request
-from app.database import supabase
+from app.database import supabase, supabase_admin
 from app.dependencies import get_current_user
 from app.schemas.projects import ProjectQuote
 from app.services.stripe_service import (
