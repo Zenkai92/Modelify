@@ -36,6 +36,14 @@ ALLOWED_MIME_TYPES = [
     "application/zip",
 ]
 
+# Livrables admin : formats de modèles 3D en plus des types ci-dessus.
+# Le sniffing MIME (python-magic) ne reconnaît pas fiablement ces formats
+# (souvent renvoyés en application/octet-stream, voire text/plain pour
+# l'OBJ qui est en ASCII), donc on valide ces fichiers par extension.
+ALLOWED_DELIVERABLE_EXTENSIONS = [
+    ".obj", ".fbx", ".stl", ".glb", ".gltf", ".blend", ".3ds", ".dae", ".mtl",
+]
+
 
 def sanitize_filename(filename: str) -> str:
     """
@@ -298,7 +306,10 @@ def _make_signed_urls(images: list) -> list:
             file_path = raw  # nouveau format : chemin relatif direct
         if file_path:
             try:
-                signed = supabase.storage.from_("project-images").create_signed_url(
+                # supabase_admin (service role) pour bypasser le RLS storage :
+                # les livrables sont uploadés par l'admin, le client anon ne peut
+                # pas forcément générer une URL signée dessus sinon
+                signed = supabase_admin.storage.from_("project-images").create_signed_url(
                     file_path, 3600
                 )
                 img["fileUrl"] = signed.get("signedURL", raw)
@@ -337,8 +348,9 @@ async def get_project(projectId: str, current_user=Depends(get_current_user)):
             )
 
     # 3. Récupérer les images et générer des URLs signées via la service key
+    # (supabase_admin pour voir aussi les livrables déposés par l'admin, RLS bypass)
     images_result = (
-        supabase.table("ProjectsImages")
+        supabase_admin.table("ProjectsImages")
         .select("*")
         .eq("projectId", projectId)
         .execute()
@@ -347,6 +359,56 @@ async def get_project(projectId: str, current_user=Depends(get_current_user)):
     project["images"] = _make_signed_urls(raw_images)
 
     return project
+
+
+@router.get("/projects/{projectId}/verify-payment")
+async def verify_project_payment(
+    projectId: str,
+    session_id: str,
+    current_user=Depends(get_current_user),
+):
+    """
+    Vérifie auprès de Stripe si le paiement d'un projet est bien effectué
+    et met à jour le statut en 'payé' si c'est le cas.
+    Appelé par le frontend après redirection depuis Stripe (success_url).
+    """
+    result = supabase_admin.table("Projects").select("*").eq("id", projectId).single().execute()
+    if not result.data:
+        raise HTTPException(status_code=404, detail="Projet non trouvé")
+
+    project = result.data
+
+    # Seul le propriétaire peut déclencher la vérification
+    if project["userId"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+
+    # Si déjà payé ou plus avancé, on retourne simplement le projet
+    if project["status"] not in ["paiement_attente", "devis_envoyé"]:
+        return {"project": project}
+
+    try:
+        stripe_session = stripe.checkout.Session.retrieve(session_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Session Stripe invalide : {str(e)}")
+
+    # stripe_session.metadata est un StripeObject : dict() dessus plante si vide
+    # (protocole de séquence via __getitem__(0)), il faut passer par .to_dict()
+    metadata = stripe_session.metadata.to_dict() if stripe_session.metadata else {}
+    if metadata.get("project_id") != projectId or metadata.get("type") != "project_payment":
+        raise HTTPException(status_code=400, detail="La session Stripe ne correspond pas à ce projet")
+
+    if stripe_session.payment_status != "paid":
+        return {"project": project, "payment_pending": True}
+
+    payment_intent = stripe_session.payment_intent
+
+    updated = supabase_admin.table("Projects").update({
+        "status": "payé",
+        "stripe_invoice_id": payment_intent,
+        "updatedAt": datetime.now(timezone.utc).date().isoformat(),
+    }).eq("id", projectId).execute()
+
+    return {"project": updated.data[0] if updated.data else project}
 
 
 @router.put("/projects/{projectId}/status")
@@ -395,6 +457,81 @@ async def update_project_status(
         raise HTTPException(status_code=404, detail="Projet non trouvé")
 
     return {"message": "Statut mis à jour", "project": result.data[0]}
+
+
+@router.post("/projects/{projectId}/files")
+async def upload_project_deliverables(
+    projectId: str,
+    files: List[UploadFile] = File(...),
+    current_user=Depends(get_current_user),
+):
+    """
+    Permet à l'admin de déposer des fichiers livrables sur un projet.
+    """
+    try:
+        user_role_data = (
+            supabase_admin.table("Users")
+            .select("role")
+            .eq("id", current_user.id)
+            .single()
+            .execute()
+        )
+        if not user_role_data.data or user_role_data.data.get("role") != "admin":
+            raise HTTPException(status_code=403, detail="Accès réservé aux administrateurs")
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=403, detail="Erreur de vérification des droits")
+
+    project_result = supabase_admin.table("Projects").select("id, status").eq("id", projectId).single().execute()
+    if not project_result.data:
+        raise HTTPException(status_code=404, detail="Projet non trouvé")
+
+    uploaded = []
+    rejected = []
+
+    for file in files:
+        try:
+            content = await file.read()
+
+            if len(content) > MAX_FILE_SIZE:
+                rejected.append({"filename": file.filename, "reason": "Fichier trop volumineux (max 10MB)"})
+                continue
+
+            mime_type = validate_mime_type(content, file.content_type)
+            file_ext = os.path.splitext(file.filename or "")[1].lower()
+            is_3d_model = file_ext in ALLOWED_DELIVERABLE_EXTENSIONS
+            if mime_type not in ALLOWED_MIME_TYPES and not is_3d_model:
+                rejected.append({"filename": file.filename, "reason": "Type de fichier non autorisé"})
+                continue
+
+            clean_name = sanitize_filename(file.filename)
+            file_path = f"deliverables/{projectId}/{datetime.now(timezone.utc).timestamp()}_{clean_name}"
+
+            upload_content_type = "application/octet-stream" if is_3d_model else mime_type
+            supabase_admin.storage.from_("project-images").upload(
+                file_path, content, {"content-type": upload_content_type}
+            )
+
+            file_type = "livrable_image" if mime_type.startswith("image/") else "livrable_doc"
+
+            supabase_admin.table("ProjectsImages").insert({
+                "projectId": projectId,
+                "fileUrl": file_path,
+                "file_type": file_type,
+            }).execute()
+
+            uploaded.append(file.filename)
+
+        except Exception as upload_error:
+            logger.error(f"Erreur upload livrable {file.filename}: {str(upload_error)}")
+            rejected.append({"filename": file.filename, "reason": str(upload_error)})
+
+    return {
+        "message": f"{len(uploaded)} fichier(s) uploadé(s)",
+        "uploaded": uploaded,
+        "rejected": rejected,
+    }
 
 
 @router.post("/projects/{projectId}/quote")
@@ -537,20 +674,20 @@ async def pay_project(projectId: str, current_user=Depends(get_current_user)):
             ).eq("id", current_user.id).execute()
 
         # 5. Créer la session Checkout Stripe
-        # URL de base du frontend (à configurer selon env prod/dev) ou referrer
-        base_url = os.getenv("FRONTEND_URL", "http://localhost:3000")  # A adapter
+        base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
 
+        # {CHECKOUT_SESSION_ID} est remplacé par Stripe avec l'ID réel de session
         checkout_url = create_checkout_session(
             customer_id=stripe_customer_id,
             amount_eur=project["price"],
             project_title=project["title"],
             project_id=projectId,
-            success_url=f"{base_url}/projects/{projectId}?payment=success",
-            cancel_url=f"{base_url}/projects/{projectId}?payment=cancel",
+            success_url=f"{base_url}/app?view=project-details&id={projectId}&payment=success&session_id={{CHECKOUT_SESSION_ID}}",
+            cancel_url=f"{base_url}/app?view=project-details&id={projectId}&payment=cancel",
         )
 
         # On passe le statut à 'paiement_attente' le temps que l'utilisateur finisse sur Stripe
-        supabase.table("Projects").update(
+        supabase_admin.table("Projects").update(
             {
                 "status": "paiement_attente",
                 "updatedAt": datetime.now(timezone.utc).date().isoformat(),
@@ -692,7 +829,7 @@ async def stripe_webhook(request: Request):
             if project_id:
                 logger.info(f"WEBHOOK: Paiement projet confirmé pour {project_id}")
                 try:
-                    supabase.table("Projects").update(
+                    supabase_admin.table("Projects").update(
                         {
                             "status": "payé",
                             "stripe_invoice_id": session.get("payment_intent"),

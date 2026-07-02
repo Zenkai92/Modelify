@@ -27,7 +27,14 @@ const AppPortal = () => {
   };
 
   const renderContent = () => {
-    if (view === 'project-details' && projectId) return <ProjectDetails projectId={projectId} onBack={() => setView('status-commandes')} />;
+    if (view === 'project-details' && projectId) return (
+      <ProjectDetails
+        projectId={projectId}
+        onBack={() => setView('status-commandes')}
+        paymentSuccess={searchParams.get('payment') === 'success'}
+        stripeSessionId={searchParams.get('session_id')}
+      />
+    );
     if (view === 'project-edit' && projectId) return <ProjectEdit projectId={projectId} onBack={() => setView('status-commandes')} />;
     if (view === 'demande-projet') return <ProjectRequest />;
 
