@@ -181,7 +181,10 @@ async def get_order_status(session_id: str, current_user=Depends(get_current_use
             return {"completed": False, "count": 0}
 
         # 3. Vérifier que la session appartient bien à cet utilisateur
-        metadata = stripe_session.metadata._data if stripe_session.metadata else {}
+        # stripe_session.metadata est un StripeObject : ._data n'existe plus dans
+        # les versions récentes de stripe-python (Attribute('_data') -> 500).
+        # On passe par .to_dict(), comme le endpoint verify-payment des projets.
+        metadata = stripe_session.metadata.to_dict() if stripe_session.metadata else {}
         user_id = metadata.get("user_id")
         if not user_id or user_id != current_user.id:
             return {"completed": False, "count": 0}

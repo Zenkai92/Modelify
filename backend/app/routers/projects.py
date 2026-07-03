@@ -662,7 +662,7 @@ async def pay_project(projectId: str, current_user=Depends(get_current_user)):
             ).eq("id", current_user.id).execute()
 
         # 5. Créer la session Checkout Stripe
-        base_url = os.getenv("FRONTEND_URL", "http://localhost:5173")
+        base_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
         # {CHECKOUT_SESSION_ID} est remplacé par Stripe avec l'ID réel de session
         checkout_url = create_checkout_session(
