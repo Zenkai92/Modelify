@@ -5,6 +5,7 @@ from app.schemas.projects import ProjectQuote
 from app.services.stripe_service import (
     get_or_create_customer,
     create_quote,
+    cancel_quote,
     create_checkout_session,
 )
 import stripe
@@ -44,6 +45,9 @@ ALLOWED_DELIVERABLE_EXTENSIONS = [
     ".obj", ".fbx", ".stl", ".glb", ".gltf", ".blend", ".3ds", ".dae", ".mtl",
 ]
 
+# Statuts "clos" : ne comptent pas dans la limite de projets actifs
+CLOSED_STATUSES = ["terminé", "devis_refusé"]
+
 
 def sanitize_filename(filename: str) -> str:
     """
@@ -76,7 +80,7 @@ async def get_project_count(current_user=Depends(get_current_user)):
         supabase.table("Projects")
         .select("id", count="exact")
         .eq("userId", current_user.id)
-        .neq("status", "terminé")
+        .not_.in_("status", CLOSED_STATUSES)
         .execute()
     )
 
@@ -98,19 +102,19 @@ async def create_project_request(
     Créer une nouvelle demande de projet de modélisation 3D
     """
     try:
-        # Vérification de la limite de projets actifs (non "terminé")
+        # Vérification de la limite de projets actifs (hors statuts clos)
         active_projects = (
             supabase.table("Projects")
             .select("id", count="exact")
             .eq("userId", current_user.id)
-            .neq("status", "terminé")
+            .not_.in_("status", CLOSED_STATUSES)
             .execute()
         )
 
         if active_projects.count and active_projects.count >= 2:
             raise HTTPException(
                 status_code=400,
-                detail="Limite de projets atteinte. Vous ne pouvez pas avoir plus de 2 projets en cours simultanément (hors projets terminés).",
+                detail="Limite de projets atteinte. Vous ne pouvez pas avoir plus de 2 projets en cours simultanément (hors projets terminés ou refusés).",
             )
 
         project_data = {
@@ -255,7 +259,7 @@ async def get_all_projects(
     # Requête pour les données paginées
     if is_admin:
         query = supabase.table("Projects").select(
-            "*, Users(firstName, lastName, companyName, role)"
+            "*, Users(firstName, lastName, role)"
         )
         if userId:
             query = query.eq("userId", userId)
@@ -425,6 +429,7 @@ async def update_project_status(
     valid_statuses = [
         "en attente",
         "devis_envoyé",
+        "devis_refusé",
         "paiement_attente",
         "payé",
         "en cours",
@@ -611,6 +616,60 @@ async def create_project_quote(
     except Exception as e:
         logger.error(f"Erreur lors de la création du devis: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/projects/{projectId}/quote/refuse")
+async def refuse_project_quote(projectId: str, current_user=Depends(get_current_user)):
+    """
+    Permet au client de refuser le devis reçu (Client propriétaire uniquement).
+    Annule le devis Stripe associé et passe le projet en statut 'devis_refusé'.
+    """
+    # 1. Récupérer le projet
+    project_query = (
+        supabase.table("Projects").select("*").eq("id", projectId).execute()
+    )
+    if not project_query.data:
+        raise HTTPException(status_code=404, detail="Projet non trouvé")
+
+    project = project_query.data[0]
+
+    # 2. Vérifier que c'est bien le client propriétaire
+    if project["userId"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Non autorisé")
+
+    # 3. Vérifier le statut : un devis doit être en attente de décision
+    if project["status"] not in ["devis_envoyé", "paiement_attente"]:
+        raise HTTPException(
+            status_code=400, detail="Aucun devis à refuser pour ce statut"
+        )
+
+    # 4. Annuler le devis Stripe (best effort : le refus côté client doit
+    # aboutir même si l'annulation Stripe échoue)
+    if project.get("stripe_quote_id"):
+        try:
+            cancel_quote(project["stripe_quote_id"])
+        except Exception as e:
+            logger.warning(
+                f"Annulation du devis Stripe {project['stripe_quote_id']} impossible: {e}"
+            )
+
+    # 5. Mise à jour du statut
+    updated = (
+        supabase_admin.table("Projects")
+        .update(
+            {
+                "status": "devis_refusé",
+                "updatedAt": datetime.now(timezone.utc).date().isoformat(),
+            }
+        )
+        .eq("id", projectId)
+        .execute()
+    )
+
+    return {
+        "message": "Devis refusé",
+        "project": updated.data[0] if updated.data else project,
+    }
 
 
 @router.post("/projects/{projectId}/pay")

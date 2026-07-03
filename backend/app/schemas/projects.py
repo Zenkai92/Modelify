@@ -21,6 +21,7 @@ class BudgetEnum(str, Enum):
 class ProjectStatusEnum(str, Enum):
     en_attente = "en attente"
     devis_envoye = "devis_envoyé"
+    devis_refuse = "devis_refusé"
     paiement_attente = "paiement_attente"
     paye = "payé"
     en_cours = "en cours"

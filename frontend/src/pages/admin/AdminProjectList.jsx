@@ -77,6 +77,7 @@ const AdminProjectList = ({ statusFilter, title }) => {
     switch (status) {
       case 'en attente': return 'bg-warning text-dark';
       case 'devis_envoyé': return 'bg-info text-dark';
+      case 'devis_refusé': return 'bg-danger';
       case 'paiement_attente': return 'bg-info text-dark';
       case 'payé': return 'bg-success';
       case 'en cours': return 'bg-primary';
@@ -102,6 +103,7 @@ const AdminProjectList = ({ statusFilter, title }) => {
             <thead className="bg-light">
               <tr>
                 <th className="border-0 py-3 ps-4">Titre</th>
+                <th className="border-0 py-3">Nom</th>
                 <th className="border-0 py-3">Rôle</th>
                 <th className="border-0 py-3">Date</th>
                 <th className="border-0 py-3">Statut</th>
@@ -119,8 +121,9 @@ const AdminProjectList = ({ statusFilter, title }) => {
                     <span className="fw-bold text-dark">{project.title}</span>
                   </td>
 
-
-
+                  <td>
+                    {`${project.Users?.firstName || ''} ${project.Users?.lastName || ''}`.trim() || '-'}
+                  </td>
 
                   <td><span className={`badge ${
                         project.Users.role === 'admin' ? 'bg-danger' : 'bg-secondary'
@@ -142,7 +145,7 @@ const AdminProjectList = ({ statusFilter, title }) => {
               ))}
               {projects.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="text-center py-5 text-muted">
+                  <td colSpan="6" className="text-center py-5 text-muted">
                     <i className="bi bi-folder2-open display-4 d-block mb-3"></i>
                     Aucun projet trouvé
                   </td>

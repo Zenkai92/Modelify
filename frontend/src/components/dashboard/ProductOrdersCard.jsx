@@ -81,10 +81,7 @@ const ProductOrdersCard = () => {
                 <div key={order.id} className="border rounded-3 p-3">
                   <div className="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
                     <div>
-                      <span className="fw-bold">{order.product?.title ?? '—'}</span>
-                      {order.product?.category && (
-                        <span className="text-muted small ms-2">{order.product.category}</span>
-                      )}
+                      <span className="fw-bold">{order.product?.title ?? '-'}</span>
                     </div>
                     <div className="d-flex align-items-center gap-2">
                       <span className="text-muted small">{formatDate(order.created_at)}</span>

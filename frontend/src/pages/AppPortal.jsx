@@ -43,7 +43,7 @@ const AppPortal = () => {
       case 'status-commandes': return <OrderStatusCard title="Mes projets personnalisés" allowedStatuses={null} />;
       case 'completed-projects': return <ProductOrdersCard />;
       case 'admin-users': return isAdmin ? <AdminUserList /> : <PersonalInfoCard />;
-      case 'admin-pending': return isAdmin ? <AdminProjectList statusFilter={['en attente', 'devis_envoyé', 'paiement_attente', 'payé']} title="Projets à gérer / en attente" /> : <PersonalInfoCard />;
+      case 'admin-pending': return isAdmin ? <AdminProjectList statusFilter={['en attente', 'devis_envoyé', 'devis_refusé', 'paiement_attente', 'payé']} title="Projets en attente" /> : <PersonalInfoCard />;
       case 'admin-progress': return isAdmin ? <AdminProjectList statusFilter="en cours" title="Projets en cours de modélisation" /> : <PersonalInfoCard />;
       case 'admin-completed': return isAdmin ? <AdminProjectList statusFilter="terminé" title="Projets terminés" /> : <PersonalInfoCard />;
       case 'admin-legal': return isAdmin ? <AdminLegalDocuments /> : <PersonalInfoCard />;
@@ -91,7 +91,7 @@ const AppPortal = () => {
                       <i className="bi bi-people me-2"></i>Utilisateurs
                     </button>
                     <button onClick={() => setView('admin-pending')} className={`list-group-item list-group-item-action py-3 text-start border-0 ${view === 'admin-pending' ? 'active' : ''}`}>
-                      <i className="bi bi-hourglass-split me-2"></i>À gérer / Devis
+                      <i className="bi bi-hourglass-split me-2"></i>En attente
                     </button>
                     <button onClick={() => setView('admin-progress')} className={`list-group-item list-group-item-action py-3 text-start border-0 ${view === 'admin-progress' ? 'active' : ''}`}>
                       <i className="bi bi-tools me-2"></i>En cours

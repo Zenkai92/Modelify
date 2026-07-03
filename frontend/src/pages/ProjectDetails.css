@@ -130,6 +130,7 @@
 .status-icon-terminé { background: linear-gradient(135deg, #34d399 0%, #059669 100%); }
 .status-icon-en-cours { background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%); }
 .status-icon-attente { background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); }
+.status-icon-refusé { background: linear-gradient(135deg, #f87171 0%, #dc2626 100%); }
 
 .status-label {
   font-size: 1.25rem;
@@ -146,6 +147,7 @@
 .status-terminé { color: #059669; }
 .status-en-cours { color: #3b82f6; }
 .status-attente { color: #f59e0b; }
+.status-refusé { color: #dc2626; }
 
 .btn-gradient-primary {
   background: linear-gradient(135deg, #3b82f6 0%, #7c3aed 100%);

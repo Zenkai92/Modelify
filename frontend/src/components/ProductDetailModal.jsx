@@ -111,11 +111,6 @@ const ProductDetailModal = ({ product, open, onClose }) => {
         }}>
           <div>
             <h4 style={{ margin: 0, color: '#fff', fontWeight: 700 }}>{product?.title}</h4>
-            {product?.category && (
-              <span style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.9rem' }}>
-                <i className="bi bi-tag me-1"></i>{product.category}
-              </span>
-            )}
           </div>
           <button
             onClick={onClose}
@@ -190,7 +185,7 @@ const ProductDetailModal = ({ product, open, onClose }) => {
             /* Boutons de téléchargement par format */
             <div>
               <p className="fw-semibold text-success mb-3 small">
-                <i className="bi bi-check-circle-fill me-1"></i>Achat confirmé — choisissez votre format :
+                <i className="bi bi-check-circle-fill me-1"></i>Achat confirmé - choisissez votre format :
               </p>
               <div className="d-flex flex-column gap-2">
                 {downloadFiles.length > 0 ? (
@@ -224,7 +219,7 @@ const ProductDetailModal = ({ product, open, onClose }) => {
                 {buyLoading ? (
                   <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Redirection vers le paiement…</>
                 ) : (
-                  <><i className="bi bi-cart-check me-2"></i>Acheter maintenant — {Number(product?.price || 0).toFixed(2)} €</>
+                  <><i className="bi bi-cart-check me-2"></i>Acheter maintenant - {Number(product?.price || 0).toFixed(2)} €</>
                 )}
               </button>
               <button
@@ -239,7 +234,7 @@ const ProductDetailModal = ({ product, open, onClose }) => {
                 }}
               >
                 {inCart ? (
-                  <><i className="bi bi-check-circle-fill me-2"></i>Dans le panier — Retirer</>
+                  <><i className="bi bi-check-circle-fill me-2"></i>Dans le panier - Retirer</>
                 ) : (
                   <><i className="bi bi-cart-plus me-2"></i>Ajouter au panier</>
                 )}

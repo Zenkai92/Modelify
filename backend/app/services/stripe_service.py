@@ -114,6 +114,18 @@ def create_quote(customer_id: str, amount_eur: float, project_title: str) -> dic
         raise e
 
 
+def cancel_quote(quote_id: str) -> dict:
+    """
+    Annule un devis (Quote) Stripe, par exemple lorsque le client le refuse.
+    Retourne l'objet Quote annulé.
+    """
+    try:
+        return stripe.Quote.cancel(quote_id)
+    except Exception as e:
+        logger.error(f"Erreur Stripe (Quote cancel): {str(e)}")
+        raise e
+
+
 def create_product_checkout_session(
     customer_id: str,
     price_id: str,

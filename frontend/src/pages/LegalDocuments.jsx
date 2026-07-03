@@ -17,7 +17,7 @@ const LegalSection = ({ doc }) => (
     <h2 className="legal-section-title">{doc.title}</h2>
     <Markdown>{doc.content}</Markdown>
     <p className="text-muted small mt-3">
-      Version {doc.version} — mise à jour le{' '}
+      Version {doc.version} - mise à jour le{' '}
       {new Date(doc.updated_at).toLocaleDateString('fr-FR')}
     </p>
   </section>

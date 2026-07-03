@@ -85,7 +85,6 @@ const AdminUserList = () => {
               <thead className="bg-light">
                 <tr>
                   <th className="border-0 py-3">Nom</th>
-                  <th className="border-0 py-3">Entreprise</th>
                   <th className="border-0 py-3">Email</th>
                   <th className="border-0 py-3">Rôle</th>
                   <th className="border-0 py-3 pe-4">Date d'inscription</th>
@@ -95,7 +94,6 @@ const AdminUserList = () => {
                 {users.map((u) => (
                   <tr key={u.id} style={{ cursor: 'pointer' }} onClick={() => handleShowProjects(u)}>
                     <td>{u.firstName} {u.lastName}</td>
-                    <td>{u.companyName || '-'}</td>
                     <td>{u.email}</td>
                     <td>
                       <span className={`badge rounded-pill ${
@@ -109,7 +107,7 @@ const AdminUserList = () => {
                 ))}
                 {users.length === 0 && (
                   <tr>
-                    <td colSpan="6" className="text-center py-5 text-muted">
+                    <td colSpan="4" className="text-center py-5 text-muted">
                       <i className="bi bi-people display-4 d-block mb-3"></i>
                       Aucun utilisateur trouvé
                     </td>

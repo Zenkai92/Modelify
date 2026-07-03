@@ -20,20 +20,53 @@ describe('Composant Navbar', () => {
     expect(screen.queryByText('Déconnexion')).not.toBeInTheDocument()
   })
 
-  it('affiche le menu utilisateur et Déconnexion quand connecté', () => {
-    const mockSignOut = vi.fn()
-    vi.spyOn(AuthContext, 'useAuth').mockReturnValue({ 
+  it('affiche le menu utilisateur et Mon Portail quand connecté', () => {
+    vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
       user: { user_metadata: { firstName: 'John', lastName: 'Doe' } },
-      signOut: mockSignOut
+      signOut: vi.fn()
     })
-    
+
     render(
       <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Navbar />
       </BrowserRouter>
     )
-    
-    expect(screen.getByText('John Doe')).toBeInTheDocument()
-    expect(screen.getByText('Déconnexion')).toBeInTheDocument()
+
+    expect(screen.getByText(/John Doe/)).toBeInTheDocument()
+    expect(screen.getByText('Mon Portail')).toBeInTheDocument()
+    // La déconnexion se fait depuis la sidebar du portail, pas la Navbar
+    expect(screen.queryByText('Déconnexion')).not.toBeInTheDocument()
+  })
+
+  it("affiche l'info-bulle « Mes Commandes » après un achat", () => {
+    sessionStorage.setItem('recent_purchase', '1')
+    vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
+      user: { user_metadata: { firstName: 'John', lastName: 'Doe' } },
+      signOut: vi.fn()
+    })
+
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Navbar />
+      </BrowserRouter>
+    )
+
+    expect(screen.getByText(/Mes Commandes/)).toBeInTheDocument()
+    sessionStorage.removeItem('recent_purchase')
+  })
+
+  it("n'affiche pas l'info-bulle sans achat récent", () => {
+    vi.spyOn(AuthContext, 'useAuth').mockReturnValue({
+      user: { user_metadata: { firstName: 'John', lastName: 'Doe' } },
+      signOut: vi.fn()
+    })
+
+    render(
+      <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <Navbar />
+      </BrowserRouter>
+    )
+
+    expect(screen.queryByText(/Mes Commandes/)).not.toBeInTheDocument()
   })
 })

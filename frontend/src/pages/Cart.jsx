@@ -145,7 +145,7 @@ const Cart = () => {
         {checkoutLoading ? (
           <><span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Redirection vers le paiement…</>
         ) : (
-          <><i className="bi bi-credit-card me-2"></i>Passer au paiement — {total.toFixed(2)} €</>
+          <><i className="bi bi-credit-card me-2"></i>Passer au paiement - {total.toFixed(2)} €</>
         )}
       </button>
     </div>

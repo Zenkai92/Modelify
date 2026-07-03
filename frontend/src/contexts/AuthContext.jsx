@@ -159,7 +159,6 @@ export const AuthProvider = ({ children }) => {
           firstName: userData.firstName || '',
           lastName: userData.lastName || '',
           role: userData.role || 'user',
-          companyName: userData.companyName || '',
           createdAt: new Date().toISOString(), // createdAt pas createAt
           updateAt: new Date().toISOString()
         }

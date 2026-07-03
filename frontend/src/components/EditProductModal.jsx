@@ -19,7 +19,7 @@ const FileInfo = ({ file }) => file ? (
 
 const EditProductModal = ({ product, onClose, onProductUpdated }) => {
   const { session } = useAuth();
-  const [form, setForm] = useState({ title: '', description: '', price: '', category: '' });
+  const [form, setForm] = useState({ title: '', description: '', price: '' });
   const [overviewFile, setOverviewFile] = useState(null);
   const [downloadFiles, setDownloadFiles] = useState({ STL: null, OBJ: null, F3D: null });
   const [selectedFormats, setSelectedFormats] = useState([]);
@@ -35,7 +35,6 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
         title: product.title || '',
         description: product.description || '',
         price: product.price != null ? String(product.price) : '',
-        category: product.category || '',
       });
       // Restaurer les formats à partir des fichiers existants en DB
       const existingFormats = Array.isArray(product.file_formats)
@@ -101,7 +100,7 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
     setError('');
     setSuccess('');
 
-    if (!form.title.trim() || !form.price || !form.category.trim()) {
+    if (!form.title.trim() || !form.price) {
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
@@ -116,7 +115,6 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
       formData.append('title', form.title);
       formData.append('description', form.description);
       formData.append('price', form.price);
-      formData.append('category', form.category);
       formData.append('file_formats', selectedFormats.join(', '));
       if (overviewFile) formData.append('overview_model_file', overviewFile);
 
@@ -237,11 +235,6 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
               <input type="number" name="price" className="form-control" value={form.price} onChange={handleChange} min="0" step="0.01" required />
             </div>
 
-            <div className="col-6">
-              <label className="form-label fw-semibold">Catégorie <span className="text-danger">*</span></label>
-              <input type="text" name="category" className="form-control" value={form.category} onChange={handleChange} required />
-            </div>
-
             {/* Aperçu 3D */}
             <div className="col-12">
               <label className="form-label fw-semibold">Fichier Aperçu 3D</label>
@@ -251,7 +244,7 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
                 accept={OVERVIEW_EXTENSIONS.join(',')}
                 onChange={handleOverviewChange}
               />
-              <div className="form-text text-muted">Laisser vide pour conserver le fichier actuel — max 50 Mo</div>
+              <div className="form-text text-muted">Laisser vide pour conserver le fichier actuel - max 50 Mo</div>
               <FileInfo file={overviewFile} />
             </div>
 

@@ -137,7 +137,7 @@ const AdminLegalDocuments = () => {
               <div className="modal-header">
                 <h5 className="modal-title fw-bold">
                   <i className="bi bi-pencil-square me-2"></i>
-                  Modifier — {editing.title}
+                  Modifier - {editing.title}
                 </h5>
                 <button className="btn-close" onClick={closeEdit}></button>
               </div>
@@ -160,7 +160,7 @@ const AdminLegalDocuments = () => {
                   <label className="form-label fw-semibold">
                     Contenu{' '}
                     <span className="text-muted fw-normal small">
-                      (syntaxe Markdown — ### Titre, **gras**, - liste, [lien](url))
+                      (syntaxe Markdown - ### Titre, **gras**, - liste, [lien](url))
                     </span>
                   </label>
                   <textarea
@@ -173,7 +173,7 @@ const AdminLegalDocuments = () => {
               </div>
               <div className="modal-footer">
                 <span className="text-muted small me-auto">
-                  Version actuelle : v{editing.version} — sera incrémentée à la sauvegarde
+                  Version actuelle : v{editing.version} - sera incrémentée à la sauvegarde
                 </span>
                 <button className="btn btn-secondary" onClick={closeEdit} disabled={saving}>
                   Annuler

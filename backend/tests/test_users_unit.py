@@ -22,7 +22,7 @@ class TestUsersUnit(BaseAsyncTestCase):
     def setUp(self):
         super().setUp()
 
-    @patch("app.routers.users.supabase")
+    @patch("app.routers.users.supabase_admin")
     async def test_create_user_security_role_enforcement(self, mock_supabase):
         """Rôle 'admin' injecté → forcé à 'user'"""
         user_input = UserCreate(
@@ -49,7 +49,7 @@ class TestUsersUnit(BaseAsyncTestCase):
         self.assertEqual(inserted_data["role"], "user")
         self.assertEqual(response["user"]["role"], "user")
 
-    @patch("app.routers.users.supabase")
+    @patch("app.routers.users.supabase_admin")
     async def test_get_users_access_control_admin(self, mock_supabase):
         """Admin → accès liste utilisateurs autorisé"""
         mock_user = MagicMock()
@@ -81,7 +81,7 @@ class TestUsersUnit(BaseAsyncTestCase):
 
         self.assertEqual(len(result), 2)
 
-    @patch("app.routers.users.supabase")
+    @patch("app.routers.users.supabase_admin")
     async def test_get_users_access_control_forbidden(self, mock_supabase):
         """Non-admin → HTTP 403"""
         mock_user = MagicMock()
@@ -103,7 +103,7 @@ class TestUsersUnit(BaseAsyncTestCase):
 
         self.assertEqual(cm.exception.status_code, status.HTTP_403_FORBIDDEN)
 
-    @patch("app.routers.users.supabase")
+    @patch("app.routers.users.supabase_admin")
     async def test_update_profile_success(self, mock_supabase):
         """Mise à jour profil → champs persistés + updateAt ajouté"""
         mock_user = MagicMock()
@@ -117,17 +117,17 @@ class TestUsersUnit(BaseAsyncTestCase):
             mock_response
         )
 
-        payload = UserUpdate(firstName="Jean", lastName="Dupont", companyName="ACME")
+        payload = UserUpdate(firstName="Jean", lastName="Dupont")
         result = await update_current_user_profile(payload, current_user=mock_user)
 
         args, _ = mock_supabase.table.return_value.update.call_args
         updated_data = args[0]
         self.assertEqual(updated_data["firstName"], "Jean")
-        self.assertEqual(updated_data["companyName"], "ACME")
+        self.assertEqual(updated_data["lastName"], "Dupont")
         self.assertIn("updateAt", updated_data)
         self.assertEqual(result["user"]["id"], "user_123")
 
-    @patch("app.routers.users.supabase")
+    @patch("app.routers.users.supabase_admin")
     async def test_update_profile_ignores_sensitive_fields(self, mock_supabase):
         """Champs sensibles (role/email/id) jamais écrits via /users/me"""
         mock_user = MagicMock()

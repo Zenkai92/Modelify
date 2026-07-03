@@ -12,6 +12,7 @@ from app.routers.projects import (
     validate_mime_type,
     create_project_request,
     get_project_count,
+    refuse_project_quote,
 )
 from tests.base_test import BaseAsyncTestCase
 
@@ -29,7 +30,7 @@ class TestProjectsUnit(BaseAsyncTestCase):
         with patch("app.routers.projects.supabase") as mock_supabase:
             mock_count_response = MagicMock()
             mock_count_response.count = 1
-            mock_supabase.table.return_value.select.return_value.eq.return_value.neq.return_value.execute.return_value = (
+            mock_supabase.table.return_value.select.return_value.eq.return_value.not_.in_.return_value.execute.return_value = (
                 mock_count_response
             )
 
@@ -78,7 +79,7 @@ class TestProjectsUnit(BaseAsyncTestCase):
         # Mock active projects count (0 projects)
         mock_count_response = MagicMock()
         mock_count_response.count = 0
-        mock_supabase.table.return_value.select.return_value.eq.return_value.neq.return_value.execute.return_value = (
+        mock_supabase.table.return_value.select.return_value.eq.return_value.not_.in_.return_value.execute.return_value = (
             mock_count_response
         )
 
@@ -116,7 +117,7 @@ class TestProjectsUnit(BaseAsyncTestCase):
         # Mock active projects count (0 projects)
         mock_count_response = MagicMock()
         mock_count_response.count = 0
-        mock_supabase.table.return_value.select.return_value.eq.return_value.neq.return_value.execute.return_value = (
+        mock_supabase.table.return_value.select.return_value.eq.return_value.not_.in_.return_value.execute.return_value = (
             mock_count_response
         )
 
@@ -142,7 +143,7 @@ class TestProjectsUnit(BaseAsyncTestCase):
         # Mock active projects count >= 2
         mock_count_response = MagicMock()
         mock_count_response.count = 2
-        mock_supabase.table.return_value.select.return_value.eq.return_value.neq.return_value.execute.return_value = (
+        mock_supabase.table.return_value.select.return_value.eq.return_value.not_.in_.return_value.execute.return_value = (
             mock_count_response
         )
 
@@ -156,3 +157,88 @@ class TestProjectsUnit(BaseAsyncTestCase):
 
         self.assertEqual(cm.exception.status_code, 400)
         self.assertIn("Limite de projets atteinte", cm.exception.detail)
+
+    def _mock_project_fetch(self, mock_supabase, project):
+        """Configure le mock supabase pour retourner un projet donné"""
+        mock_response = MagicMock()
+        mock_response.data = [project] if project else []
+        mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value = (
+            mock_response
+        )
+
+    @patch("app.routers.projects.cancel_quote")
+    @patch("app.routers.projects.supabase_admin")
+    @patch("app.routers.projects.supabase")
+    async def test_refuse_quote_success(self, mock_supabase, mock_supabase_admin, mock_cancel_quote):
+        """Client propriétaire refuse un devis envoyé → statut 'devis_refusé' + annulation Stripe"""
+        self._mock_project_fetch(mock_supabase, {
+            "id": "proj123",
+            "userId": "user123",
+            "status": "devis_envoyé",
+            "stripe_quote_id": "qt_123",
+        })
+
+        mock_update_response = MagicMock()
+        mock_update_response.data = [{"id": "proj123", "status": "devis_refusé"}]
+        mock_supabase_admin.table.return_value.update.return_value.eq.return_value.execute.return_value = (
+            mock_update_response
+        )
+
+        result = await refuse_project_quote("proj123", current_user=self.mock_user)
+
+        self.assertEqual(result["project"]["status"], "devis_refusé")
+        mock_cancel_quote.assert_called_once_with("qt_123")
+        update_args = mock_supabase_admin.table.return_value.update.call_args[0][0]
+        self.assertEqual(update_args["status"], "devis_refusé")
+
+    @patch("app.routers.projects.supabase")
+    async def test_refuse_quote_not_owner(self, mock_supabase):
+        """Utilisateur non propriétaire → HTTP 403"""
+        self._mock_project_fetch(mock_supabase, {
+            "id": "proj123",
+            "userId": "autre_user",
+            "status": "devis_envoyé",
+        })
+
+        with self.assertRaises(HTTPException) as cm:
+            await refuse_project_quote("proj123", current_user=self.mock_user)
+
+        self.assertEqual(cm.exception.status_code, 403)
+
+    @patch("app.routers.projects.supabase")
+    async def test_refuse_quote_invalid_status(self, mock_supabase):
+        """Projet sans devis en attente (ex: payé) → HTTP 400"""
+        self._mock_project_fetch(mock_supabase, {
+            "id": "proj123",
+            "userId": "user123",
+            "status": "payé",
+        })
+
+        with self.assertRaises(HTTPException) as cm:
+            await refuse_project_quote("proj123", current_user=self.mock_user)
+
+        self.assertEqual(cm.exception.status_code, 400)
+
+    @patch("app.routers.projects.cancel_quote", side_effect=Exception("Stripe down"))
+    @patch("app.routers.projects.supabase_admin")
+    @patch("app.routers.projects.supabase")
+    async def test_refuse_quote_stripe_failure_still_refuses(
+        self, mock_supabase, mock_supabase_admin, mock_cancel_quote
+    ):
+        """Échec annulation Stripe → le refus aboutit quand même"""
+        self._mock_project_fetch(mock_supabase, {
+            "id": "proj123",
+            "userId": "user123",
+            "status": "paiement_attente",
+            "stripe_quote_id": "qt_123",
+        })
+
+        mock_update_response = MagicMock()
+        mock_update_response.data = [{"id": "proj123", "status": "devis_refusé"}]
+        mock_supabase_admin.table.return_value.update.return_value.eq.return_value.execute.return_value = (
+            mock_update_response
+        )
+
+        result = await refuse_project_quote("proj123", current_user=self.mock_user)
+
+        self.assertEqual(result["project"]["status"], "devis_refusé")

@@ -103,7 +103,6 @@ async function ensureOAuthProfileExists(user, token) {
       firstName,
       lastName,
       role: 'user',
-      companyName: '',
       createdAt: new Date().toISOString(),
       updateAt: new Date().toISOString(),
     };

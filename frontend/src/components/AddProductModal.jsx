@@ -14,7 +14,6 @@ const initialForm = {
   title: '',
   description: '',
   price: '',
-  category: '',
 };
 
 const FileInfo = ({ file }) => file ? (
@@ -83,7 +82,7 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
     setError('');
     setSuccess('');
 
-    if (!form.title.trim() || !form.price || !form.category.trim()) {
+    if (!form.title.trim() || !form.price) {
       setError('Veuillez remplir tous les champs obligatoires.');
       return;
     }
@@ -108,7 +107,6 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
       formData.append('title', form.title);
       formData.append('description', form.description);
       formData.append('price', form.price);
-      formData.append('category', form.category);
       formData.append('file_formats', selectedFormats.join(', '));
       formData.append('overview_model_file', overviewFile);
       selectedFormats.forEach((fmt) => {
@@ -224,11 +222,6 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
                     <input type="number" name="price" className="form-control" value={form.price} onChange={handleChange} placeholder="0.00" min="0" step="0.01" required />
                   </div>
 
-                  <div className="col-6">
-                    <label className="form-label fw-semibold">Catégorie <span className="text-danger">*</span></label>
-                    <input type="text" name="category" className="form-control" value={form.category} onChange={handleChange} placeholder="ex: Architecture, Jeux…" required />
-                  </div>
-
                   {/* Aperçu 3D */}
                   <div className="col-12">
                     <label className="form-label fw-semibold">
@@ -241,7 +234,7 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
                       onChange={handleOverviewChange}
                       required
                     />
-                    <div className="form-text text-muted">max 50 Mo — {OVERVIEW_EXTENSIONS.join(', ')}</div>
+                    <div className="form-text text-muted">max 50 Mo - {OVERVIEW_EXTENSIONS.join(', ')}</div>
                     <FileInfo file={overviewFile} />
                   </div>
 

@@ -11,6 +11,10 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
   const [pendingStatus, setPendingStatus] = useState(null);
   const [showQuoteModal, setShowQuoteModal] = useState(false);
   const [quotePrice, setQuotePrice] = useState('');
+  const [showRefuseModal, setShowRefuseModal] = useState(false);
+  const [refusingQuote, setRefusingQuote] = useState(false);
+  // Pop-up de feedback (succès / erreur) : { type: 'success' | 'error', message }
+  const [feedback, setFeedback] = useState(null);
   const [paymentVerified, setPaymentVerified] = useState(false);
   const [verifyingPayment, setVerifyingPayment] = useState(false);
 
@@ -86,13 +90,16 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
       setPendingStatus(null);
     } catch (err) {
       console.error(err);
-      alert('Erreur lors du changement de statut');
+      setFeedback({ type: 'error', message: 'Erreur lors du changement de statut.' });
       setShowConfirmModal(false);
     }
   };
 
   const handleSendQuote = async () => {
-    if (!quotePrice || isNaN(quotePrice)) { alert('Veuillez entrer un prix valide'); return; }
+    if (!quotePrice || isNaN(quotePrice)) {
+      setFeedback({ type: 'error', message: 'Veuillez entrer un prix valide.' });
+      return;
+    }
     try {
       const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}/quote`, {
         method: 'POST',
@@ -104,10 +111,13 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
       setProject(data.project);
       setShowQuoteModal(false);
       setQuotePrice('');
-      alert('Devis envoyé avec succès !');
+      setFeedback({
+        type: 'success',
+        message: `Le devis de ${data.project.price} € a été envoyé au client. Il pourra le payer ou le refuser depuis sa page projet.`
+      });
     } catch (err) {
       console.error(err);
-      alert(err.message);
+      setFeedback({ type: 'error', message: err.message });
     }
   };
 
@@ -123,7 +133,26 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
       else throw new Error('Aucune URL de paiement reçue');
     } catch (err) {
       console.error(err);
-      alert(err.message);
+      setFeedback({ type: 'error', message: err.message });
+    }
+  };
+
+  const handleRefuseQuote = async () => {
+    setRefusingQuote(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}/quote/refuse`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      if (!response.ok) throw new Error('Erreur lors du refus du devis');
+      const data = await response.json();
+      setProject(data.project);
+      setShowRefuseModal(false);
+    } catch (err) {
+      console.error(err);
+      setFeedback({ type: 'error', message: err.message });
+    } finally {
+      setRefusingQuote(false);
     }
   };
 
@@ -150,7 +179,7 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
         const details = data.rejected.map(r => `${r.filename} (${r.reason})`).join(', ');
         setUploadMessage({
           type: data.uploaded.length > 0 ? 'partial' : 'error',
-          text: `${data.message} — Rejetés : ${details}`,
+          text: `${data.message} - Rejetés : ${details}`,
         });
       } else {
         setUploadMessage({ type: 'success', text: data.message });
@@ -214,14 +243,19 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
           <div className="d-flex align-items-center flex-wrap gap-2">
             {isAdmin && (
               <>
-                {project.status === 'en attente' && (
+                {(project.status === 'en attente' || project.status === 'devis_refusé') && (
                   <button className="btn btn-gradient-primary fw-bold px-4 shadow-sm" onClick={() => setShowQuoteModal(true)}>
-                    <i className="bi bi-file-earmark-text me-2"></i> Faire un devis
+                    <i className="bi bi-file-earmark-text me-2"></i> {project.status === 'devis_refusé' ? 'Refaire un devis' : 'Faire un devis'}
                   </button>
                 )}
                 {project.status === 'devis_envoyé' && (
                   <span className="badge bg-info py-2 px-3 text-dark">
                     <i className="bi bi-envelope-paper me-2"></i> Devis envoyé : {project.price} €
+                  </span>
+                )}
+                {project.status === 'devis_refusé' && (
+                  <span className="badge bg-danger py-2 px-3">
+                    <i className="bi bi-x-circle me-2"></i> Devis refusé : {project.price} €
                   </span>
                 )}
                 {project.status === 'payé' && (
@@ -282,9 +316,24 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
                       )}
                     </div>
                   </div>
-                  <button onClick={handlePayment} className="btn btn-gradient-success btn-lg fw-bold px-4 shadow-sm">
-                    <i className="bi bi-credit-card-2-front me-2"></i> Payer {project.price} €
-                  </button>
+                  <div className="d-flex flex-wrap align-items-center gap-2">
+                    <button onClick={handlePayment} className="btn btn-gradient-success fw-bold px-4 shadow-sm">
+                      <i className="bi bi-credit-card-2-front me-2"></i> Payer {project.price} €
+                    </button>
+                    <button onClick={() => setShowRefuseModal(true)} className="btn btn-outline-danger btn-sm px-3">
+                      <i className="bi bi-x-circle me-1"></i> Refuser le devis
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Bannière devis refusé pour le client */}
+            {!loading && project && project.status === 'devis_refusé' && isOwner && (
+              <div className="alert alert-secondary d-flex align-items-center gap-3 mb-4 shadow-sm border-0 rounded-3">
+                <i className="bi bi-x-circle-fill fs-3 text-danger"></i>
+                <div>
+                  <strong>Devis refusé.</strong> Vous avez refusé le devis de {project.price} €. Ce projet est clôturé, mais nous pouvons vous proposer un nouveau devis : n'hésitez pas à nous contacter.
                 </div>
               </div>
             )}
@@ -363,11 +412,11 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
                   Statut du projet
                 </h5>
                 <div className="status-card-content">
-                  <div className={`status-icon-circle ${project.status === 'terminé' ? 'status-icon-terminé' : project.status === 'en cours' ? 'status-icon-en-cours' : 'status-icon-attente'}`}>
-                    <i className={`bi ${project.status === 'terminé' ? 'bi-check-lg' : project.status === 'en cours' ? 'bi-gear-fill' : 'bi-hourglass-split'}`}></i>
+                  <div className={`status-icon-circle ${project.status === 'terminé' ? 'status-icon-terminé' : project.status === 'en cours' ? 'status-icon-en-cours' : project.status === 'devis_refusé' ? 'status-icon-refusé' : 'status-icon-attente'}`}>
+                    <i className={`bi ${project.status === 'terminé' ? 'bi-check-lg' : project.status === 'en cours' ? 'bi-gear-fill' : project.status === 'devis_refusé' ? 'bi-x-lg' : 'bi-hourglass-split'}`}></i>
                   </div>
-                  <div className={`status-label ${project.status === 'terminé' ? 'status-terminé' : project.status === 'en cours' ? 'status-en-cours' : 'status-attente'}`}>
-                    {project.status}
+                  <div className={`status-label ${project.status === 'terminé' ? 'status-terminé' : project.status === 'en cours' ? 'status-en-cours' : project.status === 'devis_refusé' ? 'status-refusé' : 'status-attente'}`}>
+                    {project.status === 'devis_refusé' ? 'devis refusé' : project.status}
                   </div>
                   <div className="status-date">
                     Mis à jour le {formatDate(project.updatedAt || project.created_at)}
@@ -537,6 +586,61 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
               <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowQuoteModal(false)}>Annuler</button>
                 <button type="button" className="btn btn-gradient-primary" onClick={handleSendQuote}>Envoyer le devis</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Pop-up de feedback (succès / erreur) */}
+      {feedback && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header modal-header-gradient">
+                <h5 className="modal-title">
+                  <i className={`bi ${feedback.type === 'success' ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2`}></i>
+                  {feedback.type === 'success' ? 'Succès' : 'Erreur'}
+                </h5>
+                <button type="button" className="btn-close" onClick={() => setFeedback(null)}></button>
+              </div>
+              <div className="modal-body text-dark text-center py-4">
+                <i className={`bi ${feedback.type === 'success' ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger'} display-4 d-block mb-3`}></i>
+                <p className="mb-0">{feedback.message}</p>
+              </div>
+              <div className="modal-footer justify-content-center">
+                <button type="button" className="btn btn-gradient-primary px-5" onClick={() => setFeedback(null)}>OK</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmation refus de devis */}
+      {showRefuseModal && (
+        <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header modal-header-gradient">
+                <h5 className="modal-title"><i className="bi bi-x-circle me-2"></i>Refuser le devis</h5>
+                <button type="button" className="btn-close" onClick={() => setShowRefuseModal(false)}></button>
+              </div>
+              <div className="modal-body text-dark">
+                <p>Êtes-vous sûr de vouloir refuser le devis de <strong>{project.price} €</strong> ?</p>
+                <p className="text-muted small mb-0">
+                  <i className="bi bi-info-circle me-1"></i>
+                  Le projet sera clôturé. Vous pourrez toujours soumettre une nouvelle demande ou nous contacter pour renégocier.
+                </p>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowRefuseModal(false)} disabled={refusingQuote}>Annuler</button>
+                <button type="button" className="btn btn-danger" onClick={handleRefuseQuote} disabled={refusingQuote}>
+                  {refusingQuote ? (
+                    <><span className="spinner-border spinner-border-sm me-2"></span>Refus en cours…</>
+                  ) : (
+                    <>Refuser le devis</>
+                  )}
+                </button>
               </div>
             </div>
           </div>

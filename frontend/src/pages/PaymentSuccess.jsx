@@ -12,6 +12,11 @@ const PaymentSuccess = () => {
   const [confirmed, setConfirmed] = useState(false);
   const [attempts, setAttempts] = useState(0);
 
+  // Signale à la Navbar d'afficher l'info-bulle "Vos articles sont dans Mes Commandes"
+  useEffect(() => {
+    sessionStorage.setItem('recent_purchase', '1');
+  }, []);
+
   useEffect(() => {
     if (confirmed || attempts >= 15) return;
     if (!session || !sessionId) return;
@@ -48,7 +53,7 @@ const PaymentSuccess = () => {
             ></i>
             <h2 className="fw-bold mb-2">Paiement réussi !</h2>
             <p className="text-muted mb-4">
-              Votre achat est confirmé. Retournez sur la boutique pour télécharger vos fichiers.
+              Votre achat est confirmé. Vos articles sont disponibles dans « Mes Commandes » de votre portail.
             </p>
 
             {sessionId && !confirmed && attempts < 15 && (
@@ -60,7 +65,7 @@ const PaymentSuccess = () => {
             {confirmed && (
               <div className="alert alert-success py-2 small mb-4">
                 <i className="bi bi-check-circle me-1"></i>
-                Votre achat est maintenant disponible dans la boutique.
+                Votre achat est maintenant disponible dans « Mes Commandes ».
               </div>
             )}
             {attempts >= 15 && !confirmed && (

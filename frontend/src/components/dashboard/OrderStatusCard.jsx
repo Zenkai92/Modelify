@@ -42,13 +42,14 @@ const OrderStatusCard = ({ allowedStatuses, title = "Status des commandes" }) =>
     }
 
     return filtered.sort((a, b) => {
-      const priority = { 
-        'devis_envoyé': 1, 
+      const priority = {
+        'devis_envoyé': 1,
         'paiement_attente': 2,
-        'payé': 3, 
-        'en cours': 4, 
-        'en attente': 5, 
-        'terminé': 6 
+        'payé': 3,
+        'en cours': 4,
+        'en attente': 5,
+        'terminé': 6,
+        'devis_refusé': 7
       };
       const pA = priority[a.status] || 10;
       const pB = priority[b.status] || 10;
@@ -132,11 +133,12 @@ const OrderStatusCard = ({ allowedStatuses, title = "Status des commandes" }) =>
                       <span className={`badge rounded-pill ${
                         project.status === 'terminé' ? 'bg-success' : 
                         project.status === 'payé' ? 'bg-success' :
-                        project.status === 'en cours' ? 'bg-primary' : 
+                        project.status === 'en cours' ? 'bg-primary' :
                         (project.status === 'devis_envoyé' || project.status === 'paiement_attente') ? 'bg-info text-dark' :
+                        project.status === 'devis_refusé' ? 'bg-danger' :
                         'bg-warning text-dark'
                       }`}>
-                        {project.status}
+                        {project.status === 'devis_refusé' ? 'devis refusé' : project.status}
                       </span>
                     </td>
                   </tr>

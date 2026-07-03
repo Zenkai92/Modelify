@@ -8,7 +8,6 @@ class UserCreate(BaseModel):
     firstName: Optional[str] = ""
     lastName: Optional[str] = ""
     role: Optional[str] = "user"
-    companyName: Optional[str] = ""
     createdAt: Optional[str] = None
     updateAt: Optional[str] = None
 
@@ -22,4 +21,3 @@ class UserUpdate(BaseModel):
 
     firstName: Optional[str] = None
     lastName: Optional[str] = None
-    companyName: Optional[str] = None

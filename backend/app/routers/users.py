@@ -73,7 +73,7 @@ async def update_current_user_profile(
     payload: UserUpdate, current_user=Depends(get_current_user)
 ):
     """
-    Mettre à jour le profil de l'utilisateur connecté (prénom, nom, société).
+    Mettre à jour le profil de l'utilisateur connecté (prénom, nom).
     L'email et le rôle ne peuvent pas être modifiés par ce endpoint :
     l'email passe par Supabase Auth avec confirmation par email.
     """

@@ -8,6 +8,7 @@ const Navbar = () => {
   const { user, signOut, session } = useAuth();
   const cartCount = useCartStore((state) => state.items.length);
   const [projectCount, setProjectCount] = useState(null);
+  const [showPurchaseHint, setShowPurchaseHint] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -15,6 +16,16 @@ const Navbar = () => {
         fetchProjectCount();
     }
   }, [user, session, location.pathname]); // Refresh on route change to keep it updated
+
+  // Info-bulle post-achat : posée par PaymentSuccess, affichée jusqu'à fermeture
+  useEffect(() => {
+    setShowPurchaseHint(sessionStorage.getItem('recent_purchase') === '1');
+  }, [location.pathname]);
+
+  const dismissPurchaseHint = () => {
+    sessionStorage.removeItem('recent_purchase');
+    setShowPurchaseHint(false);
+  };
 
   const fetchProjectCount = async () => {
       try {
@@ -70,9 +81,20 @@ const Navbar = () => {
                   </span>
                   Mon Panier
                 </Link>
-                <Link className="btn btn-sm fw-bold d-flex align-items-center gap-2 btn-gradient-pill" to="/app">
-                  <i className="bi bi-grid-fill"></i> Mon Portail
-                </Link>
+                <span className="position-relative d-inline-flex">
+                  <Link className="btn btn-sm fw-bold d-flex align-items-center gap-2 btn-gradient-pill" to="/app">
+                    <i className="bi bi-grid-fill"></i> Mon Portail
+                  </Link>
+                  {showPurchaseHint && (
+                    <div className="purchase-hint shadow" role="alert">
+                      <button type="button" className="btn-close purchase-hint-close" aria-label="Fermer" onClick={dismissPurchaseHint}></button>
+                      <Link to="/app?view=completed-projects" className="text-decoration-none text-dark d-block" onClick={dismissPurchaseHint}>
+                        <i className="bi bi-bag-check-fill text-success me-2"></i>
+                        Vos articles sont disponibles dans « Mes Commandes ».
+                      </Link>
+                    </div>
+                  )}
+                </span>
               </li>
             ) : (
               <>
