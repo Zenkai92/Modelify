@@ -4,9 +4,14 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const budgetLabels = {
-  'less_100': 'Moins de 100€',
+  'less_25': 'Moins de 25€',
+  '25_50': '25€ - 50€',
+  '50_100': '50€ - 100€',
   '100_300': '100€ - 300€',
   '300_500': '300€ - 500€',
+  'more_500': 'Plus de 500€',
+  // Anciennes tranches conservées pour les projets existants
+  'less_100': 'Moins de 100€',
   '500_1000': '500€ - 1000€',
   'more_1000': 'Plus de 1000€',
   'discuss': 'À discuter'

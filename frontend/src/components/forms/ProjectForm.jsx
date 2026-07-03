@@ -1,46 +1,31 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Select from 'react-select';
 import { useAuth } from '../../contexts/AuthContext';
 import ModalStatusProject from '../modalStatusProject';
 import Toast from '../Toast';
 import './ProjectForm.css';
 
-const detailLevelOptions = [
-  { value: 'basique', label: <span><strong>Volumique</strong> - Formes simples pour valider les proportions</span> },
-  { value: 'standard', label: <span><strong>Intermédiaire</strong> - Modèle fonctionnel avec détails essentiels</span> },
-  { value: 'hd', label: <span><strong>Avancé</strong> - haute fidélité et détails soignés</span> }
-];
+const TOTAL_STEPS = 3;
+const MAX_IMAGES = 5;
 
 const ProjectForm = ({ initialData = null }) => {
   const { user, session } = useAuth();
   const navigate = useNavigate();
-  // If editing, start at step 2 and assume knowledgeable to show all fields
-  const [step, setStep] = useState(initialData ? 2 : 1);
-  const [userLevel, setUserLevel] = useState(initialData ? 'knowledgeable' : null); // 'beginner' | 'knowledgeable'
+  const [step, setStep] = useState(1);
 
   const [formData, setFormData] = useState(initialData ? {
-    ...initialData,
+    title: initialData.title || '',
+    descriptionClient: initialData.descriptionClient || '',
     format: initialData.format ? (typeof initialData.format === 'string' ? initialData.format.split(',') : initialData.format) : [],
     files: [], // Files cannot be pre-filled
-    dimensionLength: initialData.dimensionLength || '',
-    dimensionWidth: initialData.dimensionWidth || '',
-    dimensionHeight: initialData.dimensionHeight || '',
-    dimensionNoConstraint: initialData.dimensionNoConstraint || false,
+    deadlineType: initialData.deadlineType || '',
     deadlineDate: initialData.deadlineDate || '',
     budget: initialData.budget || ''
   } : {
     title: '',
     descriptionClient: '',
-    use: '',
     format: [],
     files: [],
-    nbElements: 'unique',
-    dimensionLength: '',
-    dimensionWidth: '',
-    dimensionHeight: '',
-    dimensionNoConstraint: false,
-    detailLevel: 'standard',
     deadlineType: '',
     deadlineDate: '',
     budget: ''
@@ -60,22 +45,25 @@ const ProjectForm = ({ initialData = null }) => {
     setToast({ message, type });
   };
 
-  const getUnit = (value) => {
-    const val = parseFloat(value);
-    if (isNaN(val)) return '';
-    if (val >= 0.01 && val < 1) return 'mm';
-    if (val >= 1) return 'cm';
-    return '';
-  };
-
   const handleChange = (e) => {
     const { name, value, type, files, checked } = e.target;
     if (type === 'file') {
-      const fileArray = Array.from(files || []);
+      const newFiles = Array.from(files || []);
+      const combined = [...formData.files];
+      newFiles.forEach(file => {
+        if (!combined.some(f => f.name === file.name && f.size === file.size)) {
+          combined.push(file);
+        }
+      });
+      if (combined.length > MAX_IMAGES) {
+        showToast(`Vous pouvez ajouter au maximum ${MAX_IMAGES} images`);
+      }
       setFormData(prev => ({
         ...prev,
-        [name]: fileArray
+        files: combined.slice(0, MAX_IMAGES)
       }));
+      // Permet de resélectionner les mêmes fichiers plus tard
+      e.target.value = '';
     } else if (type === 'checkbox') {
       if (name === 'format') {
         setFormData(prev => {
@@ -99,33 +87,19 @@ const ProjectForm = ({ initialData = null }) => {
     }
   };
 
-  const handleLevelSelect = (level) => {
-    setUserLevel(level);
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       const formDataToSend = new FormData();
       formDataToSend.append('title', formData.title);
       formDataToSend.append('descriptionClient', formData.descriptionClient);
-      formDataToSend.append('use', formData.use);
       formDataToSend.append('format', formData.format.join(','));
       formDataToSend.append('userId', user.id);
-      formDataToSend.append('nbElements', formData.nbElements);
-      formDataToSend.append('detailLevel', formData.detailLevel);
-      formDataToSend.append('dimensionNoConstraint', formData.dimensionNoConstraint);
       formDataToSend.append('deadlineType', formData.deadlineType);
       if (formData.deadlineDate) formDataToSend.append('deadlineDate', formData.deadlineDate);
       formDataToSend.append('budget', formData.budget);
-      
-      if (!formData.dimensionNoConstraint) {
-          if (formData.dimensionLength) formDataToSend.append('dimensionLength', formData.dimensionLength);
-          if (formData.dimensionWidth) formDataToSend.append('dimensionWidth', formData.dimensionWidth);
-          if (formData.dimensionHeight) formDataToSend.append('dimensionHeight', formData.dimensionHeight);
-      }
 
       if (formData.files && formData.files.length > 0) {
         formData.files.forEach((file) => {
@@ -136,10 +110,10 @@ const ProjectForm = ({ initialData = null }) => {
         console.log('[ProjectForm] aucun fichier dans formData.files');
       }
 
-      const url = initialData 
+      const url = initialData
         ? `${import.meta.env.VITE_API_URL}/api/projects/${initialData.id}`
         : `${import.meta.env.VITE_API_URL}/api/projects`;
-      
+
       const method = initialData ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -170,25 +144,17 @@ const ProjectForm = ({ initialData = null }) => {
         setFormData({
           title: '',
           descriptionClient: '',
-          use: '',
           format: [],
           files: [],
-          nbElements: 'unique',
-          dimensionLength: '',
-          dimensionWidth: '',
-          dimensionHeight: '',
-          dimensionNoConstraint: false,
-          detailLevel: 'standard',
           deadlineType: '',
           deadlineDate: '',
           budget: ''
         });
         setStep(1);
-        setUserLevel(null);
         const fileInput = document.getElementById('files');
         if (fileInput) fileInput.value = '';
       }
-      
+
     } catch (error) {
       console.error('Erreur:', error);
       setModalState({
@@ -198,7 +164,7 @@ const ProjectForm = ({ initialData = null }) => {
         message: error.message || 'Une erreur est survenue. Veuillez réessayer.'
       });
     }
-    
+
     setIsSubmitting(false);
   };
 
@@ -210,121 +176,56 @@ const ProjectForm = ({ initialData = null }) => {
   };
 
   const nextStep = () => {
-    if (step === 1) { // Level Selection
-      if (!userLevel) {
-        showToast("Veuillez sélectionner votre niveau d'expérience");
+    if (step === 1) { // General Info
+      if (!formData.title || !formData.descriptionClient) {
+        showToast("Veuillez remplir tous les champs obligatoires");
         return;
       }
-      
-      if (userLevel === 'beginner') {
-          // Set defaults for beginner
-          setFormData(prev => ({
-              ...prev,
-              nbElements: 'Objet unique monobloc',
-              dimensionNoConstraint: true,
-              format: ['STL'], 
-              detailLevel: 'standard'
-          }));
-      }
-
       setStep(2);
       return;
     }
 
-    if (step === 2) { // General Info
-      if (!formData.title || !formData.descriptionClient || !formData.use) {
-        showToast("Veuillez remplir tous les champs obligatoires");
-        return;
-      }
-      
-      if (userLevel === 'beginner') {
-          setStep(5); // Go to Budget/Deadline
-      } else {
-          setStep(3); // Go to Characteristics
-      }
-      return;
-    }
-
-    if (step === 3) { // Characteristics
-      if (formData.nbElements !== 'Objet unique monobloc' && formData.nbElements !== 'Plusieurs pièces assemblées') {
-        showToast("Veuillez indiquer le nombre d'éléments à modéliser");
-        return;
-      }
-      if (!formData.dimensionNoConstraint && (!formData.dimensionLength || !formData.dimensionWidth || !formData.dimensionHeight)) {
-        showToast("Veuillez renseigner les dimensions ou cocher 'Pas de contrainte dimensionnelle'");
-        return;
-      }
-      setStep(4);
-      return;
-    }
-
-    if (step === 4) { // Formats
+    if (step === 2) { // Formats
       if (formData.format.length === 0) {
         showToast("Veuillez sélectionner au moins un format de fichier");
         return;
       }
-      setStep(5);
-      return;
+      setStep(3);
     }
   };
 
   const prevStep = () => {
-      if (step === 2) {
-          if (initialData) return; // Cannot go back to level selection if editing
-          setStep(1);
-      } else if (step === 3) {
-          setStep(2);
-      } else if (step === 4) {
-          setStep(3);
-      } else if (step === 5) {
-          if (userLevel === 'beginner') {
-              setStep(2);
-          } else {
-              setStep(4);
-          }
-      }
+    if (step > 1) setStep(step - 1);
   };
 
-  const getProgress = () => {
-    if (userLevel === 'beginner') {
-        if (step === 1) return 33;
-        if (step === 2) return 66;
-        if (step === 5) return 100;
-        return 0; // Should not happen
-    } else {
-        return step * 20;
-    }
+  const removeFile = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      files: prev.files.filter((_, i) => i !== index)
+    }));
   };
 
-  const getStepLabel = () => {
-      if (userLevel === 'beginner') {
-          if (step === 1) return "Étape 1 sur 3";
-          if (step === 2) return "Étape 2 sur 3";
-          if (step === 5) return "Étape 3 sur 3";
-      }
-      return `Étape ${step} sur 5`;
-  };
+  const getProgress = () => Math.round((step / TOTAL_STEPS) * 100);
 
   return (
     <>
-      <Toast 
-        message={toast.message} 
-        type={toast.type} 
-        onClose={() => setToast({ ...toast, message: '' })} 
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        onClose={() => setToast({ ...toast, message: '' })}
       />
-      
-      {/* Do not show progress bar description on step 1 if not selected yet, or just show general "Start" */}
+
       <div className="mb-4">
         <div className="d-flex justify-content-between mb-2">
-            <span className="fw-bold step-label">{getStepLabel()}</span>
+            <span className="fw-bold step-label">{`Étape ${step} sur ${TOTAL_STEPS}`}</span>
         </div>
         <div className="progress project-form-progress">
-          <div 
-            className="progress-bar" 
-            role="progressbar" 
+          <div
+            className="progress-bar"
+            role="progressbar"
             style={{ width: `${getProgress()}%` }}
-            aria-valuenow={getProgress()} 
-            aria-valuemin="0" 
+            aria-valuenow={getProgress()}
+            aria-valuemin="0"
             aria-valuemax="100"
           >
           </div>
@@ -333,54 +234,6 @@ const ProjectForm = ({ initialData = null }) => {
 
       <form onSubmit={handleSubmit}>
         {step === 1 && (
-            <>
-                <h3 className="mb-4 text-center">Quel est votre niveau de connaissance en modélisation 3D ?</h3>
-                <div className="row justify-content-center g-4 mb-5">
-                    <div className="col-md-5">
-                        <div 
-                            className={`card h-100 cursor-pointer selection-card ${userLevel === 'beginner' ? 'border-primary bg-light ring-2' : ''}`}
-                            onClick={() => handleLevelSelect('beginner')}
-                            style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                        >
-                            <div className="card-body text-center p-4">
-                                <i className="bi bi-emoji-smile fs-1 text-success mb-3"></i>
-                                <h4 className="card-title">Débutant</h4>
-                                <p className="card-text text-muted">
-                                    Je ne connais pas les détails techniques. Je veux juste expliquer mon idée.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="col-md-5">
-                        <div 
-                            className={`card h-100 cursor-pointer selection-card ${userLevel === 'knowledgeable' ? 'border-primary bg-light ring-2' : ''}`}
-                            onClick={() => handleLevelSelect('knowledgeable')}
-                            style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                        >
-                            <div className="card-body text-center p-4">
-                                <i className="bi bi-gear-wide-connected fs-1 text-primary mb-3"></i>
-                                <h4 className="card-title">Initié / Expert</h4>
-                                <p className="card-text text-muted">
-                                    Je sais spécifier les formats de fichiers, les dimensions et les niveaux de détails.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="text-center">
-                    <button
-                        type="button"
-                        className="btn btn-primary btn-lg"
-                        onClick={nextStep}
-                        disabled={!userLevel}
-                    >
-                        Commencer
-                    </button>
-                </div>
-            </>
-        )}
-
-        {step === 2 && (
           <>
             <h3 className="mb-4">Informations générales</h3>
             <div className="mb-3">
@@ -411,26 +264,6 @@ const ProjectForm = ({ initialData = null }) => {
             </div>
 
             <div className="mb-3">
-              <label htmlFor="use" className="form-label">Usage final du modèle *</label>
-              <select
-                className="form-select"
-                id="use"
-                name="use"
-                value={formData.use}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Sélectionnez un usage...</option>
-                <option value="Personnel">Usage personnel</option>
-                <option value="Éducatif / Pédagogique">Usage éducatif/pédagogique</option>
-                <option value="Créatif / Artistique">Usage créatif/artistique</option>
-                <option value="Événementiel">Usage événementiel</option>
-                <option value="Divertissement">Usage lié aux jeux/divertissement</option>
-                <option value="Commercial">Usage commercial</option>
-              </select>
-            </div>
-
-            <div className="mb-3">
               <label htmlFor="files" className="form-label">Images de référence</label>
               <input
                 type="file"
@@ -442,26 +275,36 @@ const ProjectForm = ({ initialData = null }) => {
                 accept="image/*,.pdf"
               />
               <div className="form-text">
-                Formats acceptés : JPG, PNG, GIF, PDF (max 10MB par fichier)
+                Formats acceptés : JPG, PNG, GIF, PDF (max 10MB par fichier, {MAX_IMAGES} images maximum)
               </div>
               {formData.files.length > 0 && (
                 <div className="mt-2">
+                  <ul className="list-group mb-2">
+                    {formData.files.map((file, index) => (
+                      <li key={`${file.name}-${index}`} className="list-group-item d-flex justify-content-between align-items-center py-2">
+                        <span className="text-truncate me-2">
+                          <i className="bi bi-image me-2"></i>
+                          {file.name}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn btn-sm btn-outline-danger"
+                          onClick={() => removeFile(index)}
+                          aria-label={`Supprimer ${file.name}`}
+                        >
+                          Supprimer
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
                   <small className="text-muted">
-                    {formData.files.length} fichier(s) sélectionné(s)
+                    {formData.files.length}/{MAX_IMAGES} image(s) sélectionnée(s)
                   </small>
                 </div>
               )}
             </div>
 
-            <div className="d-flex justify-content-between mt-5">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={prevStep}
-                disabled={initialData} // Disable back button on first visible step if editing
-              >
-                Précédent
-              </button>
+            <div className="d-flex justify-content-end mt-5">
               <button
                 type="button"
                 className="btn btn-primary btn-lg"
@@ -473,137 +316,11 @@ const ProjectForm = ({ initialData = null }) => {
           </>
         )}
 
-        {step === 3 && (
-          <>
-            <h3 className="mb-4">Caractéristiques du modèle</h3>
-            <div className="mb-3">
-              <label className="form-label">Nombre d'éléments à modéliser</label>
-              <div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="nbElements"
-                    id="nbUnique"
-                    value="Objet unique monobloc"
-                    checked={formData.nbElements === 'Objet unique monobloc'}
-                    onChange={handleChange}
-                  />
-                  <label className="form-check-label" htmlFor="nbUnique">Objet unique monobloc</label>
-                </div>
-                <div className="form-check form-check-inline">
-                  <input
-                    className="form-check-input"
-                    type="radio"
-                    name="nbElements"
-                    id="nbMultiple"
-                    value="Plusieurs pièces assemblées"
-                    checked={formData.nbElements === 'Plusieurs pièces assemblées'}
-                    onChange={handleChange}
-                  />
-                  <label className="form-check-label" htmlFor="nbMultiple">Plusieurs pièces assemblées</label>
-                </div>
-              </div>
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Dimensions réelles souhaitées</label>
-              <div className="form-check mb-2">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  name="dimensionNoConstraint"
-                  id="dimensionNoConstraint"
-                  checked={formData.dimensionNoConstraint}
-                  onChange={handleChange}
-                />
-                <label className="form-check-label" htmlFor="dimensionNoConstraint">
-                  Pas de contrainte dimensionnelle
-                </label>
-              </div>
-              {!formData.dimensionNoConstraint && (
-                <div className="row">
-                  <div className="col-md-4 mb-2 position-relative">
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="dimensionLength"
-                      placeholder="Longueur"
-                      value={formData.dimensionLength}
-                      onChange={handleChange}
-                      step="0.01"
-                    />
-                    <span className="unit-indicator text-muted">{getUnit(formData.dimensionLength)}</span>
-                  </div>
-                  <div className="col-md-4 mb-2 position-relative">
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="dimensionWidth"
-                      placeholder="Largeur"
-                      value={formData.dimensionWidth}
-                      onChange={handleChange}
-                      step="0.01"
-                    />
-                    <span className="unit-indicator text-muted">{getUnit(formData.dimensionWidth)}</span>
-                  </div>
-                  <div className="col-md-4 mb-2 position-relative">
-                    <input
-                      type="number"
-                      className="form-control"
-                      name="dimensionHeight"
-                      placeholder="Hauteur"
-                      value={formData.dimensionHeight}
-                      onChange={handleChange}
-                      step="0.01"
-                    />
-                    <span className="unit-indicator text-muted">{getUnit(formData.dimensionHeight)}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="mb-3">
-              <label className="form-label">Complexité du modèle</label>
-              <Select
-                options={detailLevelOptions}
-                value={detailLevelOptions.find(option => option.value === formData.detailLevel)}
-                onChange={(selectedOption) => {
-                  setFormData(prev => ({
-                    ...prev,
-                    detailLevel: selectedOption.value
-                  }));
-                }}
-                placeholder="Sélectionnez un niveau de détail"
-                className="react-select-container"
-                classNamePrefix="react-select"
-              />
-            </div>
-
-            <div className="d-flex justify-content-between mt-5">
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={prevStep}
-              >
-                Précédent
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary btn-lg"
-                onClick={nextStep}
-              >
-                Suivant
-              </button>
-            </div>
-          </>
-        )}
-
-        {step === 4 && (
+        {step === 2 && (
           <>
             <h3 className="mb-4">Formats de fichiers souhaités</h3>
             <p className="text-muted mb-4">Sélectionnez un ou plusieurs formats de livraison pour votre modèle 3D.</p>
-            
+
             <div className="mb-4">
               <div className="row g-3">
                 {['STL', 'OBJ', 'F3D'].map((format) => (
@@ -650,20 +367,19 @@ const ProjectForm = ({ initialData = null }) => {
           </>
         )}
 
-        {step === 5 && (
+        {step === 3 && (
           <>
             <h3 className="mb-4">Délais et Budget</h3>
-            
+
             <div className="mb-4">
               <label className="form-label fw-bold mb-3">Avez-vous une date limite ? *</label>
               <div className="row g-3">
                 {[
-                  { id: 'deadlineUrgent', value: 'urgent', label: 'Oui, c\'est urgent', sub: '(préciser la date)', icon: 'bi-exclamation-circle text-danger' },
-                  { id: 'deadlineFlexible', value: 'flexible', label: 'Oui, mais flexible', sub: '(préciser la date)', icon: 'bi-calendar-check text-primary' },
+                  { id: 'deadlineFlexible', value: 'flexible', label: 'Oui', sub: '(préciser la date)', icon: 'bi-calendar-check text-primary' },
                   { id: 'deadlineNone', value: 'none', label: 'Non', sub: 'Pas de contrainte', icon: 'bi-infinity text-success' }
                 ].map((option) => (
-                   <div className="col-md-4" key={option.id}>
-                    <div 
+                   <div className="col-md-6" key={option.id}>
+                    <div
                         className={`card h-100 cursor-pointer selection-card ${formData.deadlineType === option.value ? 'border-primary bg-light ring-2' : ''}`}
                         onClick={() => handleChange({ target: { name: 'deadlineType', value: option.value, type: 'radio', checked: true } })}
                         style={{ cursor: 'pointer', transition: 'all 0.2s' }}
@@ -693,7 +409,7 @@ const ProjectForm = ({ initialData = null }) => {
               </div>
             </div>
 
-            {(formData.deadlineType === 'urgent' || formData.deadlineType === 'flexible') && (
+            {formData.deadlineType === 'flexible' && (
               <div className="mb-4 animate-fade-in">
                 <label htmlFor="deadlineDate" className="form-label">Date limite souhaitée</label>
                 <input
@@ -712,15 +428,15 @@ const ProjectForm = ({ initialData = null }) => {
               <label className="form-label fw-bold mb-3">Budget indicatif *</label>
               <div className="row g-3">
               {[
-                { value: 'less_100', label: 'Moins de 100€' },
+                { value: 'less_25', label: 'Moins de 25€' },
+                { value: '25_50', label: '25€ - 50€' },
+                { value: '50_100', label: '50€ - 100€' },
                 { value: '100_300', label: '100€ - 300€' },
                 { value: '300_500', label: '300€ - 500€' },
-                { value: '500_1000', label: '500€ - 1000€' },
-                { value: 'more_1000', label: 'Plus de 1000€' },
-                { value: 'discuss', label: 'À discuter' }
+                { value: 'more_500', label: 'Plus de 500€' }
               ].map((option) => (
                 <div className="col-6 col-md-4" key={option.value}>
-                    <div 
+                    <div
                         className={`card h-100 cursor-pointer selection-card ${formData.budget === option.value ? 'border-primary bg-light' : ''}`}
                         onClick={() => handleChange({ target: { name: 'budget', value: option.value, type: 'radio', checked: true } })}
                         style={{ cursor: 'pointer', transition: 'all 0.2s' }}

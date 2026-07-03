@@ -302,43 +302,7 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
                   <p className="card-text text-muted">{project.descriptionClient}</p>
                 </div>
 
-                <div className="mb-5">
-                  <h5 className="section-title">
-                    <span className="section-icon-badge"><i className="bi bi-bullseye"></i></span>
-                    Usage
-                  </h5>
-                  <p className="card-text text-muted">{project.use}</p>
-                </div>
-
                 <div className="row g-3">
-                  <div className="col-md-6">
-                    <div className="detail-box h-100">
-                      <div className="detail-label">Niveau de détail</div>
-                      <div className="detail-value">{project.detailLevel}</div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="detail-box h-100">
-                      <div className="detail-label">Nombre d'éléments</div>
-                      <div className="detail-value">{project.nbElements}</div>
-                    </div>
-                  </div>
-                  <div className="col-md-6">
-                    <div className="detail-box h-100">
-                      <div className="detail-label">Dimensions</div>
-                      <div className="detail-value">
-                        {project.dimensionNoConstraint ? (
-                          <span className="badge bg-light text-dark border">Aucune contrainte</span>
-                        ) : (
-                          <div className="dimension-grid">
-                            <div className="dimension-box"><div className="dimension-label">L</div><div className="dimension-val">{project.dimensionLength || '-'}</div></div>
-                            <div className="dimension-box"><div className="dimension-label">l</div><div className="dimension-val">{project.dimensionWidth || '-'}</div></div>
-                            <div className="dimension-box"><div className="dimension-label">H</div><div className="dimension-val">{project.dimensionHeight || '-'}</div></div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
                   <div className="col-md-6">
                     <div className="detail-box h-100">
                       <div className="detail-label">Formats de fichiers</div>
@@ -359,8 +323,11 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
                       <div className="detail-value">
                         {(() => {
                           const budgets = {
-                            'less_100': 'Moins de 100€', '100_300': '100€ - 300€',
-                            '300_500': '300€ - 500€', '500_1000': '500€ - 1000€',
+                            'less_25': 'Moins de 25€', '25_50': '25€ - 50€',
+                            '50_100': '50€ - 100€', '100_300': '100€ - 300€',
+                            '300_500': '300€ - 500€', 'more_500': 'Plus de 500€',
+                            // Anciennes tranches conservées pour les projets existants
+                            'less_100': 'Moins de 100€', '500_1000': '500€ - 1000€',
                             'more_1000': 'Plus de 1000€', 'discuss': 'À discuter'
                           };
                           return budgets[project.budget] || project.budget || <span className="badge bg-light text-dark border">Aucune contrainte</span>;

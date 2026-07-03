@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # Configuration des limites de fichiers
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
-MAX_FILES_PER_PROJECT = 10
+MAX_FILES_PER_PROJECT = 5
 
 ALLOWED_MIME_TYPES = [
     "image/jpeg",
@@ -87,14 +87,7 @@ async def get_project_count(current_user=Depends(get_current_user)):
 async def create_project_request(
     title: str = Form(...),
     descriptionClient: str = Form(...),
-    use: str = Form(...),
     format: Optional[str] = Form(None),
-    nbElements: str = Form("unique"),
-    dimensionLength: Optional[float] = Form(None),
-    dimensionWidth: Optional[float] = Form(None),
-    dimensionHeight: Optional[float] = Form(None),
-    dimensionNoConstraint: bool = Form(False),
-    detailLevel: str = Form("standard"),
     deadlineType: Optional[str] = Form(None),
     deadlineDate: Optional[str] = Form(None),
     budget: Optional[str] = Form(None),
@@ -123,15 +116,8 @@ async def create_project_request(
         project_data = {
             "title": title,
             "descriptionClient": descriptionClient,
-            "use": use,
             "userId": current_user.id,
             "format": format,
-            "nbElements": nbElements,
-            "dimensionLength": dimensionLength,
-            "dimensionWidth": dimensionWidth,
-            "dimensionHeight": dimensionHeight,
-            "dimensionNoConstraint": dimensionNoConstraint,
-            "detailLevel": detailLevel,
             "deadlineType": deadlineType,
             "deadlineDate": deadlineDate,
             "budget": budget,
@@ -177,7 +163,9 @@ async def create_project_request(
 
                         file_path = f"{projectId}/{datetime.now(timezone.utc).timestamp()}_{clean_filename}"
 
-                        supabase.storage.from_(
+                        # supabase_admin : le RLS storage bloque l'upload avec la
+                        # clé anon (le backend n'a pas de session utilisateur)
+                        supabase_admin.storage.from_(
                             "project-images"
                         ).upload(file_path, file_content, {"content-type": mime_type})
 
@@ -187,7 +175,7 @@ async def create_project_request(
 
                         # On stocke le chemin relatif (pas l'URL publique) pour
                         # générer des URLs signées fiables à la lecture
-                        supabase.table("ProjectsImages").insert(
+                        supabase_admin.table("ProjectsImages").insert(
                             {
                                 "projectId": projectId,
                                 "fileUrl": file_path,
@@ -706,14 +694,7 @@ async def update_project(
     projectId: str,
     title: Optional[str] = Form(None),
     descriptionClient: Optional[str] = Form(None),
-    use: Optional[str] = Form(None),
     format: Optional[str] = Form(None),
-    nbElements: Optional[str] = Form(None),
-    dimensionLength: Optional[float] = Form(None),
-    dimensionWidth: Optional[float] = Form(None),
-    dimensionHeight: Optional[float] = Form(None),
-    dimensionNoConstraint: Optional[bool] = Form(None),
-    detailLevel: Optional[str] = Form(None),
     deadlineType: Optional[str] = Form(None),
     deadlineDate: Optional[str] = Form(None),
     budget: Optional[str] = Form(None),
@@ -746,22 +727,8 @@ async def update_project(
             update_data["title"] = title
         if descriptionClient is not None:
             update_data["descriptionClient"] = descriptionClient
-        if use is not None:
-            update_data["use"] = use
         if format is not None:
             update_data["format"] = format
-        if nbElements is not None:
-            update_data["nbElements"] = nbElements
-        if dimensionLength is not None:
-            update_data["dimensionLength"] = dimensionLength
-        if dimensionWidth is not None:
-            update_data["dimensionWidth"] = dimensionWidth
-        if dimensionHeight is not None:
-            update_data["dimensionHeight"] = dimensionHeight
-        if dimensionNoConstraint is not None:
-            update_data["dimensionNoConstraint"] = dimensionNoConstraint
-        if detailLevel is not None:
-            update_data["detailLevel"] = detailLevel
         if deadlineType is not None:
             update_data["deadlineType"] = deadlineType
         if deadlineDate is not None:

@@ -58,9 +58,14 @@ const AdminProjectList = ({ statusFilter, title }) => {
 
   const formatBudget = (budget) => {
     switch (budget) {
-      case 'less_100': return 'Moins de 100€';
+      case 'less_25': return 'Moins de 25€';
+      case '25_50': return '25€ - 50€';
+      case '50_100': return '50€ - 100€';
       case '100_300': return '100€ - 300€';
       case '300_500': return '300€ - 500€';
+      case 'more_500': return 'Plus de 500€';
+      // Anciennes tranches conservées pour les projets existants
+      case 'less_100': return 'Moins de 100€';
       case '500_1000': return '500€ - 1000€';
       case 'more_1000': return 'Plus de 1000€';
       case 'discuss': return 'À discuter';

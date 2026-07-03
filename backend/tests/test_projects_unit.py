@@ -66,8 +66,9 @@ class TestProjectsUnit(BaseAsyncTestCase):
         mock_magic.from_buffer.assert_called_once()
 
     @patch("app.routers.projects.validate_mime_type", return_value="image/png")
+    @patch("app.routers.projects.supabase_admin")
     @patch("app.routers.projects.supabase")
-    async def test_create_project_file_validation_success(self, mock_supabase, mock_validate_mime):
+    async def test_create_project_file_validation_success(self, mock_supabase, mock_supabase_admin, mock_validate_mime):
         """Fichier valide → upload effectué"""
         mock_file = AsyncMock(spec=UploadFile)
         mock_file.filename = "test.png"
@@ -87,26 +88,25 @@ class TestProjectsUnit(BaseAsyncTestCase):
             mock_insert_response
         )
 
-        mock_supabase.storage.from_.return_value.upload.return_value = {
+        # Upload storage et insert ProjectsImages passent par le client admin
+        mock_supabase_admin.storage.from_.return_value.upload.return_value = {
             "key": "path/to/file"
         }
-        mock_supabase.storage.from_.return_value.get_public_url.return_value = (
-            "http://url/file.png"
-        )
 
         result = await create_project_request(
             title="Test Project",
             descriptionClient="Desc",
-            use="Perso",
             files=[mock_file],
             current_user=self.mock_user,
         )
 
         self.assertEqual(result["status"], "success")
-        mock_supabase.storage.from_.return_value.upload.assert_called()
+        mock_supabase_admin.storage.from_.return_value.upload.assert_called()
+        mock_supabase_admin.table.assert_called_with("ProjectsImages")
 
+    @patch("app.routers.projects.supabase_admin")
     @patch("app.routers.projects.supabase")
-    async def test_create_project_file_validation_failure(self, mock_supabase):
+    async def test_create_project_file_validation_failure(self, mock_supabase, mock_supabase_admin):
         """Fichier .exe → upload ignoré"""
         mock_file = AsyncMock(spec=UploadFile)
         mock_file.filename = "virus.exe"
@@ -129,13 +129,12 @@ class TestProjectsUnit(BaseAsyncTestCase):
         result = await create_project_request(
             title="Test Project",
             descriptionClient="Desc",
-            use="Perso",
             files=[mock_file],
             current_user=self.mock_user,
         )
 
         self.assertEqual(result["status"], "success")
-        mock_supabase.storage.from_.return_value.upload.assert_not_called()
+        mock_supabase_admin.storage.from_.return_value.upload.assert_not_called()
 
     @patch("app.routers.projects.supabase")
     async def test_create_project_limit_reached(self, mock_supabase):
@@ -151,7 +150,6 @@ class TestProjectsUnit(BaseAsyncTestCase):
             await create_project_request(
                 title="Test Project",
                 descriptionClient="Desc",
-                use="Perso",
                 files=[],
                 current_user=self.mock_user,
             )

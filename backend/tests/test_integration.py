@@ -40,8 +40,9 @@ class TestIntegration(BaseTestCase):
         self.assertIn("database", response.json())
 
     @patch("app.routers.projects.validate_mime_type", return_value="image/jpeg")
+    @patch("app.routers.projects.supabase_admin")
     @patch("app.routers.projects.supabase")
-    def test_create_project_complete_flow(self, mock_supabase, mock_validate_mime):
+    def test_create_project_complete_flow(self, mock_supabase, mock_supabase_admin, mock_validate_mime):
         """POST /api/projects → création complète OK"""
 
         def table_side_effect(table_name):
@@ -60,24 +61,21 @@ class TestIntegration(BaseTestCase):
                 mock_count_result.count = 0
                 mock_select_chain.execute.return_value = mock_count_result
 
-            elif table_name == "ProjectsImages":
-                mock_t.insert.return_value.execute.return_value.data = [{"id": 456}]
             return mock_t
 
         mock_supabase.table.side_effect = table_side_effect
 
+        # L'upload storage et l'insert ProjectsImages passent par le client admin
+        mock_supabase_admin.table.return_value.insert.return_value.execute.return_value.data = [{"id": 456}]
         mock_storage_response = MagicMock()
-        mock_bucket = mock_supabase.storage.from_.return_value
+        mock_bucket = mock_supabase_admin.storage.from_.return_value
         mock_bucket.upload.return_value = mock_storage_response
 
         files = [("files", ("test_image.jpg", b"fake image content", "image/jpeg"))]
         data = {
             "title": "Projet Test Intégration",
             "descriptionClient": "Description du projet de test",
-            "use": "Vérifier le mocking",
             "userId": "user-test-uuid",
-            "nbElements": "1",
-            "detailLevel": "high",
         }
 
         response = self.client.post("/api/projects", data=data, files=files)
@@ -89,12 +87,13 @@ class TestIntegration(BaseTestCase):
         self.assertEqual(json_resp["projectId"], 123)
 
         mock_supabase.table.assert_any_call("Projects")
-        mock_supabase.storage.from_.assert_called_with("project-images")
+        mock_supabase_admin.storage.from_.assert_called_with("project-images")
+        mock_supabase_admin.table.assert_called_with("ProjectsImages")
 
     @patch("app.routers.projects.supabase")
     def test_create_project_validation_error(self, mock_supabase):
         """Champs manquants → HTTP 422"""
-        # Données incomplètes (manque 'userId', 'use', etc.)
+        # Données incomplètes (manque 'descriptionClient', etc.)
         data = {
             "title": "Projet Incomplet",
             # "descriptionClient": "Manquante",
@@ -119,7 +118,6 @@ class TestIntegration(BaseTestCase):
         data = {
             "title": "Projet Crash DB",
             "descriptionClient": "Test crash",
-            "use": "Crash",
             "userId": "user-123",
         }
 

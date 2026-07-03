@@ -3,17 +3,6 @@ from typing import Optional, List
 from enum import Enum
 
 
-class NbElementsEnum(str, Enum):
-    unique = "unique"
-    multiple = "multiple"
-
-
-class DetailLevelEnum(str, Enum):
-    basique = "basique"
-    standard = "standard"
-    hd = "hd"
-
-
 class DeadlineTypeEnum(str, Enum):
     none = "none"
     flexible = "flexible"
@@ -21,12 +10,12 @@ class DeadlineTypeEnum(str, Enum):
 
 
 class BudgetEnum(str, Enum):
-    less_100 = "less_100"
+    less_25 = "less_25"
+    budget_25_50 = "25_50"
+    budget_50_100 = "50_100"
     budget_100_300 = "100_300"
     budget_300_500 = "300_500"
-    budget_500_1000 = "500_1000"
-    more_1000 = "more_1000"
-    discuss = "discuss"
+    more_500 = "more_500"
 
 
 class ProjectStatusEnum(str, Enum):
@@ -56,14 +45,7 @@ class ProjectBase(BaseModel):
     """Schéma de base pour les projets"""
     title: str = Field(..., min_length=3, max_length=200, description="Titre du projet")
     descriptionClient: str = Field(..., min_length=10, max_length=5000, description="Description du projet")
-    use: str = Field(..., min_length=3, max_length=500, description="Usage prévu du modèle")
     format: Optional[str] = Field(None, max_length=200, description="Formats de fichier souhaités")
-    nbElements: str = Field(default="unique", description="Nombre d'éléments")
-    dimensionLength: Optional[float] = Field(None, ge=0, le=10000, description="Longueur en cm")
-    dimensionWidth: Optional[float] = Field(None, ge=0, le=10000, description="Largeur en cm")
-    dimensionHeight: Optional[float] = Field(None, ge=0, le=10000, description="Hauteur en cm")
-    dimensionNoConstraint: bool = Field(default=False)
-    detailLevel: str = Field(default="standard", description="Niveau de détail")
     deadlineType: Optional[str] = Field(None, description="Type de délai")
     deadlineDate: Optional[str] = Field(None, description="Date limite")
     budget: Optional[str] = Field(None, description="Budget indicatif")
@@ -96,14 +78,7 @@ class ProjectUpdate(BaseModel):
     """Schéma pour la mise à jour d'un projet (tous les champs optionnels)"""
     title: Optional[str] = Field(None, min_length=3, max_length=200)
     descriptionClient: Optional[str] = Field(None, min_length=10, max_length=5000)
-    use: Optional[str] = Field(None, min_length=3, max_length=500)
     format: Optional[str] = Field(None, max_length=200)
-    nbElements: Optional[str] = None
-    dimensionLength: Optional[float] = Field(None, ge=0, le=10000)
-    dimensionWidth: Optional[float] = Field(None, ge=0, le=10000)
-    dimensionHeight: Optional[float] = Field(None, ge=0, le=10000)
-    dimensionNoConstraint: Optional[bool] = None
-    detailLevel: Optional[str] = None
     deadlineType: Optional[str] = None
     deadlineDate: Optional[str] = None
     budget: Optional[str] = None

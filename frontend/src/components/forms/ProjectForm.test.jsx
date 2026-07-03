@@ -17,24 +17,54 @@ vi.mock('../../contexts/AuthContext', () => ({
 describe('Composant ProjectForm', () => {
   beforeEach(() => {
     vi.clearAllMocks()
-    
+
     global.fetch.mockResolvedValue({
       ok: true,
       json: async () => ({ projectId: 999 })
     })
   })
 
-  it('affiche correctement le formulaire (étape 1: Niveau)', () => {
+  it('affiche correctement le formulaire (étape 1: Informations générales)', () => {
     render(
       <MemoryRouter>
         <ProjectForm />
       </MemoryRouter>
     )
-    expect(screen.getByText(/Quel est votre niveau de connaissance en modélisation 3D/i)).toBeInTheDocument()
-    expect(screen.getByText(/Débutant/i)).toBeInTheDocument()
-    expect(screen.getByText(/Initié \/ Expert/i)).toBeInTheDocument()
-    // Le bouton commencer doit être présent (initialement disabled)
-    expect(screen.getByText(/Commencer/i)).toBeInTheDocument()
+    expect(screen.getByText(/Informations générales/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Titre du projet/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Description détaillée/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/Images de référence/i)).toBeInTheDocument()
+    expect(screen.getByText(/Étape 1 sur 3/i)).toBeInTheDocument()
+  })
+
+  it('cumule les images de référence et limite à 5 maximum', async () => {
+    render(
+      <MemoryRouter>
+        <ProjectForm />
+      </MemoryRouter>
+    )
+
+    const input = screen.getByLabelText(/Images de référence/i)
+    const makeFile = (name) => new File(['contenu'], name, { type: 'image/png' })
+
+    // Première sélection : 3 images
+    fireEvent.change(input, {
+      target: { files: [makeFile('a.png'), makeFile('b.png'), makeFile('c.png')] }
+    })
+    expect(screen.getByText('3/5 image(s) sélectionnée(s)')).toBeInTheDocument()
+
+    // Deuxième sélection : 3 de plus → limite dépassée, plafonné à 5
+    fireEvent.change(input, {
+      target: { files: [makeFile('d.png'), makeFile('e.png'), makeFile('f.png')] }
+    })
+    expect(await screen.findByText(/Vous pouvez ajouter au maximum 5 images/i)).toBeInTheDocument()
+    expect(screen.getByText('5/5 image(s) sélectionnée(s)')).toBeInTheDocument()
+    expect(screen.queryByText('f.png')).not.toBeInTheDocument()
+
+    // Suppression d'une image de la liste
+    fireEvent.click(screen.getByLabelText('Supprimer a.png'))
+    expect(screen.getByText('4/5 image(s) sélectionnée(s)')).toBeInTheDocument()
+    expect(screen.queryByText('a.png')).not.toBeInTheDocument()
   })
 
   it('parcourt toutes les étapes et envoie les données', async () => {
@@ -44,18 +74,7 @@ describe('Composant ProjectForm', () => {
       </MemoryRouter>
     )
 
-    // --- Étape 1 : Sélection du niveau ---
-    // On clique sur le card "Initié / Expert"
-    fireEvent.click(screen.getByText(/Initié \/ Expert/i))
-    
-    // Le bouton commencer s'active, on clique dessus
-    fireEvent.click(screen.getByText(/Commencer/i))
-
-    // --- Étape 2 : Infos générales ---
-    await waitFor(() => {
-      expect(screen.getByLabelText(/Titre du projet/i)).toBeInTheDocument()
-    })
-
+    // --- Étape 1 : Infos générales ---
     fireEvent.change(screen.getByLabelText(/Titre du projet/i), {
       target: { value: 'Mon Super Projet 3D' }
     })
@@ -64,23 +83,9 @@ describe('Composant ProjectForm', () => {
       target: { value: 'Je veux une modélisation de voiture.' }
     })
 
-    fireEvent.change(screen.getByLabelText(/Usage final du modèle/i), {
-      target: { value: 'Personnel' }
-    })
-
     fireEvent.click(screen.getByText(/Suivant/i))
 
-    // --- Étape 3 : Caractéristiques ---
-    await waitFor(() => {
-      expect(screen.getByText(/Caractéristiques du modèle/i)).toBeInTheDocument()
-    })
-
-    fireEvent.click(screen.getByLabelText(/Objet unique monobloc/i))
-    fireEvent.click(screen.getByLabelText(/Pas de contrainte dimensionnelle/i))
-
-    fireEvent.click(screen.getByText(/Suivant/i))
-
-    // --- Étape 4 : Formats ---
+    // --- Étape 2 : Formats ---
     await waitFor(() => {
       expect(screen.getByText(/Formats de fichiers souhaités/i)).toBeInTheDocument()
     })
@@ -89,16 +94,16 @@ describe('Composant ProjectForm', () => {
 
     fireEvent.click(screen.getByText(/Suivant/i))
 
-    // --- Étape 5 : Délais et Budget ---
+    // --- Étape 3 : Délais et Budget ---
     await waitFor(() => {
       expect(screen.getByText(/Délais et Budget/i)).toBeInTheDocument()
     })
 
     // Sélection du délai "Non" qui contient le texte "Pas de contrainte"
     fireEvent.click(screen.getByText(/Pas de contrainte/i))
-    
-    // Sélection du budget "Moins de 100€"
-    fireEvent.click(screen.getByText(/Moins de 100€/i))
+
+    // Sélection du budget "Moins de 25€"
+    fireEvent.click(screen.getByText(/Moins de 25€/i))
 
     const submitButton = screen.getByText(/Soumettre la demande/i)
     fireEvent.click(submitButton)
