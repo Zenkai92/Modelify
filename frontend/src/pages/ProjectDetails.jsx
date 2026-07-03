@@ -333,7 +333,7 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
               <div className="alert alert-secondary d-flex align-items-center gap-3 mb-4 shadow-sm border-0 rounded-3">
                 <i className="bi bi-x-circle-fill fs-3 text-danger"></i>
                 <div>
-                  <strong>Devis refusé.</strong> Vous avez refusé le devis de {project.price} €. Ce projet est clôturé, mais nous pouvons vous proposer un nouveau devis : n'hésitez pas à nous contacter.
+                  <strong>Devis refusé.</strong> Vous avez refusé le devis de {project.price} €. Nous pouvons vous proposer un nouveau devis : n'hésitez pas à nous contacter.
                 </div>
               </div>
             )}
@@ -629,7 +629,7 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
                 <p>Êtes-vous sûr de vouloir refuser le devis de <strong>{project.price} €</strong> ?</p>
                 <p className="text-muted small mb-0">
                   <i className="bi bi-info-circle me-1"></i>
-                  Le projet sera clôturé. Vous pourrez toujours soumettre une nouvelle demande ou nous contacter pour renégocier.
+                  Votre projet sera réévalué et une nouvelle estimation vous sera envoyée.
                 </p>
               </div>
               <div className="modal-footer">
