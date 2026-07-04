@@ -34,6 +34,11 @@ class TestUsersUnit(BaseAsyncTestCase):
             lastName="Man",
         )
 
+        # Le compte Supabase Auth existe et l'email correspond
+        mock_auth_user = MagicMock()
+        mock_auth_user.user.email = "hacker@example.com"
+        mock_supabase.auth.admin.get_user_by_id.return_value = mock_auth_user
+
         mock_response = MagicMock()
         mock_response.data = [
             {"id": "123", "email": "hacker@example.com", "role": "user"}
@@ -48,6 +53,46 @@ class TestUsersUnit(BaseAsyncTestCase):
         inserted_data = args[0]
         self.assertEqual(inserted_data["role"], "user")
         self.assertEqual(response["user"]["role"], "user")
+
+    @patch("app.routers.users.supabase_admin")
+    async def test_create_user_rejects_unknown_auth_id(self, mock_supabase):
+        """Id sans compte Supabase Auth → HTTP 401 (anti-spam de la table Users)"""
+        user_input = UserCreate(
+            id="fake_id_123",
+            email="spam@example.com",
+            firstName="Spam",
+            lastName="Bot",
+        )
+
+        mock_supabase.auth.admin.get_user_by_id.side_effect = Exception(
+            "User not found"
+        )
+
+        with self.assertRaises(HTTPException) as cm:
+            await create_user(user_input)
+
+        self.assertEqual(cm.exception.status_code, status.HTTP_401_UNAUTHORIZED)
+        mock_supabase.table.return_value.insert.assert_not_called()
+
+    @patch("app.routers.users.supabase_admin")
+    async def test_create_user_rejects_email_mismatch(self, mock_supabase):
+        """Email différent de celui du compte auth → HTTP 403"""
+        user_input = UserCreate(
+            id="user_123",
+            email="autre@example.com",
+            firstName="Jean",
+            lastName="Dupont",
+        )
+
+        mock_auth_user = MagicMock()
+        mock_auth_user.user.email = "vrai@example.com"
+        mock_supabase.auth.admin.get_user_by_id.return_value = mock_auth_user
+
+        with self.assertRaises(HTTPException) as cm:
+            await create_user(user_input)
+
+        self.assertEqual(cm.exception.status_code, status.HTTP_403_FORBIDDEN)
+        mock_supabase.table.return_value.insert.assert_not_called()
 
     @patch("app.routers.users.supabase_admin")
     async def test_get_users_access_control_admin(self, mock_supabase):

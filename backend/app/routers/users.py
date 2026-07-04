@@ -161,6 +161,29 @@ async def create_user(user: UserCreate):
     if user_data.get("role") != "user":
         user_data["role"] = "user"
 
+    # Sécurité : cet endpoint est public (appelé juste après l'inscription,
+    # avant confirmation de l'email, donc sans session). On vérifie que l'id
+    # correspond à un compte Supabase Auth réel et que l'email concorde,
+    # pour empêcher la création de profils arbitraires dans la table Users.
+    try:
+        auth_user = supabase_admin.auth.admin.get_user_by_id(user_data["id"])
+    except Exception as e:
+        logger.warning(f"POST /users : compte auth introuvable pour {user_data['id']}: {e}")
+        auth_user = None
+
+    if not auth_user or not getattr(auth_user, "user", None):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Aucun compte authentifié ne correspond à cet identifiant",
+        )
+
+    auth_email = (auth_user.user.email or "").lower()
+    if auth_email != user_data["email"].lower():
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="L'email fourni ne correspond pas au compte authentifié",
+        )
+
     # Ensure dates are set if not provided
     if not user_data.get("createdAt"):
         user_data["createdAt"] = datetime.now(timezone.utc).isoformat()

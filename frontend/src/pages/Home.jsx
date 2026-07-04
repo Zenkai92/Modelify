@@ -6,6 +6,7 @@ import AddProductModal from '../components/AddProductModal';
 import EditProductModal from '../components/EditProductModal';
 import ProductDetailModal from '../components/ProductDetailModal';
 import { useAuth } from '../contexts/AuthContext';
+import { apiFetch } from '../lib/api';
 import './Home.css';
 
 const HOW_IT_WORKS = [
@@ -68,7 +69,7 @@ const Home = () => {
   const fetchProducts = useCallback(async () => {
     setLoadingProducts(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products`);
+      const response = await apiFetch('/api/products');
       const data = await response.json();
       console.log('GET /api/products -', response.status, data);
       if (response.ok) {

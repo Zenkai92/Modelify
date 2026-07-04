@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { apiFetch } from '../../lib/api';
 import Toast from '../Toast';
 import './PersonalInfoCard.css';
 
@@ -106,12 +107,10 @@ const PersonalInfoCard = () => {
       }
 
       // 1. Mise à jour des informations de profil dans la table Users
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
+      const response = await apiFetch('/api/users/me', {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
+        token: accessToken,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstName, lastName }),
       });
 

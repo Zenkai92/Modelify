@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import UserProjectsModal from './UserProjectsModal';
+import { apiFetch } from '../../lib/api';
 
 const AdminUserList = () => {
   const [users, setUsers] = useState([]);
@@ -15,13 +16,7 @@ const AdminUserList = () => {
       try {
         if (!session?.access_token) return;
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await apiFetch('/api/users', { token: session.access_token });
 
         if (!response.ok) {
           if (response.status === 403) {

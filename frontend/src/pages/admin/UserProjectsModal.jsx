@@ -2,20 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-
-const budgetLabels = {
-  'less_25': 'Moins de 25€',
-  '25_50': '25€ - 50€',
-  '50_100': '50€ - 100€',
-  '100_300': '100€ - 300€',
-  '300_500': '300€ - 500€',
-  'more_500': 'Plus de 500€',
-  // Anciennes tranches conservées pour les projets existants
-  'less_100': 'Moins de 100€',
-  '500_1000': '500€ - 1000€',
-  'more_1000': 'Plus de 1000€',
-  'discuss': 'À discuter'
-};
+import { apiFetch } from '../../lib/api';
+import { budgetLabel, statusBadgeClass, statusLabel } from '../../constants/projectStatus';
 
 const UserProjectsModal = ({ show, onClose, user }) => {
   const [projects, setProjects] = useState([]);
@@ -39,10 +27,8 @@ const UserProjectsModal = ({ show, onClose, user }) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects?userId=${user.id}`, {
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
+      const response = await apiFetch(`/api/projects?userId=${user.id}&limit=100`, {
+        token: session.access_token,
       });
 
       if (!response.ok) {
@@ -107,15 +93,11 @@ const UserProjectsModal = ({ show, onClose, user }) => {
                         <td>{project.title}</td>
                         <td>{new Date(project.created_at).toLocaleDateString()}</td>
                         <td>
-                          <span className={`badge ${
-                            project.status === 'terminé' ? 'bg-success' :
-                            project.status === 'en cours' ? 'bg-primary' :
-                            'bg-warning text-dark'
-                          }`}>
-                            {project.status}
+                          <span className={`badge ${statusBadgeClass(project.status)}`}>
+                            {statusLabel(project.status)}
                           </span>
                         </td>
-                        <td>{budgetLabels[project.budget] || project.budget || '-'}</td>
+                        <td>{budgetLabel(project.budget) || '-'}</td>
                       </tr>
                     ))}
                   </tbody>

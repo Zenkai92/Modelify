@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCartStore } from '../store/cartStore';
+import { apiFetch } from '../lib/api';
 
 const Cart = () => {
   const { user, session } = useAuth();
@@ -17,9 +18,7 @@ const Cart = () => {
       setPurchasedIds([]);
       return;
     }
-    fetch(`${import.meta.env.VITE_API_URL}/api/cart/purchased-ids`, {
-      headers: { Authorization: `Bearer ${session.access_token}` },
-    })
+    apiFetch('/api/cart/purchased-ids', { token: session.access_token })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setPurchasedIds(data?.product_ids || []))
       .catch(() => {});
@@ -36,12 +35,10 @@ const Cart = () => {
     setError('');
     setCheckoutLoading(true);
     try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/cart/checkout`, {
+      const res = await apiFetch('/api/cart/checkout', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        token: session.access_token,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ product_ids: purchasableItems.map((item) => item.id) }),
       });
       const data = await res.json();

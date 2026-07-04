@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
+import { apiFetch } from '../../lib/api';
 
 const AuthCallback = () => {
   const [loading, setLoading] = useState(true);
@@ -73,10 +74,7 @@ const AuthCallback = () => {
 async function ensureOAuthProfileExists(user, token) {
   try {
     // Vérifier si le profil existe déjà
-    const checkResponse = await fetch(
-      `${import.meta.env.VITE_API_URL}/api/users/me`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
+    const checkResponse = await apiFetch('/api/users/me', { token });
 
     if (!checkResponse.ok) return;
 
@@ -107,7 +105,7 @@ async function ensureOAuthProfileExists(user, token) {
       updateAt: new Date().toISOString(),
     };
 
-    await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
+    await apiFetch('/api/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profileData),

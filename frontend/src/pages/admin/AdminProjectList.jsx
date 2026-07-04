@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { apiFetch } from '../../lib/api';
+import { budgetLabel, statusBadgeClass, statusLabel } from '../../constants/projectStatus';
 
 const AdminProjectList = ({ statusFilter, title }) => {
   const [projects, setProjects] = useState([]);
@@ -12,18 +14,27 @@ const AdminProjectList = ({ statusFilter, title }) => {
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects`, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-        });
+        // L'API pagine (100 max par page) : on récupère toutes les pages
+        // pour ne perdre aucun projet lors du filtrage par statut côté client
+        let allProjects = [];
+        let page = 1;
+        let totalPages = 1;
+        do {
+          const response = await apiFetch(`/api/projects?page=${page}&limit=100`, {
+            token: session.access_token,
+          });
 
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des projets');
-        }
+          if (!response.ok) {
+            throw new Error('Erreur lors de la récupération des projets');
+          }
 
-        const data = await response.json();
-        let filteredProjects = data.projects || [];
+          const data = await response.json();
+          allProjects = allProjects.concat(data.projects || []);
+          totalPages = data.total_pages || 1;
+          page += 1;
+        } while (page <= totalPages);
+
+        let filteredProjects = allProjects;
         
         if (statusFilter) {
           if (Array.isArray(statusFilter)) {
@@ -54,36 +65,6 @@ const AdminProjectList = ({ statusFilter, title }) => {
 
   const handleProjectClick = (projectId) => {
     navigate(`/app?view=project-details&id=${projectId}`);
-  };
-
-  const formatBudget = (budget) => {
-    switch (budget) {
-      case 'less_25': return 'Moins de 25€';
-      case '25_50': return '25€ - 50€';
-      case '50_100': return '50€ - 100€';
-      case '100_300': return '100€ - 300€';
-      case '300_500': return '300€ - 500€';
-      case 'more_500': return 'Plus de 500€';
-      // Anciennes tranches conservées pour les projets existants
-      case 'less_100': return 'Moins de 100€';
-      case '500_1000': return '500€ - 1000€';
-      case 'more_1000': return 'Plus de 1000€';
-      case 'discuss': return 'À discuter';
-      default: return budget || '-';
-    }
-  };
-
-  const getStatusBadgeClass = (status) => {
-    switch (status) {
-      case 'en attente': return 'bg-warning text-dark';
-      case 'devis_envoyé': return 'bg-info text-dark';
-      case 'devis_refusé': return 'bg-danger';
-      case 'paiement_attente': return 'bg-info text-dark';
-      case 'payé': return 'bg-success';
-      case 'en cours': return 'bg-primary';
-      case 'terminé': return 'bg-success';
-      default: return 'bg-secondary';
-    }
   };
 
   if (loading) return <div className="text-center py-5"><div className="spinner-border text-primary"></div></div>;
@@ -126,9 +107,9 @@ const AdminProjectList = ({ statusFilter, title }) => {
                   </td>
 
                   <td><span className={`badge ${
-                        project.Users.role === 'admin' ? 'bg-danger' : 'bg-secondary'
+                        project.Users?.role === 'admin' ? 'bg-danger' : 'bg-secondary'
                       }`}>
-                        {project.Users.role}
+                        {project.Users?.role || '-'}
                       </span>
                   </td>
 
@@ -136,11 +117,11 @@ const AdminProjectList = ({ statusFilter, title }) => {
 
                   <td>{new Date(project.created_at).toLocaleDateString()}</td>
                   <td>
-                    <span className={`badge rounded-pill ${getStatusBadgeClass(project.status)}`}>
-                      {project.status}
+                    <span className={`badge rounded-pill ${statusBadgeClass(project.status)}`}>
+                      {statusLabel(project.status)}
                     </span>
                   </td>
-                  <td className="pe-4">{formatBudget(project.budget)}</td>
+                  <td className="pe-4">{budgetLabel(project.budget) || '-'}</td>
                 </tr>
               ))}
               {projects.length === 0 && (

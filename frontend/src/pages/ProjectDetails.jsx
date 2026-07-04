@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { apiFetch } from '../lib/api';
+import { budgetLabel, statusLabel } from '../constants/projectStatus';
 import './ProjectDetails.css';
 
 const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) => {
@@ -27,9 +29,7 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
   const fetchProject = async () => {
     if (!session) return;
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}`, {
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
-      });
+      const response = await apiFetch(`/api/projects/${projectId}`, { token: session.access_token });
       if (!response.ok) throw new Error('Erreur lors de la récupération du projet');
       const data = await response.json();
       setProject(data);
@@ -52,9 +52,9 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
     const verifyPayment = async () => {
       setVerifyingPayment(true);
       try {
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/projects/${projectId}/verify-payment?session_id=${stripeSessionId}`,
-          { headers: { 'Authorization': `Bearer ${session.access_token}` } }
+        const response = await apiFetch(
+          `/api/projects/${projectId}/verify-payment?session_id=${stripeSessionId}`,
+          { token: session.access_token }
         );
         if (response.ok) {
           const data = await response.json();
@@ -79,9 +79,9 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
   const confirmStatusChange = async () => {
     if (!pendingStatus) return;
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/projects/${projectId}/status?status=${pendingStatus}`,
-        { method: 'PUT', headers: { 'Authorization': `Bearer ${session.access_token}` } }
+      const response = await apiFetch(
+        `/api/projects/${projectId}/status?status=${pendingStatus}`,
+        { method: 'PUT', token: session.access_token }
       );
       if (!response.ok) throw new Error('Erreur lors de la mise à jour du statut');
       const data = await response.json();
@@ -101,9 +101,10 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
       return;
     }
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}/quote`, {
+      const response = await apiFetch(`/api/projects/${projectId}/quote`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+        token: session.access_token,
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ price: parseFloat(quotePrice) })
       });
       if (!response.ok) throw new Error("Erreur lors de l'envoi du devis");
@@ -123,9 +124,9 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
 
   const handlePayment = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}/pay`, {
+      const response = await apiFetch(`/api/projects/${projectId}/pay`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
+        token: session.access_token
       });
       if (!response.ok) throw new Error("Erreur lors de l'initialisation du paiement");
       const data = await response.json();
@@ -140,9 +141,9 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
   const handleRefuseQuote = async () => {
     setRefusingQuote(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}/quote/refuse`, {
+      const response = await apiFetch(`/api/projects/${projectId}/quote/refuse`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${session.access_token}` }
+        token: session.access_token
       });
       if (!response.ok) throw new Error('Erreur lors du refus du devis');
       const data = await response.json();
@@ -168,9 +169,9 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
     try {
       const formData = new FormData();
       deliverableFiles.forEach(f => formData.append('files', f));
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}/files`, {
+      const response = await apiFetch(`/api/projects/${projectId}/files`, {
         method: 'POST',
-        headers: { 'Authorization': `Bearer ${session.access_token}` },
+        token: session.access_token,
         body: formData,
       });
       if (!response.ok) throw new Error("Erreur lors de l'upload des livrables");
@@ -370,17 +371,7 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
                     <div className="detail-box h-100">
                       <div className="detail-label">Budget indicatif</div>
                       <div className="detail-value">
-                        {(() => {
-                          const budgets = {
-                            'less_25': 'Moins de 25€', '25_50': '25€ - 50€',
-                            '50_100': '50€ - 100€', '100_300': '100€ - 300€',
-                            '300_500': '300€ - 500€', 'more_500': 'Plus de 500€',
-                            // Anciennes tranches conservées pour les projets existants
-                            'less_100': 'Moins de 100€', '500_1000': '500€ - 1000€',
-                            'more_1000': 'Plus de 1000€', 'discuss': 'À discuter'
-                          };
-                          return budgets[project.budget] || project.budget || <span className="badge bg-light text-dark border">Aucune contrainte</span>;
-                        })()}
+                        {budgetLabel(project.budget) || <span className="badge bg-light text-dark border">Aucune contrainte</span>}
                       </div>
                     </div>
                   </div>
@@ -416,7 +407,7 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
                     <i className={`bi ${project.status === 'terminé' ? 'bi-check-lg' : project.status === 'en cours' ? 'bi-gear-fill' : project.status === 'devis_refusé' ? 'bi-x-lg' : 'bi-hourglass-split'}`}></i>
                   </div>
                   <div className={`status-label ${project.status === 'terminé' ? 'status-terminé' : project.status === 'en cours' ? 'status-en-cours' : project.status === 'devis_refusé' ? 'status-refusé' : 'status-attente'}`}>
-                    {project.status === 'devis_refusé' ? 'devis refusé' : project.status}
+                    {statusLabel(project.status)}
                   </div>
                   <div className="status-date">
                     Mis à jour le {formatDate(project.updatedAt || project.created_at)}

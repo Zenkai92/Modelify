@@ -5,17 +5,10 @@ import { useCartStore } from '../store/cartStore';
 import './Navbar.css';
 
 const Navbar = () => {
-  const { user, signOut, session } = useAuth();
+  const { user } = useAuth();
   const cartCount = useCartStore((state) => state.items.length);
-  const [projectCount, setProjectCount] = useState(null);
   const [showPurchaseHint, setShowPurchaseHint] = useState(false);
   const location = useLocation();
-
-  useEffect(() => {
-    if (user && session) {
-        fetchProjectCount();
-    }
-  }, [user, session, location.pathname]); // Refresh on route change to keep it updated
 
   // Info-bulle post-achat : posée par PaymentSuccess, affichée jusqu'à fermeture
   useEffect(() => {
@@ -25,22 +18,6 @@ const Navbar = () => {
   const dismissPurchaseHint = () => {
     sessionStorage.removeItem('recent_purchase');
     setShowPurchaseHint(false);
-  };
-
-  const fetchProjectCount = async () => {
-      try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/count`, {
-              headers: {
-                  'Authorization': `Bearer ${session.access_token}`
-              }
-          });
-          if (response.ok) {
-              const data = await response.json();
-              setProjectCount(data);
-          }
-      } catch (error) {
-          console.error("Failed to fetch project count", error);
-      }
   };
 
   return (

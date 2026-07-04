@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiFetch } from '../lib/api';
 
 const OVERVIEW_EXTENSIONS = ['.stl', '.obj', '.3mf', '.gltf', '.glb'];
 
@@ -113,9 +114,9 @@ const AddProductModal = ({ open, onClose, onProductAdded }) => {
         formData.append('download_files', downloadFiles[fmt]);
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products`, {
+      const response = await apiFetch('/api/products', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        token: session?.access_token,
         body: formData,
       });
 

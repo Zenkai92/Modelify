@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { apiFetch } from '../lib/api';
 
 const OVERVIEW_EXTENSIONS = ['.stl', '.obj', '.3mf', '.gltf', '.glb'];
 
@@ -123,9 +124,9 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
         formData.append('download_files', downloadFiles[fmt]);
       });
 
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${product.id}`, {
+      const response = await apiFetch(`/api/products/${product.id}`, {
         method: 'PUT',
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        token: session?.access_token,
         body: formData,
       });
 
@@ -148,9 +149,9 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
     setDeleting(true);
     setError('');
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/products/${product.id}`, {
+      const response = await apiFetch(`/api/products/${product.id}`, {
         method: 'DELETE',
-        headers: { Authorization: `Bearer ${session?.access_token}` },
+        token: session?.access_token,
       });
       if (!response.ok) {
         const data = await response.json();

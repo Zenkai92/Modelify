@@ -55,7 +55,7 @@ class TestIntegration(BaseTestCase):
                 mock_select_chain = MagicMock()
                 mock_t.select.return_value = mock_select_chain
                 mock_select_chain.eq.return_value = mock_select_chain
-                mock_select_chain.neq.return_value = mock_select_chain
+                mock_select_chain.not_.in_.return_value = mock_select_chain
 
                 mock_count_result = MagicMock()
                 mock_count_result.count = 0
@@ -173,27 +173,22 @@ class TestIntegration(BaseTestCase):
         self.assertIn("limit", json_resp)
         self.assertIn("total_pages", json_resp)
 
+    @patch("app.routers.projects.supabase_admin")
     @patch("app.routers.projects.supabase")
-    def test_get_project_detail(self, mock_supabase):
+    def test_get_project_detail(self, mock_supabase, mock_supabase_admin):
         """GET /api/projects/:id → détails projet"""
         mock_project_query = MagicMock()
         mock_project_query.select.return_value.eq.return_value.execute.return_value.data = [
             {"id": 123, "title": "Test Project", "userId": "test_user_id"}
         ]
+        mock_supabase.table.return_value = mock_project_query
 
+        # Les images sont lues via le client admin (bypass RLS pour les livrables)
         mock_images_query = MagicMock()
         mock_images_query.select.return_value.eq.return_value.execute.return_value.data = (
             []
         )
-
-        def table_side_effect(table_name):
-            if table_name == "Projects":
-                return mock_project_query
-            elif table_name == "ProjectsImages":
-                return mock_images_query
-            return MagicMock()
-
-        mock_supabase.table.side_effect = table_side_effect
+        mock_supabase_admin.table.return_value = mock_images_query
 
         response = self.client.get("/api/projects/123")
         self.assertEqual(response.status_code, 200)
@@ -218,10 +213,15 @@ class TestIntegration(BaseTestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["project"]["title"], "Updated Title")
 
-    @patch("app.routers.users.supabase")
-    def test_create_user(self, mock_supabase):
+    @patch("app.routers.users.supabase_admin")
+    def test_create_user(self, mock_supabase_admin):
         """POST /api/users → création user OK"""
-        mock_supabase.table.return_value.insert.return_value.execute.return_value.data = [
+        # Le compte Supabase Auth existe et l'email correspond
+        mock_auth_user = MagicMock()
+        mock_auth_user.user.email = "new@test.com"
+        mock_supabase_admin.auth.admin.get_user_by_id.return_value = mock_auth_user
+
+        mock_supabase_admin.table.return_value.insert.return_value.execute.return_value.data = [
             {"id": "new_user_id"}
         ]
 
@@ -235,11 +235,11 @@ class TestIntegration(BaseTestCase):
         response = self.client.post("/api/users", json=user_data)
         self.assertEqual(response.status_code, 201)
 
-    @patch("app.routers.users.supabase")
-    def test_get_users_forbidden(self, mock_supabase):
+    @patch("app.routers.users.supabase_admin")
+    def test_get_users_forbidden(self, mock_supabase_admin):
         """GET /api/users non-admin → HTTP 403"""
         # Mock user role check returning 'user'
-        mock_supabase.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {
+        mock_supabase_admin.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {
             "role": "user"
         }
 

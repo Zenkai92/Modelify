@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { apiFetch } from '../../lib/api';
 
 const AdminLegalDocuments = () => {
   const [documents, setDocuments] = useState([]);
@@ -14,7 +15,7 @@ const AdminLegalDocuments = () => {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/legal`);
+        const response = await apiFetch('/api/legal');
         if (!response.ok) throw new Error('Erreur lors de la récupération des documents');
         const data = await response.json();
         setDocuments(data);
@@ -44,17 +45,12 @@ const AdminLegalDocuments = () => {
     setSaving(true);
     setSaveError(null);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/legal/${editing.slug}`,
-        {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({ title: editing.title, content: editing.content }),
-        }
-      );
+      const response = await apiFetch(`/api/legal/${editing.slug}`, {
+        method: 'PUT',
+        token: session.access_token,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: editing.title, content: editing.content }),
+      });
       if (!response.ok) {
         const err = await response.json();
         throw new Error(err.detail || 'Erreur lors de la sauvegarde');

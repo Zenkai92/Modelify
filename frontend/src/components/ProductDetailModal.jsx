@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCartStore } from '../store/cartStore';
+import { apiFetch } from '../lib/api';
 import Model3D from './Model3D';
 
 const ProductDetailModal = ({ product, open, onClose }) => {
@@ -35,9 +36,9 @@ const ProductDetailModal = ({ product, open, onClose }) => {
   const checkPurchaseStatus = async () => {
     setCheckingPurchase(true);
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/products/${product.id}/purchased`,
-        { headers: { Authorization: `Bearer ${session.access_token}` } }
+      const res = await apiFetch(
+        `/api/products/${product.id}/purchased`,
+        { token: session.access_token }
       );
       if (res.ok) {
         const data = await res.json();
@@ -59,11 +60,11 @@ const ProductDetailModal = ({ product, open, onClose }) => {
     setBuyError('');
     setBuyLoading(true);
     try {
-      const res = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/products/${product.id}/buy`,
+      const res = await apiFetch(
+        `/api/products/${product.id}/buy`,
         {
           method: 'POST',
-          headers: { Authorization: `Bearer ${session.access_token}` },
+          token: session.access_token,
         }
       );
       const data = await res.json();

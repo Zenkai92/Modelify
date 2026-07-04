@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { apiFetch } from '../../lib/api';
 import './OrderStatusCard.css';
 
 const ProductOrdersCard = () => {
@@ -12,9 +13,7 @@ const ProductOrdersCard = () => {
     const fetchOrders = async () => {
       if (!session) return;
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/orders/mine`, {
-          headers: { Authorization: `Bearer ${session.access_token}` },
-        });
+        const response = await apiFetch('/api/orders/mine', { token: session.access_token });
         if (!response.ok) throw new Error('Erreur lors de la récupération des commandes');
         const data = await response.json();
         setOrders(data);

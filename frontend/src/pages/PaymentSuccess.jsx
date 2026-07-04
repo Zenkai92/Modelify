@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useCartStore } from '../store/cartStore';
+import { apiFetch } from '../lib/api';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -23,8 +24,10 @@ const PaymentSuccess = () => {
 
     const timer = setTimeout(async () => {
       try {
-        const url = `${import.meta.env.VITE_API_URL}/api/cart/order-status?session_id=${encodeURIComponent(sessionId)}`;
-        const res = await fetch(url, { headers: { Authorization: `Bearer ${session.access_token}` } });
+        const res = await apiFetch(
+          `/api/cart/order-status?session_id=${encodeURIComponent(sessionId)}`,
+          { token: session.access_token }
+        );
         if (res.ok) {
           const data = await res.json();
           if (data.completed) {

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import ModalStatusProject from '../modalStatusProject';
+import ModalStatusProject from '../ModalStatusProject';
 import Toast from '../Toast';
+import { apiFetch } from '../../lib/api';
 import './ProjectForm.css';
 
 const TOTAL_STEPS = 3;
@@ -110,17 +111,12 @@ const ProjectForm = ({ initialData = null }) => {
         console.log('[ProjectForm] aucun fichier dans formData.files');
       }
 
-      const url = initialData
-        ? `${import.meta.env.VITE_API_URL}/api/projects/${initialData.id}`
-        : `${import.meta.env.VITE_API_URL}/api/projects`;
-
+      const path = initialData ? `/api/projects/${initialData.id}` : '/api/projects';
       const method = initialData ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      const response = await apiFetch(path, {
         method: method,
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`
-        },
+        token: session.access_token,
         body: formDataToSend,
       });
 

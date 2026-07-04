@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import ProjectForm from '../components/forms/ProjectForm';
 import FloatingShapes from '../components/FloatingShapes';
+import { apiFetch } from '../lib/api';
 import './ProjectRequest.css';
 
 const ProjectEdit = ({ projectId: propProjectId }) => {
@@ -19,11 +20,7 @@ const ProjectEdit = ({ projectId: propProjectId }) => {
     const fetchProject = async () => {
       if (!session) return;
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/${projectId}`, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
-        });
+        const response = await apiFetch(`/api/projects/${projectId}`, { token: session.access_token });
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération du projet');
         }

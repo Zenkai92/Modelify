@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { apiFetch } from '../../lib/api';
+import { statusBadgeClass, statusLabel } from '../../constants/projectStatus';
 import './OrderStatusCard.css';
 
 const OrderStatusCard = ({ allowedStatuses, title = "Status des commandes" }) => {
@@ -14,10 +16,8 @@ const OrderStatusCard = ({ allowedStatuses, title = "Status des commandes" }) =>
     const fetchProjects = async () => {
       if (!user || !session) return;
       try {
-        const response = await fetch(`http://localhost:8000/api/projects?userId=${user.id}`, {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`
-          }
+        const response = await apiFetch(`/api/projects?userId=${user.id}&limit=100`, {
+          token: session.access_token
         });
         if (!response.ok) {
           throw new Error('Erreur lors de la récupération des commandes');
@@ -130,15 +130,8 @@ const OrderStatusCard = ({ allowedStatuses, title = "Status des commandes" }) =>
                     </td>
                     <td>{formatDate(project.created_at)}</td>
                     <td className="pe-4">
-                      <span className={`badge rounded-pill ${
-                        project.status === 'terminé' ? 'bg-success' : 
-                        project.status === 'payé' ? 'bg-success' :
-                        project.status === 'en cours' ? 'bg-primary' :
-                        (project.status === 'devis_envoyé' || project.status === 'paiement_attente') ? 'bg-info text-dark' :
-                        project.status === 'devis_refusé' ? 'bg-danger' :
-                        'bg-warning text-dark'
-                      }`}>
-                        {project.status === 'devis_refusé' ? 'devis refusé' : project.status}
+                      <span className={`badge rounded-pill ${statusBadgeClass(project.status)}`}>
+                        {statusLabel(project.status)}
                       </span>
                     </td>
                   </tr>

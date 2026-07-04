@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { apiFetch } from '../lib/api'
 
 const AuthContext = createContext({})
 
@@ -22,11 +23,7 @@ export const AuthProvider = ({ children }) => {
       if (!sessionUser || !token) return sessionUser;
       
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        const response = await apiFetch('/api/users/me', { token });
           
         if (response.ok) {
           const profile = await response.json();
@@ -166,7 +163,7 @@ export const AuthProvider = ({ children }) => {
         console.log('📝 Données profil à envoyer au backend:', profileData)
         
         try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
+          const response = await apiFetch('/api/users', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

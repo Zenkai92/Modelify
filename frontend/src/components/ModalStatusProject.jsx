@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import './modalStatusProject.css';
+import './ModalStatusProject.css';
 
 const ModalStatusProject = ({ show, status, projectId, message, onClose }) => {
   // Gestion du scroll du body quand la modale est ouverte

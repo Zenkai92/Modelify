@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import Markdown from 'react-markdown';
+import { apiFetch } from '../lib/api';
 import './LegalDocuments.css';
 
 const SECTIONS = [
@@ -32,7 +33,7 @@ const LegalDocuments = () => {
   useEffect(() => {
     const fetchDocuments = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/legal`);
+        const response = await apiFetch('/api/legal');
         if (!response.ok) throw new Error('Erreur lors du chargement des documents légaux');
         const data = await response.json();
         // Preserve display order from SECTIONS

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import ProjectForm from '../components/forms/ProjectForm';
 import FloatingShapes from '../components/FloatingShapes';
 import { useAuth } from '../contexts/AuthContext';
+import { apiFetch } from '../lib/api';
 import './ProjectRequest.css';
 
 const ProjectRequest = () => {
@@ -16,11 +17,7 @@ const ProjectRequest = () => {
 
   const fetchProjectCount = async () => {
       try {
-          const response = await fetch(`${import.meta.env.VITE_API_URL}/api/projects/count`, {
-              headers: {
-                  'Authorization': `Bearer ${session.access_token}`
-              }
-          });
+          const response = await apiFetch('/api/projects/count', { token: session.access_token });
           if (response.ok) {
               const data = await response.json();
               setProjectCount(data);
