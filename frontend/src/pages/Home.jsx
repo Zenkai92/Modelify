@@ -1,13 +1,15 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import FloatingShapes from '../components/FloatingShapes';
 import ProductCard from '../components/ProductCard';
-import AddProductModal from '../components/AddProductModal';
-import EditProductModal from '../components/EditProductModal';
 import ProductDetailModal from '../components/ProductDetailModal';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch } from '../lib/api';
 import './Home.css';
+
+// Modales admin chargées à la demande : les visiteurs n'en ont pas besoin
+const AddProductModal = lazy(() => import('../components/AddProductModal'));
+const EditProductModal = lazy(() => import('../components/EditProductModal'));
 
 const HOW_IT_WORKS = [
   {
@@ -272,20 +274,24 @@ const Home = () => {
 
       {/* Modal d'ajout (admin uniquement) */}
       {isAdmin && (
-        <AddProductModal
-          open={modalOpen}
-          onClose={() => setModalOpen(false)}
-          onProductAdded={fetchProducts}
-        />
-      )}  
+        <Suspense fallback={null}>
+          <AddProductModal
+            open={modalOpen}
+            onClose={() => setModalOpen(false)}
+            onProductAdded={fetchProducts}
+          />
+        </Suspense>
+      )}
 
       {/* Modal d'édition (admin uniquement) */}
       {isAdmin && editProduct && (
-        <EditProductModal
-          product={editProduct}
-          onClose={() => setEditProduct(null)}
-          onProductUpdated={fetchProducts}
-        />
+        <Suspense fallback={null}>
+          <EditProductModal
+            product={editProduct}
+            onClose={() => setEditProduct(null)}
+            onProductUpdated={fetchProducts}
+          />
+        </Suspense>
       )}
 
       {/* Modal de détail — toujours montée, fermeture force le remontage des canvases */}

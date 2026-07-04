@@ -142,23 +142,23 @@ function GenericScene({ type, color, spin = true }) {
   );
 }
 
-export default function Model3D({ type = 'cube', color = '#4338ca', modelPath, rotation = [0, 0, 0], interactive = true }) {
+// Le conteneur (dimensions, lazy loading) est géré par Model3D.jsx :
+// ce composant ne rend que le canvas WebGL lui-même.
+export default function Model3DCanvas({ type = 'cube', color = '#4338ca', modelPath, rotation = [0, 0, 0], interactive = true }) {
   return (
-    <div style={{ height: '300px', width: '100%', marginBottom: '1rem' }}>
-      <Canvas shadows dpr={[1, 2]}>
-        {modelPath ? (
-          <ModelErrorBoundary fallback={<GenericScene type="cube" color={color} spin={interactive} />}>
-            <Suspense fallback={<RotatingMesh type="sphere" color="#cccccc" spin={interactive} />}>
-              <Stage environment="city" intensity={1.8} adjustCamera shadows={false}>
-                <Model url={modelPath} rotation={rotation} color={color} />
-              </Stage>
-            </Suspense>
-          </ModelErrorBoundary>
-        ) : (
-          <GenericScene type={type} color={color} spin={interactive} />
-        )}
-        <OrbitControls enabled={interactive} autoRotate={interactive} autoRotateSpeed={4} enableZoom={false} enablePan={false} />
-      </Canvas>
-    </div>
+    <Canvas shadows dpr={[1, 2]}>
+      {modelPath ? (
+        <ModelErrorBoundary fallback={<GenericScene type="cube" color={color} spin={interactive} />}>
+          <Suspense fallback={<RotatingMesh type="sphere" color="#cccccc" spin={interactive} />}>
+            <Stage environment="city" intensity={1.8} adjustCamera shadows={false}>
+              <Model url={modelPath} rotation={rotation} color={color} />
+            </Stage>
+          </Suspense>
+        </ModelErrorBoundary>
+      ) : (
+        <GenericScene type={type} color={color} spin={interactive} />
+      )}
+      <OrbitControls enabled={interactive} autoRotate={interactive} autoRotateSpeed={4} enableZoom={false} enablePan={false} />
+    </Canvas>
   );
 }
