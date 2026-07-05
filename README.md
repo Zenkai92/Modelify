@@ -1,6 +1,6 @@
-# Modelify — Plateforme de modélisation 3D à la demande
+# Modelify - Plateforme de modélisation 3D à la demande
 
-Modelify est une application web complète qui met en relation des clients avec un service de modélisation 3D. Elle couvre tout le cycle de vie d'une demande : soumission du projet avec fichiers de référence, devis, paiement en ligne via Stripe, puis livraison des fichiers 3D — ainsi qu'une boutique de modèles 3D prêts à l'emploi avec visionneuse 3D interactive.
+Modelify est une application web complète qui met en relation des clients avec un service de modélisation 3D. Elle couvre tout le cycle de vie d'une demande : soumission du projet avec fichiers de référence, devis, paiement en ligne via Stripe, puis livraison des fichiers 3D - ainsi qu'une boutique de modèles 3D prêts à l'emploi avec visionneuse 3D interactive.
 
 > Projet développé dans le cadre de la certification **CDA (Concepteur Développeur d'Applications)**.
 
@@ -14,7 +14,7 @@ Modelify est une application web complète qui met en relation des clients avec 
 4. [Démarrage rapide](#démarrage-rapide)
 5. [Tests](#tests)
 6. [Variables d'environnement](#variables-denvironnement)
-7. [API — vue d'ensemble](#api--vue-densemble)
+7. [API - vue d'ensemble](#api--vue-densemble)
 8. [Structure du projet](#structure-du-projet)
 9. [CI/CD](#cicd)
 
@@ -30,20 +30,20 @@ Modelify est une application web complète qui met en relation des clients avec 
 
 ### 📐 Demandes de projets 3D
 - Formulaire de demande en plusieurs étapes (informations, dimensions, tranche de budget, délais) accessible depuis le portail client.
-- Upload de fichiers de référence (JPEG, PNG, WebP, PDF, ZIP) avec **validation du type MIME réel** (python-magic) — maximum **5 fichiers de 10 Mo** chacun, stockés dans Supabase Storage (bucket `project-images`, accès via URLs signées).
+- Upload de fichiers de référence (JPEG, PNG, WebP, PDF, ZIP) avec **validation du type MIME réel** (python-magic) - maximum **5 fichiers de 10 Mo** chacun, stockés dans Supabase Storage (bucket `project-images`, accès via URLs signées).
 - Limite de **2 projets actifs simultanés** par client (hors projets terminés ou refusés).
 - Suivi du statut de bout en bout : `en attente` → `devis_envoyé` → `paiement_attente` → `payé` → `en cours` → `terminé` (ou `devis_refusé`).
 - Devis Stripe : envoi par l'admin, puis paiement ou refus par le client, avec vérification du paiement au retour de Stripe.
 - Livraison des fichiers 3D finaux (`.obj`, `.stl`, `.glb`, `.gltf`, `.fbx`, `.blend`, `.3ds`, `.dae`, `.mtl`) déposés par l'admin.
 
 ### 🛒 Boutique de modèles 3D
-- Catalogue de produits présenté sur la page d'accueil, avec **aperçu 3D interactif** (three.js — formats OBJ, STL, 3MF, GLTF/GLB).
+- Catalogue de produits présenté sur la page d'accueil, avec **aperçu 3D interactif** (three.js - formats OBJ, STL, 3MF, GLTF/GLB).
 - Panier persistant (store Zustand) et paiement via **Stripe Checkout**.
 - Confirmation de commande asynchrone via **webhook Stripe** (signature vérifiée).
 - Historique des commandes et re-téléchargement des modèles achetés depuis le portail client.
 
 ### 🗂️ Portail client (`/app`)
-Interface unique pilotée par un paramètre d'URL `?view=` : profil, nouveau projet, suivi des projets personnalisés, commandes de la boutique — et pour l'admin : gestion des utilisateurs, des projets par statut (en attente / en cours / terminés) et des documents légaux.
+Interface unique pilotée par un paramètre d'URL `?view=` : profil, nouveau projet, suivi des projets personnalisés, commandes de la boutique - et pour l'admin : gestion des utilisateurs, des projets par statut (en attente / en cours / terminés) et des documents légaux.
 
 ### 🛠️ Administration
 - Gestion des demandes de projets : changement de statut, envoi de devis, dépôt des livrables.
@@ -82,15 +82,15 @@ graph TD
 
 **Règle d'architecture centrale** : le frontend ne parle **jamais** directement à la base de données. Toutes les opérations de données passent par l'API FastAPI, qui centralise la validation (Pydantic), la logique métier et les contrôles d'autorisation. Le client Supabase côté frontend sert **uniquement** à l'authentification. Tous les appels API passent par un point d'entrée unique : [`frontend/src/lib/api.js`](frontend/src/lib/api.js) (`apiFetch`).
 
-**Authentification côté API** : chaque requête porte un JWT Supabase en header `Authorization: Bearer`. Si `SUPABASE_JWT_SECRET` est configuré, le token est validé localement (python-jose) ; sinon — ou en cas d'échec — l'API interroge Supabase Auth. Le rôle admin est ensuite systématiquement revérifié dans la table `Users`.
+**Authentification côté API** : chaque requête porte un JWT Supabase en header `Authorization: Bearer`. Si `SUPABASE_JWT_SECRET` est configuré, le token est validé localement (python-jose) ; sinon - ou en cas d'échec - l'API interroge Supabase Auth. Le rôle admin est ensuite systématiquement revérifié dans la table `Users`.
 
-Les règles détaillées (sécurité, rôles, RLS, conventions) sont dans [PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md) — **à lire avant toute contribution**.
+Les règles détaillées (sécurité, rôles, RLS, conventions) sont dans [PROJECT_GUIDELINES.md](PROJECT_GUIDELINES.md) - **à lire avant toute contribution**.
 
 ---
 
 ## Démarrage rapide
 
-### Option 1 — Docker (recommandé)
+### Option 1 - Docker (recommandé)
 
 **Prérequis** : Docker + Docker Compose, un fichier `backend/.env` rempli (voir [Variables d'environnement](#variables-denvironnement)).
 
@@ -106,7 +106,7 @@ docker-compose up --build
 
 > Les variables `VITE_*` du frontend sont injectées **au build** de l'image (build args dans `docker-compose.yml`), pas au démarrage du conteneur.
 
-### Option 2 — Installation manuelle
+### Option 2 - Installation manuelle
 
 **Backend** (Python 3.10+ ; l'image Docker utilise Python 3.11) :
 
@@ -144,7 +144,7 @@ Copiez le secret `whsec_...` affiché dans `STRIPE_WEBHOOK_SECRET` (fichier `bac
 
 ## Tests
 
-### Frontend — Vitest + React Testing Library
+### Frontend - Vitest + React Testing Library
 
 ```bash
 cd frontend
@@ -154,7 +154,7 @@ npm run test:ci     # équivalent explicite utilisé en CI
 
 Les tests (`src/**/*.test.jsx`, environnement happy-dom) couvrent l'inscription, la connexion, le formulaire de projet multi-étapes, la navbar (dont l'affichage selon le rôle), le footer et la protection des routes.
 
-### Backend — pytest
+### Backend - pytest
 
 Les dépendances de test ne sont pas dans `requirements.txt` (elles sont installées à part, comme en CI) :
 
@@ -216,7 +216,7 @@ Un modèle est fourni dans [`backend/.env.example`](backend/.env.example).
 
 ---
 
-## API — vue d'ensemble
+## API - vue d'ensemble
 
 Toutes les routes métier sont préfixées par `/api`. Documentation interactive complète sur `/docs` (Swagger UI).
 
@@ -288,9 +288,9 @@ Modelify/
 
 Le pipeline GitHub Actions ([`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml)) s'exécute sur chaque push et pull request vers `main` :
 
-1. **backend-ci** — Python 3.10, installation de `libmagic1` et des dépendances, puis `pytest -v` avec les variables d'environnement mock (`TESTING=true`).
-2. **frontend-ci** — Node 18, `npm ci`, exécution de la suite Vitest, puis build de production Vite.
-3. **docker-build** *(uniquement sur push vers `main`, si les deux jobs précédents réussissent)* — build des images Docker backend et frontend et publication sur **GitHub Container Registry** (`ghcr.io/<owner>/modelify-backend` et `modelify-frontend`).
+1. **backend-ci** - Python 3.10, installation de `libmagic1` et des dépendances, puis `pytest -v` avec les variables d'environnement mock (`TESTING=true`).
+2. **frontend-ci** - Node 18, `npm ci`, exécution de la suite Vitest, puis build de production Vite.
+3. **docker-build** *(uniquement sur push vers `main`, si les deux jobs précédents réussissent)* - build des images Docker backend et frontend et publication sur **GitHub Container Registry** (`ghcr.io/<owner>/modelify-backend` et `modelify-frontend`).
 
 ---
 
