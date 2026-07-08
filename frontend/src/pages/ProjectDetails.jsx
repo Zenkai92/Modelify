@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { apiFetch } from '../lib/api';
 import { budgetLabel, statusLabel } from '../constants/projectStatus';
+import ProjectChat from '../components/ProjectChat';
 import './ProjectDetails.css';
 
 const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) => {
@@ -392,6 +393,9 @@ const ProjectDetails = ({ projectId, onBack, paymentSuccess, stripeSessionId }) 
                 </div>
               </div>
             </div>
+
+            {/* Messagerie client <-> admin */}
+            <ProjectChat projectId={projectId} />
           </div>
 
           <div className="col-lg-4 mb-4">

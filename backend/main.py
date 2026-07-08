@@ -4,7 +4,7 @@ load_dotenv()
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import projects, users, products, legal, cart, webhooks
+from app.routers import projects, users, products, legal, cart, webhooks, messages
 from app.database import supabase
 import uvicorn
 import os
@@ -42,6 +42,7 @@ app.include_router(products.router, prefix="/api", tags=["products"])
 app.include_router(legal.router, prefix="/api", tags=["legal"])
 app.include_router(cart.router, prefix="/api", tags=["cart"])
 app.include_router(webhooks.router, prefix="/api", tags=["webhooks"])
+app.include_router(messages.router, prefix="/api", tags=["messages"])
 
 
 @app.get("/")

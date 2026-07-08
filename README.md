@@ -35,6 +35,7 @@ Modelify est une application web complète qui met en relation des clients avec 
 - Suivi du statut de bout en bout : `en attente` → `devis_envoyé` → `paiement_attente` → `payé` → `en cours` → `terminé` (ou `devis_refusé`).
 - Devis Stripe : envoi par l'admin, puis paiement ou refus par le client, avec vérification du paiement au retour de Stripe.
 - Livraison des fichiers 3D finaux (`.obj`, `.stl`, `.glb`, `.gltf`, `.fbx`, `.blend`, `.3ds`, `.dae`, `.mtl`) déposés par l'admin.
+- **Messagerie intégrée** sur la page de détail du projet : discussion client ↔ admin (questions, suivi), avec envoi d'images pour montrer l'avancement (rafraîchissement automatique toutes les 10 s).
 
 ### 🛒 Boutique de modèles 3D
 - Catalogue de produits présenté sur la page d'accueil, avec **aperçu 3D interactif** (three.js - formats OBJ, STL, 3MF, GLTF/GLB).
@@ -224,6 +225,7 @@ Toutes les routes métier sont préfixées par `/api`. Documentation interactive
 |---|---|---|
 | **Projets** | `GET/POST /projects`, `GET /projects/count`, `GET/PUT /projects/{id}`, `PUT /projects/{id}/status` (admin), `POST /projects/{id}/files` (admin) | Demandes de modélisation, statuts, livrables |
 | **Devis & paiement** | `POST /projects/{id}/quote` (admin), `POST /projects/{id}/quote/refuse`, `POST /projects/{id}/pay`, `GET /projects/{id}/verify-payment` | Cycle devis → paiement Stripe |
+| **Messagerie projet** | `GET/POST /projects/{id}/messages` | Discussion client ↔ admin avec images jointes (URLs signées) |
 | **Utilisateurs** | `POST /users`, `GET/PUT /users/me`, `GET /users` (admin) | Comptes et profils |
 | **Boutique** | `GET/POST /products`, `PUT/DELETE /products/{id}` (admin), `POST /products/{id}/buy`, `GET /products/{id}/purchased` | Catalogue et achat de modèles 3D |
 | **Panier & commandes** | `POST /cart/checkout`, `GET /cart/purchased-ids`, `GET /cart/order-status`, `GET /orders/mine` | Checkout Stripe et suivi des commandes |
