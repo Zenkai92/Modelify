@@ -282,7 +282,6 @@ Modelify/
 │
 ├── docker-compose.yml            # Orchestration backend (8000) + frontend (3000)
 ├── .github/workflows/ci-cd.yml   # Pipeline CI/CD
-└── PROJECT_GUIDELINES.md         # Règles de développement et de sécurité (À LIRE)
 ```
 
 ---
