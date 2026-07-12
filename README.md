@@ -184,7 +184,7 @@ py -m pytest -v
 
 > ⚠️ **Windows** : lancez pytest depuis **PowerShell**, pas depuis Git Bash. Le PATH de Git Bash expose une DLL `libmagic` (msys) incompatible qui fait planter Python au chargement de `python-magic`.
 
-La suite backend comprend des **tests unitaires** (`test_auth_unit.py`, `test_users_unit.py`, `test_projects_unit.py` : authentification JWT, contrôle d'accès par rôle, validation des fichiers, cycle de vie des devis) et des **tests d'intégration** (`test_integration.py` : flux complet de création de projet via l'API, gestion des erreurs, health check). Les mocks partagés sont dans `base_test.py`.
+La suite backend comprend des **tests unitaires** (`test_auth_unit.py`, `test_users_unit.py`, `test_projects_unit.py`, `test_messages_unit.py` : authentification JWT, contrôle d'accès par rôle, validation des fichiers, cycle de vie des devis, messagerie projet) et des **tests d'intégration** (`test_integration.py` : flux complet de création de projet via l'API, gestion des erreurs, health check). Les mocks partagés sont dans `base_test.py`.
 
 ---
 
@@ -246,6 +246,7 @@ Modelify/
 │   │   ├── dependencies.py       # Auth : validation JWT (locale ou via Supabase)
 │   │   ├── routers/              # Endpoints par domaine
 │   │   │   ├── projects.py       #   projets, fichiers, devis, paiement
+│   │   │   ├── messages.py       #   messagerie projet client ↔ admin
 │   │   │   ├── users.py          #   comptes, profils, admin
 │   │   │   ├── products.py       #   boutique
 │   │   │   ├── cart.py           #   panier, checkout, commandes
