@@ -613,6 +613,8 @@ async def create_project_quote(
             "stripe_quote_url": stripe_quote.id,  # On pourrait renvoyer l'URL si on l'avait
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Erreur lors de la création du devis: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -743,6 +745,8 @@ async def pay_project(projectId: str, current_user=Depends(get_current_user)):
 
         return {"url": checkout_url}
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Erreur lors de l'initiation du paiement: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
