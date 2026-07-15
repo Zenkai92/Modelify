@@ -16,9 +16,11 @@ import re
 import logging
 
 # Tentative d'import de python-magic pour la validation des fichiers
+# (ImportError si absent, OSError si la libmagic native est inutilisable,
+# ex. DLL incompatible sous Windows — dans les deux cas on passe en mode dégradé)
 try:
     import magic
-except ImportError:
+except Exception:
     magic = None
 
 router = APIRouter()
