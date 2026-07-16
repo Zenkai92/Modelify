@@ -18,7 +18,7 @@ class LegalDocumentUpdate(BaseModel):
 async def get_all_legal_documents():
     try:
         response = (
-            supabase.table("legal_documents")
+            supabase.table("LegalDocuments")
             .select("*")
             .order("slug")
             .execute()
@@ -53,7 +53,7 @@ async def update_legal_document(
 
     try:
         existing = (
-            supabase_admin.table("legal_documents")
+            supabase_admin.table("LegalDocuments")
             .select("version")
             .eq("slug", slug)
             .single()
@@ -63,7 +63,7 @@ async def update_legal_document(
             raise HTTPException(status_code=404, detail="Document introuvable")
 
         response = (
-            supabase_admin.table("legal_documents")
+            supabase_admin.table("LegalDocuments")
             .update({
                 "title": body.title,
                 "content": body.content,
