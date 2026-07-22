@@ -3,7 +3,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from app.database import supabase
 import os
 import logging
-from jose import jwt, JWTError
+import jwt
+from jwt import InvalidTokenError
 
 security = HTTPBearer()
 logger = logging.getLogger(__name__)
@@ -27,7 +28,6 @@ async def get_current_user(
                 token,
                 secret,
                 algorithms=["HS256"],
-                audience="authenticated",
                 options={
                     "verify_aud": False
                 },  # Parfois l'audience peut varier, mais 'authenticated' est standard
@@ -45,7 +45,7 @@ async def get_current_user(
                 email=payload.get("email"),
                 user_metadata=payload.get("user_metadata", {}),
             )
-        except JWTError:
+        except InvalidTokenError:
             # Si échec local, fallback sur l'API
             pass
 
