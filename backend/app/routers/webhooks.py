@@ -65,7 +65,10 @@ async def stripe_webhook(request: Request):
             if product_id and user_id:
                 logger.info(f"WEBHOOK: Achat produit confirmé — produit {product_id} par user {user_id}")
                 try:
-                    supabase_admin.table("Orders").insert(
+                    # upsert idempotent : si la commande existe déjà (webhook + polling
+                    # order-status en course, ou double achat), la contrainte UNIQUE
+                    # (client_id, product_id) déclenche un ON CONFLICT DO NOTHING.
+                    supabase_admin.table("Orders").upsert(
                         {
                             "product_id": product_id,
                             "client_id": user_id,
@@ -73,7 +76,9 @@ async def stripe_webhook(request: Request):
                             "stripe_payment_intent_id": session.get("payment_intent"),
                             "amount_paid": session.get("amount_total", 0) / 100,
                             "status": "completed",
-                        }
+                        },
+                        on_conflict="client_id,product_id",
+                        ignore_duplicates=True,
                     ).execute()
                     logger.info("Achat produit enregistré dans Orders")
                 except Exception as db_error:
@@ -101,7 +106,11 @@ async def stripe_webhook(request: Request):
                         }
                         for product_id in product_ids
                     ]
-                    supabase_admin.table("Orders").insert(orders_rows).execute()
+                    supabase_admin.table("Orders").upsert(
+                        orders_rows,
+                        on_conflict="client_id,product_id",
+                        ignore_duplicates=True,
+                    ).execute()
                     logger.info(f"Achat panier enregistré dans Orders ({len(orders_rows)} ligne(s))")
                 except Exception as db_error:
                     logger.error(f"Erreur DB insert Orders (panier): {db_error}")

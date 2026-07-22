@@ -197,14 +197,20 @@ async def get_order_status(session_id: str, current_user=Depends(get_current_use
         if event_type == "product_purchase":
             product_id = metadata.get("product_id")
             if product_id:
-                supabase_admin.table("Orders").insert({
-                    "product_id": product_id,
-                    "client_id": user_id,
-                    "stripe_session_id": session_id,
-                    "stripe_payment_intent_id": payment_intent,
-                    "amount_paid": amount_total,
-                    "status": "completed",
-                }).execute()
+                # upsert idempotent : évite un doublon si le webhook Stripe a déjà
+                # enregistré la commande (contrainte UNIQUE (client_id, product_id)).
+                supabase_admin.table("Orders").upsert(
+                    {
+                        "product_id": product_id,
+                        "client_id": user_id,
+                        "stripe_session_id": session_id,
+                        "stripe_payment_intent_id": payment_intent,
+                        "amount_paid": amount_total,
+                        "status": "completed",
+                    },
+                    on_conflict="client_id,product_id",
+                    ignore_duplicates=True,
+                ).execute()
                 inserted = 1
                 logger.info(f"Commande produit créée via vérification directe: user={user_id}, product={product_id}")
 
@@ -224,7 +230,11 @@ async def get_order_status(session_id: str, current_user=Depends(get_current_use
                     }
                     for pid in product_ids
                 ]
-                supabase_admin.table("Orders").insert(rows).execute()
+                supabase_admin.table("Orders").upsert(
+                    rows,
+                    on_conflict="client_id,product_id",
+                    ignore_duplicates=True,
+                ).execute()
                 inserted = len(rows)
                 logger.info(f"Commandes panier créées via vérification directe: user={user_id}, {inserted} produit(s)")
 
