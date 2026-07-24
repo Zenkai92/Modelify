@@ -23,13 +23,16 @@ const ProductDetailModal = ({ product, open, onClose }) => {
       ? product.file_formats.split(',').map((f) => f.trim())
       : [];
 
-  const downloadFiles = Array.isArray(product?.download_files) ? product.download_files : [];
+  // Les liens de téléchargement ne transitent plus par le catalogue public :
+  // ils sont renvoyés par /purchased, uniquement si l'achat est confirmé.
+  const [downloadFiles, setDownloadFiles] = useState([]);
 
   useEffect(() => {
     if (open && product && user && session) {
       checkPurchaseStatus();
     } else if (!user) {
       setPurchased(false);
+      setDownloadFiles([]);
     }
   }, [open, product?.id, user]);
 
@@ -43,6 +46,7 @@ const ProductDetailModal = ({ product, open, onClose }) => {
       if (res.ok) {
         const data = await res.json();
         setPurchased(data.purchased);
+        setDownloadFiles(Array.isArray(data.download_files) ? data.download_files : []);
       }
     } catch {
       // silencieux — on affiche juste le bouton Acheter par défaut

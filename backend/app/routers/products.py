@@ -21,6 +21,16 @@ MAX_MODEL_SIZE = 50 * 1024 * 1024  # 50 MB
 OVERVIEW_EXTENSIONS = {".stl", ".obj", ".3mf", ".gltf", ".glb"}
 DOWNLOAD_EXTENSIONS = {".stl", ".obj", ".f3d", ".3mf", ".gltf", ".glb", ".ply", ".zip"}
 
+# Colonnes du catalogue exposables sans authentification.
+# `download_files` (liens vers les fichiers payants) et les identifiants Stripe
+# en sont volontairement absents : le rôle anon n'a pas le privilège SELECT sur
+# ces colonnes (voir backend/sql/rls_policies.sql), un select("*") serait donc
+# rejeté par la base. La restriction est ainsi garantie côté serveur, pas
+# seulement côté code.
+PUBLIC_PRODUCT_COLUMNS = (
+    "id,title,description,price,overview_model_file,file_formats,created_at,updated_at"
+)
+
 
 def sanitize_filename(filename: str) -> str:
     return re.sub(r"[^a-zA-Z0-9._-]", "", filename)
@@ -62,11 +72,11 @@ def check_admin(current_user) -> None:
 
 @router.get("/products", status_code=status.HTTP_200_OK)
 async def get_products():
-    """Récupérer la liste de tous les produits (public)."""
+    """Récupérer la liste de tous les produits (public, sans les fichiers payants)."""
     try:
         response = (
             supabase.table("Products")
-            .select("*")
+            .select(PUBLIC_PRODUCT_COLUMNS)
             .order("created_at", desc=True)
             .execute()
         )
@@ -160,7 +170,7 @@ async def create_product(
             "updated_at": now,
         }
 
-        response = supabase.table("Products").insert(product_data).execute()
+        response = supabase_admin.table("Products").insert(product_data).execute()
         if not response.data:
             raise HTTPException(status_code=500, detail="Erreur lors de la création du produit")
         return response.data[0]
@@ -176,7 +186,7 @@ async def delete_product(product_id: str, current_user=Depends(get_current_user)
     """Supprimer un produit (Admin uniquement)."""
     check_admin(current_user)
     try:
-        result = supabase.table("Products").delete().eq("id", product_id).execute()
+        result = supabase_admin.table("Products").delete().eq("id", product_id).execute()
         if not result.data:
             raise HTTPException(status_code=404, detail="Produit introuvable")
     except HTTPException:
@@ -206,7 +216,7 @@ async def update_product(
     check_admin(current_user)
 
     try:
-        existing = supabase.table("Products").select("*").eq("id", product_id).single().execute()
+        existing = supabase_admin.table("Products").select("*").eq("id", product_id).single().execute()
         if not existing.data:
             raise HTTPException(status_code=404, detail="Produit introuvable")
     except HTTPException:
@@ -284,7 +294,7 @@ async def update_product(
         update_data["download_files"] = uploaded_download_files
 
     try:
-        response = supabase.table("Products").update(update_data).eq("id", product_id).execute()
+        response = supabase_admin.table("Products").update(update_data).eq("id", product_id).execute()
         if not response.data:
             raise HTTPException(status_code=500, detail="Erreur lors de la mise à jour du produit")
         return response.data[0]
@@ -297,7 +307,11 @@ async def update_product(
 
 @router.get("/products/{product_id}/purchased", status_code=status.HTTP_200_OK)
 async def check_purchased(product_id: str, current_user=Depends(get_current_user)):
-    """Vérifie si l'utilisateur courant a acheté ce produit (via la table Orders)."""
+    """
+    Vérifie si l'utilisateur courant a acheté ce produit (via la table Orders).
+    Renvoie les fichiers téléchargeables uniquement si l'achat est confirmé :
+    ils ne figurent pas dans le catalogue public.
+    """
     try:
         result = (
             supabase_admin.table("Orders")
@@ -307,9 +321,49 @@ async def check_purchased(product_id: str, current_user=Depends(get_current_user
             .eq("status", "completed")
             .execute()
         )
-        return {"purchased": bool(result.data)}
+        purchased = bool(result.data)
+
+        if not purchased:
+            return {"purchased": False, "download_files": []}
+
+        product = (
+            supabase_admin.table("Products")
+            .select("download_files")
+            .eq("id", product_id)
+            .single()
+            .execute()
+        )
+        files = (product.data or {}).get("download_files") or []
+        return {"purchased": True, "download_files": files}
     except Exception as e:
         logger.error(f"Erreur vérification achat produit: {e}")
+        raise HTTPException(status_code=500, detail="Erreur interne du serveur")
+
+
+@router.get("/products/{product_id}/admin", status_code=status.HTTP_200_OK)
+async def get_product_admin(product_id: str, current_user=Depends(get_current_user)):
+    """
+    Récupérer un produit complet, fichiers de téléchargement et identifiants
+    Stripe inclus (Admin uniquement). Sert à préremplir le formulaire d'édition,
+    que le catalogue public ne peut plus alimenter.
+    """
+    check_admin(current_user)
+
+    try:
+        result = (
+            supabase_admin.table("Products")
+            .select("*")
+            .eq("id", product_id)
+            .single()
+            .execute()
+        )
+        if not result.data:
+            raise HTTPException(status_code=404, detail="Produit introuvable")
+        return result.data
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Erreur récupération produit (admin): {e}")
         raise HTTPException(status_code=500, detail="Erreur interne du serveur")
 
 
@@ -321,7 +375,7 @@ async def buy_product(product_id: str, current_user=Depends(get_current_user)):
     Retourne l'URL de redirection vers Stripe Checkout.
     """
     try:
-        product_query = supabase.table("Products").select("*").eq("id", product_id).single().execute()
+        product_query = supabase_admin.table("Products").select("*").eq("id", product_id).single().execute()
         if not product_query.data:
             raise HTTPException(status_code=404, detail="Produit introuvable")
         product = product_query.data

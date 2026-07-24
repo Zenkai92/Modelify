@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request
-from app.database import supabase, supabase_admin
+from app.database import supabase_admin
 from datetime import datetime, timezone
 import stripe
 import os
@@ -91,7 +91,7 @@ async def stripe_webhook(request: Request):
                 logger.info(f"WEBHOOK: Achat panier confirmé — {len(product_ids)} produit(s) par user {user_id}")
                 try:
                     prices = (
-                        supabase.table("Products").select("id,price").in_("id", product_ids).execute()
+                        supabase_admin.table("Products").select("id,price").in_("id", product_ids).execute()
                     )
                     price_map = {p["id"]: p["price"] for p in (prices.data or [])}
 

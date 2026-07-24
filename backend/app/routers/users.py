@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends
 from app.schemas.users import UserCreate, UserUpdate
-from app.database import supabase, supabase_admin
+from app.database import supabase_admin
 from app.dependencies import get_current_user
 from datetime import datetime, timezone
 import logging

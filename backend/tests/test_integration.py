@@ -28,7 +28,7 @@ class TestIntegration(BaseTestCase):
         app.dependency_overrides = {}
         super().tearDown()
 
-    @patch("main.supabase")
+    @patch("main.supabase_admin")
     def test_health_check(self, mock_supabase):
         """GET /health → status OK"""
         # Mock successful database connection
@@ -41,8 +41,7 @@ class TestIntegration(BaseTestCase):
 
     @patch("app.routers.projects.validate_mime_type", return_value="image/jpeg")
     @patch("app.routers.projects.supabase_admin")
-    @patch("app.routers.projects.supabase")
-    def test_create_project_complete_flow(self, mock_supabase, mock_supabase_admin, mock_validate_mime):
+    def test_create_project_complete_flow(self, mock_supabase_admin, mock_validate_mime):
         """POST /api/projects → création complète OK"""
 
         def table_side_effect(table_name):
@@ -63,10 +62,9 @@ class TestIntegration(BaseTestCase):
 
             return mock_t
 
-        mock_supabase.table.side_effect = table_side_effect
+        mock_supabase_admin.table.side_effect = table_side_effect
 
-        # L'upload storage et l'insert ProjectsImages passent par le client admin
-        mock_supabase_admin.table.return_value.insert.return_value.execute.return_value.data = [{"id": 456}]
+        # L'upload storage passe par le même client admin
         mock_storage_response = MagicMock()
         mock_bucket = mock_supabase_admin.storage.from_.return_value
         mock_bucket.upload.return_value = mock_storage_response
@@ -86,11 +84,11 @@ class TestIntegration(BaseTestCase):
         self.assertEqual(json_resp["message"], "Demande de projet créée avec succès")
         self.assertEqual(json_resp["projectId"], 123)
 
-        mock_supabase.table.assert_any_call("Projects")
+        mock_supabase_admin.table.assert_any_call("Projects")
         mock_supabase_admin.storage.from_.assert_called_with("project-images")
         mock_supabase_admin.table.assert_called_with("ProjectsImages")
 
-    @patch("app.routers.projects.supabase")
+    @patch("app.routers.projects.supabase_admin")
     def test_create_project_validation_error(self, mock_supabase):
         """Champs manquants → HTTP 422"""
         # Données incomplètes (manque 'descriptionClient', etc.)
@@ -107,7 +105,7 @@ class TestIntegration(BaseTestCase):
         # On vérifie que la base de données N'A PAS été appelée
         mock_supabase.table.assert_not_called()
 
-    @patch("app.routers.projects.supabase")
+    @patch("app.routers.projects.supabase_admin")
     def test_create_project_db_error(self, mock_supabase):
         """Erreur DB → HTTP 500"""
         # On simule une exception lors de l'appel à la base
@@ -127,7 +125,7 @@ class TestIntegration(BaseTestCase):
         self.assertEqual(response.status_code, 500)
         self.assertIn("Erreur lors de la création", response.json()["detail"])
 
-    @patch("app.routers.projects.supabase")
+    @patch("app.routers.projects.supabase_admin")
     def test_get_all_projects(self, mock_supabase):
         """GET /api/projects → liste paginée"""
         # Mock user role check (standard user)
@@ -174,27 +172,32 @@ class TestIntegration(BaseTestCase):
         self.assertIn("total_pages", json_resp)
 
     @patch("app.routers.projects.supabase_admin")
-    @patch("app.routers.projects.supabase")
-    def test_get_project_detail(self, mock_supabase, mock_supabase_admin):
+    def test_get_project_detail(self, mock_supabase_admin):
         """GET /api/projects/:id → détails projet"""
         mock_project_query = MagicMock()
         mock_project_query.select.return_value.eq.return_value.execute.return_value.data = [
             {"id": 123, "title": "Test Project", "userId": "test_user_id"}
         ]
-        mock_supabase.table.return_value = mock_project_query
 
-        # Les images sont lues via le client admin (bypass RLS pour les livrables)
         mock_images_query = MagicMock()
         mock_images_query.select.return_value.eq.return_value.execute.return_value.data = (
             []
         )
-        mock_supabase_admin.table.return_value = mock_images_query
+
+        def table_side_effect(table_name):
+            if table_name == "Projects":
+                return mock_project_query
+            if table_name == "ProjectsImages":
+                return mock_images_query
+            return MagicMock()
+
+        mock_supabase_admin.table.side_effect = table_side_effect
 
         response = self.client.get("/api/projects/123")
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json()["title"], "Test Project")
 
-    @patch("app.routers.projects.supabase")
+    @patch("app.routers.projects.supabase_admin")
     def test_update_project(self, mock_supabase):
         """PUT /api/projects/:id → mise à jour OK"""
         # Mock existing project check

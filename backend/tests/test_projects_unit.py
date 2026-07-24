@@ -27,7 +27,7 @@ class TestProjectsUnit(BaseAsyncTestCase):
 
     async def test_get_project_count(self):
         """Compteur projets actifs → retourne count et limite"""
-        with patch("app.routers.projects.supabase") as mock_supabase:
+        with patch("app.routers.projects.supabase_admin") as mock_supabase:
             mock_count_response = MagicMock()
             mock_count_response.count = 1
             mock_supabase.table.return_value.select.return_value.eq.return_value.not_.in_.return_value.execute.return_value = (
@@ -68,8 +68,7 @@ class TestProjectsUnit(BaseAsyncTestCase):
 
     @patch("app.routers.projects.validate_mime_type", return_value="image/png")
     @patch("app.routers.projects.supabase_admin")
-    @patch("app.routers.projects.supabase")
-    async def test_create_project_file_validation_success(self, mock_supabase, mock_supabase_admin, mock_validate_mime):
+    async def test_create_project_file_validation_success(self, mock_supabase_admin, mock_validate_mime):
         """Fichier valide → upload effectué"""
         mock_file = AsyncMock(spec=UploadFile)
         mock_file.filename = "test.png"
@@ -79,13 +78,13 @@ class TestProjectsUnit(BaseAsyncTestCase):
         # Mock active projects count (0 projects)
         mock_count_response = MagicMock()
         mock_count_response.count = 0
-        mock_supabase.table.return_value.select.return_value.eq.return_value.not_.in_.return_value.execute.return_value = (
+        mock_supabase_admin.table.return_value.select.return_value.eq.return_value.not_.in_.return_value.execute.return_value = (
             mock_count_response
         )
 
         mock_insert_response = MagicMock()
         mock_insert_response.data = [{"id": "proj123"}]
-        mock_supabase.table.return_value.insert.return_value.execute.return_value = (
+        mock_supabase_admin.table.return_value.insert.return_value.execute.return_value = (
             mock_insert_response
         )
 
@@ -106,8 +105,7 @@ class TestProjectsUnit(BaseAsyncTestCase):
         mock_supabase_admin.table.assert_called_with("ProjectsImages")
 
     @patch("app.routers.projects.supabase_admin")
-    @patch("app.routers.projects.supabase")
-    async def test_create_project_file_validation_failure(self, mock_supabase, mock_supabase_admin):
+    async def test_create_project_file_validation_failure(self, mock_supabase_admin):
         """Fichier .exe → upload ignoré"""
         mock_file = AsyncMock(spec=UploadFile)
         mock_file.filename = "virus.exe"
@@ -117,13 +115,13 @@ class TestProjectsUnit(BaseAsyncTestCase):
         # Mock active projects count (0 projects)
         mock_count_response = MagicMock()
         mock_count_response.count = 0
-        mock_supabase.table.return_value.select.return_value.eq.return_value.not_.in_.return_value.execute.return_value = (
+        mock_supabase_admin.table.return_value.select.return_value.eq.return_value.not_.in_.return_value.execute.return_value = (
             mock_count_response
         )
 
         mock_insert_response = MagicMock()
         mock_insert_response.data = [{"id": "proj123"}]
-        mock_supabase.table.return_value.insert.return_value.execute.return_value = (
+        mock_supabase_admin.table.return_value.insert.return_value.execute.return_value = (
             mock_insert_response
         )
 
@@ -137,7 +135,7 @@ class TestProjectsUnit(BaseAsyncTestCase):
         self.assertEqual(result["status"], "success")
         mock_supabase_admin.storage.from_.return_value.upload.assert_not_called()
 
-    @patch("app.routers.projects.supabase")
+    @patch("app.routers.projects.supabase_admin")
     async def test_create_project_limit_reached(self, mock_supabase):
         """Limite 2 projets atteinte → HTTP 400"""
         # Mock active projects count >= 2
@@ -168,10 +166,9 @@ class TestProjectsUnit(BaseAsyncTestCase):
 
     @patch("app.routers.projects.cancel_quote")
     @patch("app.routers.projects.supabase_admin")
-    @patch("app.routers.projects.supabase")
-    async def test_refuse_quote_success(self, mock_supabase, mock_supabase_admin, mock_cancel_quote):
+    async def test_refuse_quote_success(self, mock_supabase_admin, mock_cancel_quote):
         """Client propriétaire refuse un devis envoyé → statut 'devis_refusé' + annulation Stripe"""
-        self._mock_project_fetch(mock_supabase, {
+        self._mock_project_fetch(mock_supabase_admin, {
             "id": "proj123",
             "userId": "user123",
             "status": "devis_envoyé",
@@ -191,7 +188,7 @@ class TestProjectsUnit(BaseAsyncTestCase):
         update_args = mock_supabase_admin.table.return_value.update.call_args[0][0]
         self.assertEqual(update_args["status"], "devis_refusé")
 
-    @patch("app.routers.projects.supabase")
+    @patch("app.routers.projects.supabase_admin")
     async def test_refuse_quote_not_owner(self, mock_supabase):
         """Utilisateur non propriétaire → HTTP 403"""
         self._mock_project_fetch(mock_supabase, {
@@ -205,7 +202,7 @@ class TestProjectsUnit(BaseAsyncTestCase):
 
         self.assertEqual(cm.exception.status_code, 403)
 
-    @patch("app.routers.projects.supabase")
+    @patch("app.routers.projects.supabase_admin")
     async def test_refuse_quote_invalid_status(self, mock_supabase):
         """Projet sans devis en attente (ex: payé) → HTTP 400"""
         self._mock_project_fetch(mock_supabase, {
@@ -221,12 +218,11 @@ class TestProjectsUnit(BaseAsyncTestCase):
 
     @patch("app.routers.projects.cancel_quote", side_effect=Exception("Stripe down"))
     @patch("app.routers.projects.supabase_admin")
-    @patch("app.routers.projects.supabase")
     async def test_refuse_quote_stripe_failure_still_refuses(
-        self, mock_supabase, mock_supabase_admin, mock_cancel_quote
+        self, mock_supabase_admin, mock_cancel_quote
     ):
         """Échec annulation Stripe → le refus aboutit quand même"""
-        self._mock_project_fetch(mock_supabase, {
+        self._mock_project_fetch(mock_supabase_admin, {
             "id": "proj123",
             "userId": "user123",
             "status": "paiement_attente",

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
-from app.database import supabase, supabase_admin
+from app.database import supabase_admin
 from app.dependencies import get_current_user
 from app.services.stripe_service import get_or_create_customer, create_cart_checkout_session
 import logging
@@ -29,7 +29,7 @@ async def checkout_cart(payload: CartCheckoutRequest, current_user=Depends(get_c
         raise HTTPException(status_code=400, detail="Le panier est vide")
 
     try:
-        products_query = supabase.table("Products").select("*").in_("id", product_ids).execute()
+        products_query = supabase_admin.table("Products").select("*").in_("id", product_ids).execute()
         products = products_query.data or []
 
         found_ids = {p["id"] for p in products}
@@ -127,7 +127,7 @@ async def get_my_product_orders(current_user=Depends(get_current_user)):
 
         product_ids = list({o["product_id"] for o in orders if o.get("product_id")})
         products_result = (
-            supabase.table("Products")
+            supabase_admin.table("Products")
             .select("*")
             .in_("id", product_ids)
             .execute()

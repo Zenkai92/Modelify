@@ -29,6 +29,7 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [existingDownloadFiles, setExistingDownloadFiles] = useState([]);
 
   useEffect(() => {
     if (product) {
@@ -47,8 +48,35 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
       setConfirmDelete(false);
       setError('');
       setSuccess('');
+      setExistingDownloadFiles([]);
     }
   }, [product]);
+
+  // Les fichiers de téléchargement ne figurent plus dans le catalogue public :
+  // on les récupère via la route admin, seule habilitée à les renvoyer.
+  useEffect(() => {
+    if (!product?.id || !session) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await apiFetch(`/api/products/${product.id}/admin`, {
+          token: session.access_token,
+        });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (!cancelled) {
+          setExistingDownloadFiles(
+            Array.isArray(data.download_files) ? data.download_files : []
+          );
+        }
+      } catch {
+        // Non bloquant : le formulaire reste utilisable sans cet affichage.
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [product?.id, session]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -92,9 +120,6 @@ const EditProductModal = ({ product, onClose, onProductUpdated }) => {
     setError('');
     setDownloadFiles((prev) => ({ ...prev, [fmt]: file }));
   };
-
-  // Fichiers existants en base pour affichage
-  const existingDownloadFiles = Array.isArray(product?.download_files) ? product.download_files : [];
 
   const handleSubmit = async (e) => {
     e.preventDefault();

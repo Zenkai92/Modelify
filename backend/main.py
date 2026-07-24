@@ -5,7 +5,7 @@ load_dotenv()
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from app.routers import projects, users, products, legal, cart, webhooks, messages
-from app.database import supabase
+from app.database import supabase_admin
 import uvicorn
 import os
 import logging
@@ -56,7 +56,7 @@ async def health_check():
     db_status = "connected"
     try:
         # Test de connexion à Supabase
-        supabase.table("Users").select("id").limit(1).execute()
+        supabase_admin.table("Users").select("id").limit(1).execute()
     except Exception as e:
         logger.warning(f"Database health check failed: {e}")
         db_status = "disconnected"

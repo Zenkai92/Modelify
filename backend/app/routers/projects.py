@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends
-from app.database import supabase, supabase_admin
+from app.database import supabase_admin
 from app.dependencies import get_current_user
 from app.schemas.projects import ProjectQuote
 from app.services.stripe_service import (
@@ -79,7 +79,7 @@ async def get_project_count(current_user=Depends(get_current_user)):
     Récupérer le nombre de projets actifs (non 'terminé') pour l'utilisateur courant
     """
     result = (
-        supabase.table("Projects")
+        supabase_admin.table("Projects")
         .select("id", count="exact")
         .eq("userId", current_user.id)
         .not_.in_("status", CLOSED_STATUSES)
@@ -106,7 +106,7 @@ async def create_project_request(
     try:
         # Vérification de la limite de projets actifs (hors statuts clos)
         active_projects = (
-            supabase.table("Projects")
+            supabase_admin.table("Projects")
             .select("id", count="exact")
             .eq("userId", current_user.id)
             .not_.in_("status", CLOSED_STATUSES)
@@ -131,7 +131,7 @@ async def create_project_request(
             "created_at": datetime.now(timezone.utc).date().isoformat(),
         }
 
-        result = supabase.table("Projects").insert(project_data).execute()
+        result = supabase_admin.table("Projects").insert(project_data).execute()
 
         if result.data:
             projectId = result.data[0]["id"]
@@ -249,24 +249,24 @@ async def get_all_projects(
 
     # Requête pour le count total
     if is_admin:
-        count_query = supabase.table("Projects").select("id", count="exact")
+        count_query = supabase_admin.table("Projects").select("id", count="exact")
         if userId:
             count_query = count_query.eq("userId", userId)
     else:
-        count_query = supabase.table("Projects").select("id", count="exact").eq("userId", current_user.id)
+        count_query = supabase_admin.table("Projects").select("id", count="exact").eq("userId", current_user.id)
     
     count_result = count_query.execute()
     total_count = count_result.count or 0
 
     # Requête pour les données paginées
     if is_admin:
-        query = supabase.table("Projects").select(
+        query = supabase_admin.table("Projects").select(
             "*, Users(firstName, lastName, role)"
         )
         if userId:
             query = query.eq("userId", userId)
     else:
-        query = supabase.table("Projects").select("*").eq("userId", current_user.id)
+        query = supabase_admin.table("Projects").select("*").eq("userId", current_user.id)
 
     # Appliquer pagination et tri
     result = query.order("created_at", desc=True).range(offset, offset + limit - 1).execute()
@@ -320,7 +320,7 @@ async def get_project(projectId: str, current_user=Depends(get_current_user)):
     Sécurisé: Admin ou propriétaire seulement
     """
     # 1. Récupérer le projet
-    result = supabase.table("Projects").select("*").eq("id", projectId).execute()
+    result = supabase_admin.table("Projects").select("*").eq("id", projectId).execute()
     if not result.data:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
 
@@ -446,7 +446,7 @@ async def update_project_status(
     }
 
     result = (
-        supabase.table("Projects").update(update_data).eq("id", projectId).execute()
+        supabase_admin.table("Projects").update(update_data).eq("id", projectId).execute()
     )
     if not result.data:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
@@ -553,7 +553,7 @@ async def create_project_quote(
 
         # 2. Récuperer les infos du projet et du client
         project_data = (
-            supabase.table("Projects")
+            supabase_admin.table("Projects")
             .select("*")
             .eq("id", projectId)
             .single()
@@ -606,7 +606,7 @@ async def create_project_quote(
         }
 
         result = (
-            supabase.table("Projects").update(update_data).eq("id", projectId).execute()
+            supabase_admin.table("Projects").update(update_data).eq("id", projectId).execute()
         )
 
         return {
@@ -630,7 +630,7 @@ async def refuse_project_quote(projectId: str, current_user=Depends(get_current_
     """
     # 1. Récupérer le projet
     project_query = (
-        supabase.table("Projects").select("*").eq("id", projectId).execute()
+        supabase_admin.table("Projects").select("*").eq("id", projectId).execute()
     )
     if not project_query.data:
         raise HTTPException(status_code=404, detail="Projet non trouvé")
@@ -685,7 +685,7 @@ async def pay_project(projectId: str, current_user=Depends(get_current_user)):
     try:
         # 1. Récupérer le projet
         project_query = (
-            supabase.table("Projects").select("*").eq("id", projectId).execute()
+            supabase_admin.table("Projects").select("*").eq("id", projectId).execute()
         )
         if not project_query.data:
             raise HTTPException(status_code=404, detail="Projet non trouvé")
@@ -770,7 +770,7 @@ async def update_project(
     """
     try:
         project_query = (
-            supabase.table("Projects").select("*").eq("id", projectId).execute()
+            supabase_admin.table("Projects").select("*").eq("id", projectId).execute()
         )
         if not project_query.data:
             raise HTTPException(status_code=404, detail="Projet non trouvé")
@@ -802,7 +802,7 @@ async def update_project(
             update_data["budget"] = budget
 
         result = (
-            supabase.table("Projects").update(update_data).eq("id", projectId).execute()
+            supabase_admin.table("Projects").update(update_data).eq("id", projectId).execute()
         )
 
         return {
