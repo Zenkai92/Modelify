@@ -179,7 +179,7 @@ cd backend
 $env:TESTING='true'; $env:STRIPE_SECRET_KEY='sk_test_mock'
 $env:SUPABASE_URL='https://mock.supabase.co'; $env:SUPABASE_KEY='mock_key'
 $env:SECRET_KEY='test_secret_key'
-py -m pytest -v
+python -m pytest -v
 ```
 
 > ⚠️ **Windows** : lancez pytest depuis **PowerShell**, pas depuis Git Bash. Le PATH de Git Bash expose une DLL `libmagic` (msys) incompatible qui fait planter Python au chargement de `python-magic`.
